@@ -1,0 +1,18 @@
+[user]
+    name = Eduardo Macias
+    email = herwingx@proton.me
+
+[init]
+    defaultBranch = main
+
+[core]
+    editor = code --wait
+    autocrlf = input
+
+[pull]
+    rebase = true
+
+[alias]
+    lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) > %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)'
+    edit = commit --amend
+    clone-shallow = clone --depth 1
