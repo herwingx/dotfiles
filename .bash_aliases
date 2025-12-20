@@ -1,3 +1,7 @@
+# --- Auto-Actualización Dotfiles ---
+# Este comando descarga cambios del repo, reinstala configs y recarga la terminal
+alias sync-dotfiles='(cd ~/dotfiles && git pull && ./install.sh) && source ~/.bashrc && echo "✅ Dotfiles Sincronizados"'
+
 # --- Mantenimiento ---
 alias up='sudo apt update && sudo apt upgrade -y'
 alias off='sudo shutdown now'
