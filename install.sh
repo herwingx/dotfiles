@@ -230,31 +230,79 @@ install_gh_cli() {
     
     if command -v gh &> /dev/null; then
         echo -e "${YELLOW}   ! GitHub CLI ya está instalado: $(gh --version | head -1)${NC}"
-        return
-    fi
-    
-    if [ -f /etc/debian_version ]; then
-        # Debian/Ubuntu
-        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | $SUDO_CMD dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-        $SUDO_CMD chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | $SUDO_CMD tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        $SUDO_CMD apt-get update
-        $SUDO_CMD apt-get install gh -y
-    elif [ -f /etc/redhat-release ]; then
-        # Fedora/RHEL
-        $SUDO_CMD dnf install 'dnf-command(config-manager)' -y
-        $SUDO_CMD dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
-        $SUDO_CMD dnf install gh -y
-    elif [ -f /etc/arch-release ]; then
-        # Arch
-        $SUDO_CMD pacman -S github-cli --noconfirm
     else
-        echo -e "${RED}   ✗ Sistema no soportado. Instala gh manualmente: https://cli.github.com${NC}"
+        if [ -f /etc/debian_version ]; then
+            # Debian/Ubuntu
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | $SUDO_CMD dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            $SUDO_CMD chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | $SUDO_CMD tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            $SUDO_CMD apt-get update
+            $SUDO_CMD apt-get install gh -y
+        elif [ -f /etc/redhat-release ]; then
+            # Fedora/RHEL
+            $SUDO_CMD dnf install 'dnf-command(config-manager)' -y
+            $SUDO_CMD dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+            $SUDO_CMD dnf install gh -y
+        elif [ -f /etc/arch-release ]; then
+            # Arch
+            $SUDO_CMD pacman -S github-cli --noconfirm
+        else
+            echo -e "${RED}   ✗ Sistema no soportado. Instala gh manualmente: https://cli.github.com${NC}"
+            return
+        fi
+        echo -e "${CYAN}   ✓ GitHub CLI instalado${NC}"
+    fi
+    
+    # Preguntar si desea autenticarse
+    echo ""
+    read -p "   ¿Deseas autenticarte con GitHub ahora? (s/n): " auth_choice
+    if [[ "$auth_choice" =~ ^[Ss]$ ]]; then
+        gh_auth_login
+    fi
+}
+
+gh_auth_login() {
+    echo -e "${GREEN}>>> Autenticando GitHub CLI...${NC}"
+    
+    if ! command -v gh &> /dev/null; then
+        echo -e "${RED}   ✗ GitHub CLI no está instalado${NC}"
+        return 1
+    fi
+    
+    # Verificar si ya está autenticado
+    if gh auth status &> /dev/null; then
+        echo -e "${YELLOW}   ! Ya estás autenticado en GitHub${NC}"
+        gh auth status
         return
     fi
     
-    echo -e "${CYAN}   ✓ GitHub CLI instalado${NC}"
-    echo -e "${YELLOW}   ! Ejecuta 'gh auth login' para autenticarte${NC}"
+    echo -e "${CYAN}   Opciones de autenticación:${NC}"
+    echo -e "   1) Interactivo (abre navegador)"
+    echo -e "   2) Con token (pegarlo aquí)"
+    read -p "   Selecciona [1-2]: " auth_method
+    
+    case $auth_method in
+        1)
+            gh auth login
+            ;;
+        2)
+            echo -e "${YELLOW}   Genera un token en: https://github.com/settings/tokens${NC}"
+            echo -e "${YELLOW}   Permisos recomendados: repo, read:org, workflow${NC}"
+            read -sp "   Pega tu token (no se mostrará): " gh_token
+            echo ""
+            if [ -n "$gh_token" ]; then
+                echo "$gh_token" | gh auth login --with-token
+                if [ $? -eq 0 ]; then
+                    echo -e "${CYAN}   ✓ Autenticación exitosa${NC}"
+                else
+                    echo -e "${RED}   ✗ Error en la autenticación${NC}"
+                fi
+            fi
+            ;;
+        *)
+            echo -e "${YELLOW}   Omitiendo autenticación${NC}"
+            ;;
+    esac
 }
 
 install_nvm_node() {
@@ -290,14 +338,26 @@ install_nvm_node() {
 install_npm_global_packages() {
     echo -e "${GREEN}>>> Instalando paquetes npm globales...${NC}"
     
-    # Cargar NVM si existe
+    # Cargar NVM obligatoriamente
     export NVM_DIR="$HOME/.nvm"
+    
+    if [ ! -d "$NVM_DIR" ]; then
+        echo -e "${RED}   ✗ NVM no está instalado. Ejecuta primero la opción 11 (NVM + Node)${NC}"
+        return 1
+    fi
+    
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     
-    if ! command -v npm &> /dev/null; then
-        echo -e "${RED}   ✗ npm no está instalado. Ejecuta primero la opción de NVM + Node${NC}"
-        return
+    # Verificar que npm viene de NVM (no del sistema)
+    NPM_PATH=$(which npm 2>/dev/null)
+    if [[ "$NPM_PATH" != *".nvm"* ]]; then
+        echo -e "${RED}   ✗ npm detectado no es de NVM: $NPM_PATH${NC}"
+        echo -e "${YELLOW}   Esto causaría errores de permisos.${NC}"
+        echo -e "${YELLOW}   Ejecuta primero la opción 11 (NVM + Node) y reinicia la terminal.${NC}"
+        return 1
     fi
+    
+    echo -e "${CYAN}   Usando npm de NVM: $NPM_PATH${NC}"
     
     NPM_PACKAGES=(
         "@bitwarden/cli"
@@ -307,6 +367,9 @@ install_npm_global_packages() {
     for package in "${NPM_PACKAGES[@]}"; do
         echo -e "${CYAN}   Instalando $package...${NC}"
         npm install -g "$package"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}   ✗ Error instalando $package${NC}"
+        fi
     done
     
     echo -e "${CYAN}   ✓ Paquetes npm globales instalados${NC}"
@@ -406,23 +469,23 @@ show_menu() {
     echo -e "║   1) Instalar TODO (sistema + dev tools + antigravity)         ║"
     echo -e "║   2) Solo Sistema (update + paquetes, aliases, git, ssh)       ║"
     echo -e "║   3) Solo Dev Tools (gh, nvm, node, npm packages, docker)      ║"
+    echo -e "║   4) Solo Antigravity (reglas + workflows)                     ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}SISTEMA (individual)${NC}${CYAN}                                          ║"
-    echo -e "║   4) Actualizar sistema (apt/dnf upgrade)                      ║"
-    echo -e "║   5) Paquetes del sistema (git, curl, vim, htop, etc.)         ║"
-    echo -e "║   6) Bash Aliases                                              ║"
-    echo -e "║   7) Git Config                                                ║"
-    echo -e "║   8) SSH Keys (importar desde GitHub)                          ║"
-    echo -e "║   9) Copiar SSH desde Windows (solo WSL)                       ║"
+    echo -e "║   5) Actualizar sistema (apt/dnf upgrade)                      ║"
+    echo -e "║   6) Paquetes del sistema (git, curl, vim, htop, etc.)         ║"
+    echo -e "║   7) Bash Aliases                                              ║"
+    echo -e "║   8) Git Config                                                ║"
+    echo -e "║   9) SSH Keys (importar desde GitHub)                          ║"
+    echo -e "║  10) Copiar SSH desde Windows (solo WSL)                       ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}DEV TOOLS (individual)${NC}${CYAN}                                        ║"
-    echo -e "║  10) GitHub CLI (gh)                                           ║"
-    echo -e "║  11) NVM + Node.js LTS                                         ║"
-    echo -e "║  12) npm packages (bitwarden-cli, claude-code)                 ║"
-    echo -e "║  13) Docker + Docker Compose                                   ║"
+    echo -e "║  11) GitHub CLI (gh + auth)                                    ║"
+    echo -e "║  12) NVM + Node.js LTS                                         ║"
+    echo -e "║  13) npm packages (bitwarden-cli, claude-code)                 ║"
+    echo -e "║  14) Docker + Docker Compose                                   ║"
     echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}ANTIGRAVITY (Gemini AI)${NC}${CYAN}                                       ║"
-    echo -e "║  14) Antigravity Completo (reglas + workflows)                 ║"
+    echo -e "║  ${BOLD}ANTIGRAVITY (individual)${NC}${CYAN}                                      ║"
     echo -e "║  15) Solo Reglas (GEMINI.md)                                   ║"
     echo -e "║  16) Solo Workflows (/commit, /publicar, etc.)                 ║"
     echo -e "║                                                                ║"
@@ -443,37 +506,37 @@ show_menu() {
             install_dev_tools_all
             ;;
         4)
-            update_system
+            install_antigravity_full
             ;;
         5)
-            install_packages
+            update_system
             ;;
         6)
-            install_bash_aliases
+            install_packages
             ;;
         7)
-            install_gitconfig
+            install_bash_aliases
             ;;
         8)
-            install_ssh_keys
+            install_gitconfig
             ;;
         9)
-            copy_ssh_from_windows
+            install_ssh_keys
             ;;
         10)
-            install_gh_cli
+            copy_ssh_from_windows
             ;;
         11)
-            install_nvm_node
+            install_gh_cli
             ;;
         12)
-            install_npm_global_packages
+            install_nvm_node
             ;;
         13)
-            install_docker
+            install_npm_global_packages
             ;;
         14)
-            install_antigravity_full
+            install_docker
             ;;
         15)
             install_antigravity_rules
