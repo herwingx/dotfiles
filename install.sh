@@ -23,6 +23,44 @@ fi
 
 DOTFILES_DIR=$(pwd)
 
+# --- SECRETS ENCRIPTADOS ---
+# El archivo .env.age contiene las credenciales encriptadas con age
+# Solo se descifran cuando se necesitan (login de Bitwarden/GitHub)
+
+decrypt_secrets() {
+    if [ -f "$DOTFILES_DIR/.env.age" ]; then
+        if ! command -v age &> /dev/null; then
+            echo -e "${YELLOW}   age no instalado, instalando...${NC}"
+            if [ -f /etc/debian_version ]; then
+                $SUDO_CMD apt-get install -y age
+            elif [ -f /etc/redhat-release ]; then
+                $SUDO_CMD dnf install -y age
+            elif [ -f /etc/arch-release ]; then
+                $SUDO_CMD pacman -S age --noconfirm
+            fi
+        fi
+        
+        if [ -z "$SECRETS_LOADED" ]; then
+            echo -e "${CYAN}   Descifrando secrets...${NC}"
+            DECRYPTED=$(age --decrypt "$DOTFILES_DIR/.env.age" 2>/dev/null)
+            if [ $? -eq 0 ]; then
+                export BW_CLIENTID=$(echo "$DECRYPTED" | grep "BW_CLIENTID" | cut -d'=' -f2)
+                export BW_CLIENTSECRET=$(echo "$DECRYPTED" | grep "BW_CLIENTSECRET" | cut -d'=' -f2)
+                export GH_TOKEN=$(echo "$DECRYPTED" | grep "GH_TOKEN" | cut -d'=' -f2)
+                export SECRETS_LOADED=1
+                echo -e "${CYAN}   ✓ Secrets cargados${NC}"
+                return 0
+            else
+                echo -e "${RED}   ✗ Error descifrando (passphrase incorrecta?)${NC}"
+                return 1
+            fi
+        fi
+    else
+        echo -e "${YELLOW}   ! Archivo .env.age no encontrado${NC}"
+        return 1
+    fi
+}
+
 # --- FUNCIONES DE INSTALACIÓN ---
 
 update_system() {
@@ -275,12 +313,8 @@ install_gh_cli() {
         echo -e "${CYAN}   ✓ GitHub CLI instalado${NC}"
     fi
     
-    # Preguntar si desea autenticarse
-    echo ""
-    read -p "   ¿Deseas autenticarte con GitHub ahora? (s/n): " auth_choice
-    if [[ "$auth_choice" =~ ^[Ss]$ ]]; then
-        gh_auth_login
-    fi
+    # Autenticar automáticamente
+    gh_auth_login
 }
 
 gh_auth_login() {
@@ -294,89 +328,26 @@ gh_auth_login() {
     # Verificar si ya está autenticado
     if gh auth status &> /dev/null; then
         echo -e "${YELLOW}   ! Ya estás autenticado en GitHub${NC}"
-        gh auth status
-        return
+        return 0
     fi
     
-    # Intentar obtener token de Bitwarden primero
-    if command -v bw &> /dev/null; then
-        echo -e "${CYAN}   Intentando obtener token desde Bitwarden...${NC}"
-        
-        # Verificar si Bitwarden está desbloqueado
-        BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
-        
-        if [ "$BW_STATUS" = "unlocked" ]; then
-            # Intentar obtener el token
-            GH_TOKEN=$(bw get notes "Github Personal Access Token" 2>/dev/null)
-            
-            if [ -n "$GH_TOKEN" ]; then
-                echo -e "${CYAN}   Token encontrado en Bitwarden${NC}"
-                echo "$GH_TOKEN" | gh auth login --with-token
-                if [ $? -eq 0 ]; then
-                    echo -e "${CYAN}   ✓ Autenticación exitosa (desde Bitwarden)${NC}"
-                    return 0
-                else
-                    echo -e "${YELLOW}   ! Token de Bitwarden falló, usando método alternativo${NC}"
-                fi
-            else
-                echo -e "${YELLOW}   ! No se encontró 'Github Personal Access Token' en Bitwarden${NC}"
-            fi
-        elif [ "$BW_STATUS" = "locked" ]; then
-            echo -e "${YELLOW}   ! Bitwarden está bloqueado${NC}"
-            read -p "   ¿Deseas desbloquearlo para obtener el token? (s/n): " unlock_bw
-            if [[ "$unlock_bw" =~ ^[Ss]$ ]]; then
-                echo -e "${CYAN}   Ingresa tu Master Password de Bitwarden:${NC}"
-                BW_SESSION=$(bw unlock --raw)
-                if [ -n "$BW_SESSION" ]; then
-                    export BW_SESSION
-                    GH_TOKEN=$(bw get notes "Github Personal Access Token" 2>/dev/null)
-                    if [ -n "$GH_TOKEN" ]; then
-                        echo "$GH_TOKEN" | gh auth login --with-token
-                        if [ $? -eq 0 ]; then
-                            echo -e "${CYAN}   ✓ Autenticación exitosa (desde Bitwarden)${NC}"
-                            return 0
-                        fi
-                    else
-                        echo -e "${YELLOW}   ! No se encontró 'Github Personal Access Token' en Bitwarden${NC}"
-                    fi
-                else
-                    echo -e "${RED}   ✗ Error desbloqueando Bitwarden${NC}"
-                fi
-            fi
-        else
-            echo -e "${YELLOW}   ! Bitwarden no está logueado${NC}"
+    # Método 1: Usar token de secrets encriptados
+    if [ -z "$GH_TOKEN" ]; then
+        decrypt_secrets
+    fi
+    
+    if [ -n "$GH_TOKEN" ]; then
+        echo -e "${CYAN}   Usando token de secrets encriptados...${NC}"
+        echo "$GH_TOKEN" | gh auth login --with-token
+        if [ $? -eq 0 ]; then
+            echo -e "${CYAN}   ✓ Autenticación exitosa${NC}"
+            return 0
         fi
     fi
     
-    # Fallback: métodos manuales
-    echo -e "${CYAN}   Métodos alternativos:${NC}"
-    echo -e "   1) Interactivo (abre navegador)"
-    echo -e "   2) Pegar token manualmente"
-    echo -e "   3) Cancelar"
-    read -p "   Selecciona [1-3]: " auth_method
-    
-    case $auth_method in
-        1)
-            gh auth login
-            ;;
-        2)
-            echo -e "${YELLOW}   Genera un token en: https://github.com/settings/tokens${NC}"
-            echo -e "${YELLOW}   Permisos recomendados: repo, read:org, workflow${NC}"
-            read -sp "   Pega tu token (no se mostrará): " gh_token
-            echo ""
-            if [ -n "$gh_token" ]; then
-                echo "$gh_token" | gh auth login --with-token
-                if [ $? -eq 0 ]; then
-                    echo -e "${CYAN}   ✓ Autenticación exitosa${NC}"
-                else
-                    echo -e "${RED}   ✗ Error en la autenticación${NC}"
-                fi
-            fi
-            ;;
-        *)
-            echo -e "${YELLOW}   Autenticación cancelada${NC}"
-            ;;
-    esac
+    # Método 2: Fallback interactivo
+    echo -e "${YELLOW}   ! Secrets no disponibles, usando método interactivo${NC}"
+    gh auth login
 }
 
 install_nvm_node() {
@@ -462,21 +433,14 @@ install_npm_global_packages() {
     echo -e "${CYAN}   ✓ Paquetes npm globales instalados${NC}"
     echo -e "${CYAN}   Disponibles: bw (Bitwarden), claude (Claude Code)${NC}"
     
-    # Ofrecer login a Bitwarden
+    # Login automático a Bitwarden
     if command -v bw &> /dev/null; then
-        echo ""
-        read -p "   ¿Deseas iniciar sesión en Bitwarden ahora? (s/n): " bw_login
-        if [[ "$bw_login" =~ ^[Ss]$ ]]; then
-            bitwarden_login
-        fi
+        bitwarden_login
     fi
 }
 
 bitwarden_login() {
     echo -e "${GREEN}>>> Iniciando sesión en Bitwarden...${NC}"
-    
-    # Email pre-configurado (no es secreto)
-    BW_EMAIL="herwingmacias@gmail.com"
     
     if ! command -v bw &> /dev/null; then
         echo -e "${RED}   ✗ Bitwarden CLI no está instalado${NC}"
@@ -487,25 +451,38 @@ bitwarden_login() {
     BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
     
     if [ "$BW_STATUS" = "unauthenticated" ]; then
-        echo -e "${CYAN}   Iniciando sesión con: $BW_EMAIL${NC}"
-        echo -e "${YELLOW}   (Ingresa Master Password + código 2FA de Google Authenticator)${NC}"
-        bw login "$BW_EMAIL"
+        # Intentar usar API key de secrets encriptados
+        if [ -z "$BW_CLIENTID" ] || [ -z "$BW_CLIENTSECRET" ]; then
+            decrypt_secrets
+        fi
+        
+        if [ -n "$BW_CLIENTID" ] && [ -n "$BW_CLIENTSECRET" ]; then
+            echo -e "${CYAN}   Usando API key de secrets encriptados (sin 2FA)...${NC}"
+            bw login --apikey
+            if [ $? -eq 0 ]; then
+                echo -e "${CYAN}   ✓ Login exitoso${NC}"
+            else
+                echo -e "${RED}   ✗ Error en login con API key${NC}"
+                return 1
+            fi
+        else
+            # Fallback a login tradicional
+            echo -e "${YELLOW}   ! Secrets no disponibles, usando login tradicional${NC}"
+            bw login "herwingmacias@gmail.com"
+        fi
     elif [ "$BW_STATUS" = "locked" ]; then
         echo -e "${YELLOW}   ! Sesión existente pero bloqueada${NC}"
     else
         echo -e "${YELLOW}   ! Ya estás logueado en Bitwarden${NC}"
     fi
     
-    # Desbloquear bóveda
+    # Desbloquear bóveda (siempre requiere master password)
     echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
     BW_SESSION=$(bw unlock --raw)
     
     if [ -n "$BW_SESSION" ]; then
         export BW_SESSION
         echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
-        echo -e "${YELLOW}   ! Sesión válida solo para esta terminal${NC}"
-        
-        # Sincronizar
         bw sync &>/dev/null
         echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
     else
