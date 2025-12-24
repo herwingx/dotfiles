@@ -303,7 +303,8 @@ gh_auth_login() {
             echo -e "${YELLOW}   ! Bitwarden está bloqueado${NC}"
             read -p "   ¿Deseas desbloquearlo para obtener el token? (s/n): " unlock_bw
             if [[ "$unlock_bw" =~ ^[Ss]$ ]]; then
-                BW_SESSION=$(bw unlock --raw 2>/dev/null)
+                echo -e "${CYAN}   Ingresa tu Master Password de Bitwarden:${NC}"
+                BW_SESSION=$(bw unlock --raw)
                 if [ -n "$BW_SESSION" ]; then
                     export BW_SESSION
                     GH_TOKEN=$(bw get notes "Github Personal Access Token" 2>/dev/null)
@@ -313,7 +314,11 @@ gh_auth_login() {
                             echo -e "${CYAN}   ✓ Autenticación exitosa (desde Bitwarden)${NC}"
                             return 0
                         fi
+                    else
+                        echo -e "${YELLOW}   ! No se encontró 'Github Personal Access Token' en Bitwarden${NC}"
                     fi
+                else
+                    echo -e "${RED}   ✗ Error desbloqueando Bitwarden${NC}"
                 fi
             fi
         else
@@ -467,8 +472,7 @@ bitwarden_login() {
     
     # Desbloquear bóveda
     echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
-    echo -e "${YELLOW}   (Ingresa tu Master Password)${NC}"
-    BW_SESSION=$(bw unlock --raw 2>/dev/null)
+    BW_SESSION=$(bw unlock --raw)
     
     if [ -n "$BW_SESSION" ]; then
         export BW_SESSION
@@ -665,15 +669,10 @@ show_menu() {
 }
 
 # --- MAIN ---
-show_menu
-
-echo ""
-echo -e "${GREEN}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║          ✅ ¡INSTALACIÓN COMPLETADA!                     ║${NC}"
-echo -e "${GREEN}╚══════════════════════════════════════════════════════════╝${NC}"
-echo ""
-
-# Mostrar neofetch si está instalado
-if command -v neofetch &> /dev/null; then
-    neofetch
-fi
+while true; do
+    show_menu
+    
+    echo ""
+    echo -e "${CYAN}   Presiona Enter para volver al menú...${NC}"
+    read -r
+done
