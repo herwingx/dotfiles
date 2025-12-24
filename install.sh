@@ -94,6 +94,90 @@ install_ssh_keys() {
     echo -e "${CYAN}   ✓ Llaves SSH importadas${NC}"
 }
 
+copy_ssh_from_windows() {
+    echo -e "${GREEN}>>> Copiando llaves SSH desde Windows a WSL...${NC}"
+    
+    # Verificar si estamos en WSL
+    if [ ! -d "/mnt/c" ]; then
+        echo -e "${RED}   ✗ No se detectó WSL. Esta opción solo funciona en Windows Subsystem for Linux.${NC}"
+        return 1
+    fi
+    
+    # Detectar usuario de Windows automáticamente
+    # Opción 1: Usar variable de entorno de Windows
+    if [ -n "$WSLENV" ] || [ -f "/proc/sys/fs/binfmt_misc/WSLInterop" ]; then
+        # Obtener el usuario de Windows desde el path del home de Windows
+        WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+        
+        # Si falla, intentar detectar desde /mnt/c/Users
+        if [ -z "$WIN_USER" ] || [ "$WIN_USER" = "%USERNAME%" ]; then
+            # Buscar el directorio de usuario más reciente en /mnt/c/Users (excluyendo los del sistema)
+            WIN_USER=$(ls -td /mnt/c/Users/*/ 2>/dev/null | grep -v -E "(Public|Default|All Users)" | head -1 | xargs basename)
+        fi
+    fi
+    
+    if [ -z "$WIN_USER" ]; then
+        echo -e "${YELLOW}   ! No se pudo detectar el usuario de Windows automáticamente.${NC}"
+        read -p "   Ingresa tu nombre de usuario de Windows: " WIN_USER
+    fi
+    
+    WIN_SSH_DIR="/mnt/c/Users/$WIN_USER/.ssh"
+    
+    if [ ! -d "$WIN_SSH_DIR" ]; then
+        echo -e "${RED}   ✗ No se encontró el directorio SSH en: $WIN_SSH_DIR${NC}"
+        echo -e "${YELLOW}   Verifica que existan llaves SSH en Windows.${NC}"
+        return 1
+    fi
+    
+    echo -e "${CYAN}   Usuario de Windows detectado: $WIN_USER${NC}"
+    echo -e "${CYAN}   Copiando desde: $WIN_SSH_DIR${NC}"
+    
+    # Crear directorio .ssh en Linux si no existe
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    
+    # Copiar llaves privadas y públicas
+    KEYS_COPIED=0
+    for key_type in id_rsa id_ed25519 id_ecdsa; do
+        if [ -f "$WIN_SSH_DIR/$key_type" ]; then
+            cp "$WIN_SSH_DIR/$key_type" "$HOME/.ssh/"
+            chmod 600 "$HOME/.ssh/$key_type"
+            echo -e "${CYAN}   ✓ Copiada: $key_type${NC}"
+            KEYS_COPIED=$((KEYS_COPIED + 1))
+        fi
+        if [ -f "$WIN_SSH_DIR/$key_type.pub" ]; then
+            cp "$WIN_SSH_DIR/$key_type.pub" "$HOME/.ssh/"
+            chmod 644 "$HOME/.ssh/$key_type.pub"
+        fi
+    done
+    
+    # Copiar config si existe
+    if [ -f "$WIN_SSH_DIR/config" ]; then
+        cp "$WIN_SSH_DIR/config" "$HOME/.ssh/"
+        chmod 600 "$HOME/.ssh/config"
+        echo -e "${CYAN}   ✓ Copiado: config${NC}"
+    fi
+    
+    # Copiar known_hosts si existe
+    if [ -f "$WIN_SSH_DIR/known_hosts" ]; then
+        cp "$WIN_SSH_DIR/known_hosts" "$HOME/.ssh/"
+        chmod 600 "$HOME/.ssh/known_hosts"
+        echo -e "${CYAN}   ✓ Copiado: known_hosts${NC}"
+    fi
+    
+    if [ $KEYS_COPIED -eq 0 ]; then
+        echo -e "${YELLOW}   ! No se encontraron llaves SSH para copiar.${NC}"
+        return 1
+    fi
+    
+    echo -e "${CYAN}   ✓ $KEYS_COPIED llave(s) SSH copiada(s) exitosamente${NC}"
+    
+    # Probar conexión a GitHub
+    echo -e "${CYAN}   Probando conexión a GitHub...${NC}"
+    ssh -T git@github.com 2>&1 | head -2
+}
+
+
 install_antigravity_rules() {
     echo -e "${GREEN}>>> Configurando Antigravity - Reglas (GEMINI.md)...${NC}"
     GEMINI_DIR="$HOME/.gemini"
@@ -328,24 +412,25 @@ show_menu() {
     echo "║   5) Paquetes del sistema (git, curl, vim, htop, etc.)         ║"
     echo "║   6) Bash Aliases                                              ║"
     echo "║   7) Git Config                                                ║"
-    echo "║   8) SSH Keys                                                  ║"
+    echo "║   8) SSH Keys (importar desde GitHub)                          ║"
+    echo "║   9) Copiar SSH desde Windows (solo WSL)                       ║"
     echo "║                                                                ║"
     echo "║  ${BOLD}DEV TOOLS (individual)${NC}${CYAN}                                        ║"
-    echo "║   9) GitHub CLI (gh)                                           ║"
-    echo "║  10) NVM + Node.js LTS                                         ║"
-    echo "║  11) npm packages (bitwarden-cli, claude-code)                 ║"
-    echo "║  12) Docker + Docker Compose                                   ║"
+    echo "║  10) GitHub CLI (gh)                                           ║"
+    echo "║  11) NVM + Node.js LTS                                         ║"
+    echo "║  12) npm packages (bitwarden-cli, claude-code)                 ║"
+    echo "║  13) Docker + Docker Compose                                   ║"
     echo "║                                                                ║"
     echo "║  ${BOLD}ANTIGRAVITY (Gemini AI)${NC}${CYAN}                                       ║"
-    echo "║  13) Antigravity Completo (reglas + workflows)                 ║"
-    echo "║  14) Solo Reglas (GEMINI.md)                                   ║"
-    echo "║  15) Solo Workflows (/commit, /publicar, etc.)                 ║"
+    echo "║  14) Antigravity Completo (reglas + workflows)                 ║"
+    echo "║  15) Solo Reglas (GEMINI.md)                                   ║"
+    echo "║  16) Solo Workflows (/commit, /publicar, etc.)                 ║"
     echo "║                                                                ║"
     echo "║   0) Salir                                                     ║"
     echo "║                                                                ║"
     echo "╚════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    read -p "Selecciona una opción [0-15]: " choice
+    read -p "Selecciona una opción [0-16]: " choice
     
     case $choice in
         1)
@@ -373,24 +458,27 @@ show_menu() {
             install_ssh_keys
             ;;
         9)
-            install_gh_cli
+            copy_ssh_from_windows
             ;;
         10)
-            install_nvm_node
+            install_gh_cli
             ;;
         11)
-            install_npm_global_packages
+            install_nvm_node
             ;;
         12)
-            install_docker
+            install_npm_global_packages
             ;;
         13)
-            install_antigravity_full
+            install_docker
             ;;
         14)
-            install_antigravity_rules
+            install_antigravity_full
             ;;
         15)
+            install_antigravity_rules
+            ;;
+        16)
             install_antigravity_workflows
             ;;
         0)
