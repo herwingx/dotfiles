@@ -1,3 +1,7 @@
+# =============================================================================
+#                           GIT CONFIG - herwingx
+# =============================================================================
+
 [user]
     name = Eduardo Macias
     email = herwingx@proton.me
@@ -8,11 +12,116 @@
 [core]
     editor = code --wait
     autocrlf = input
+    # Mejor diff para archivos grandes
+    pager = less -F -X
 
+# -----------------------------------------------------------------------------
+# PULL - Siempre usar rebase (historial limpio)
+# -----------------------------------------------------------------------------
 [pull]
     rebase = true
 
+# -----------------------------------------------------------------------------
+# REBASE - Configuración óptima
+# -----------------------------------------------------------------------------
+[rebase]
+    # Stash automático antes de rebase (evita errores por cambios sin commit)
+    autoStash = true
+    # Auto-squash para fixup commits
+    autoSquash = true
+
+# -----------------------------------------------------------------------------
+# MERGE - Solo fast-forward (evita commits de merge innecesarios)
+# -----------------------------------------------------------------------------
+[merge]
+    ff = only
+    # Mejor herramienta de diff para conflictos
+    conflictstyle = diff3
+
+# -----------------------------------------------------------------------------
+# PUSH - Configuración segura
+# -----------------------------------------------------------------------------
+[push]
+    # Usar el nombre de la rama actual como upstream
+    default = current
+    # Configurar tracking automático al pushear nueva rama
+    autoSetupRemote = true
+    # Forzar con lease es más seguro que --force
+    # (no sobrescribe si hay commits nuevos en remote)
+
+# -----------------------------------------------------------------------------
+# FETCH - Limpiar ramas eliminadas en remote
+# -----------------------------------------------------------------------------
+[fetch]
+    prune = true
+
+# -----------------------------------------------------------------------------
+# DIFF - Mejor visualización
+# -----------------------------------------------------------------------------
+[diff]
+    # Detectar mejor los renombrados
+    renames = copies
+    # Algoritmo de diff más inteligente
+    algorithm = histogram
+
+[color]
+    ui = auto
+
+# -----------------------------------------------------------------------------
+# ALIASES - Productividad
+# -----------------------------------------------------------------------------
 [alias]
+    # Log bonito
     lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) > %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)'
+    lg10 = lg -10
+    
+    # Editar último commit
+    amend = commit --amend --no-edit
     edit = commit --amend
+    
+    # Clonar superficial (más rápido)
     clone-shallow = clone --depth 1
+    
+    # Status corto
+    s = status -sb
+    
+    # Branches
+    br = branch -v
+    bra = branch -va
+    
+    # Checkout
+    co = checkout
+    cob = checkout -b
+    
+    # Diff
+    d = diff
+    dc = diff --cached
+    
+    # Pull con rebase (redundante pero explícito)
+    pr = pull --rebase
+    
+    # Push force seguro
+    pf = push --force-with-lease
+    
+    # Deshacer último commit (mantiene cambios)
+    undo = reset --soft HEAD~1
+    
+    # Limpiar ramas mergeadas
+    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d"
+    
+    # Sync con main usando rebase
+    sync = "!git fetch origin && git rebase origin/main"
+    
+    # Ver archivos modificados en último commit
+    last = show --stat
+    
+    # Stash rápido
+    ss = stash save
+    sp = stash pop
+    sl = stash list
+
+# -----------------------------------------------------------------------------
+# URL Rewrites - Forzar SSH para GitHub
+# -----------------------------------------------------------------------------
+[url "git@github.com:"]
+    insteadOf = https://github.com/
