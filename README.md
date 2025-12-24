@@ -69,28 +69,26 @@ Detecta automáticamente tu usuario de Windows.
 ║                                                                ║
 ║  INSTALACIÓN COMPLETA                                          ║
 ║   1) Instalar TODO (sistema + dev tools + antigravity)         ║
-║   2) Solo Sistema (update + paquetes, aliases, git, ssh)       ║
-║   3) Solo Dev Tools (gh, nvm, docker, terminal tools)          ║
+║   2) Solo Sistema (update, paquetes, tools, aliases, git, ssh) ║
+║   3) Solo Dev Tools (gh, nvm, docker)                          ║
 ║   4) Solo Antigravity (reglas + workflows)                     ║
 ║                                                                ║
 ║  SISTEMA (individual)                                          ║
 ║   5) Actualizar sistema (apt/dnf upgrade)                      ║
-║   6) Paquetes (git, fzf, tmux, ranger, mc, htop, btop...)      ║
-║   7) Bash Aliases                                              ║
-║   8) Git Config                                                ║
-║   9) SSH Keys (importar desde GitHub)                          ║
-║  10) Copiar SSH desde Windows (solo WSL)                       ║
+║   6) Paquetes + Tools + Aliases (fzf, lsd, tmux, ranger...)    ║
+║   7) Git Config                                                ║
+║   8) SSH Keys (importar desde GitHub)                          ║
+║   9) Copiar SSH desde Windows (solo WSL)                       ║
 ║                                                                ║
 ║  DEV TOOLS (individual)                                        ║
-║  11) GitHub CLI (gh + auth)                                    ║
-║  12) NVM + Node.js LTS                                         ║
-║  13) npm packages (bitwarden-cli, claude-code)                 ║
-║  14) Docker + Docker Compose                                   ║
-║  15) Terminal Tools (lsd, lazydocker, ctop, gping)             ║
+║  10) GitHub CLI (gh + auth con Bitwarden)                      ║
+║  11) NVM + Node.js LTS                                         ║
+║  12) npm packages (bitwarden-cli, claude-code)                 ║
+║  13) Docker + Docker Compose                                   ║
 ║                                                                ║
 ║  ANTIGRAVITY (individual)                                      ║
-║  16) Solo Reglas (GEMINI.md)                                   ║
-║  17) Solo Workflows (/commit, /publicar, etc.)                 ║
+║  14) Solo Reglas (GEMINI.md)                                   ║
+║  15) Solo Workflows (/commit, /publicar, etc.)                 ║
 ║                                                                ║
 ║   0) Salir                                                     ║
 ╚════════════════════════════════════════════════════════════════╝
