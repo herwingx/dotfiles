@@ -50,24 +50,38 @@ update_system() {
 
 install_packages() {
     echo -e "${GREEN}>>> Instalando paquetes del sistema...${NC}"
+    
+    # Paquetes base disponibles en todos los repos
     PACKAGES=(
-        "git" "curl" "wget" "htop" "btop" "vim" "unzip" "tree" "net-tools" "neofetch" "dnsutils"
+        "git" "curl" "wget" "htop" "btop" "vim" "unzip" "tree" 
+        "net-tools" "neofetch" "tmux" "fzf" "ranger" "mc"
     )
     
     if [ -f /etc/debian_version ]; then
         echo -e "${CYAN}   Detectado: Debian/Ubuntu (apt)${NC}"
         $SUDO_CMD apt-get update -y
-        $SUDO_CMD apt-get install -y "${PACKAGES[@]}"
+        $SUDO_CMD apt-get install -y "${PACKAGES[@]}" dnsutils w3m-img
     elif [ -f /etc/redhat-release ]; then
         echo -e "${CYAN}   Detectado: Fedora/RHEL (dnf)${NC}"
-        $SUDO_CMD dnf install -y "${PACKAGES[@]}"
+        $SUDO_CMD dnf install -y "${PACKAGES[@]}" bind-utils w3m-img
     elif [ -f /etc/arch-release ]; then
         echo -e "${CYAN}   Detectado: Arch Linux (pacman)${NC}"
-        $SUDO_CMD pacman -Syu --noconfirm "${PACKAGES[@]}"
+        $SUDO_CMD pacman -Syu --noconfirm "${PACKAGES[@]}" bind w3m
     else
         echo -e "${RED}>>> Sistema no soportado para instalación automática de paquetes${NC}"
         echo -e "${YELLOW}   Instala manualmente: ${PACKAGES[*]}${NC}"
+        return
     fi
+    
+    # Configurar ranger
+    if command -v ranger &> /dev/null; then
+        if [ ! -d "$HOME/.config/ranger" ]; then
+            echo -e "${CYAN}   Configurando ranger...${NC}"
+            ranger --copy-config=all
+        fi
+    fi
+    
+    echo -e "${CYAN}   ✓ Paquetes del sistema instalados${NC}"
 }
 
 install_bash_aliases() {
@@ -547,12 +561,91 @@ install_docker() {
     echo -e "${CYAN}   Docker: $(docker --version 2>/dev/null || echo 'reinicia sesión')${NC}"
 }
 
+install_terminal_tools() {
+    echo -e "${GREEN}>>> Instalando herramientas avanzadas de terminal...${NC}"
+    
+    # LSD - LSDeluxe (ls moderno con iconos)
+    if ! command -v lsd &> /dev/null; then
+        echo -e "${CYAN}   Instalando lsd (ls moderno)...${NC}"
+        if [ -f /etc/debian_version ]; then
+            # Descargar .deb desde GitHub releases
+            LSD_VERSION="1.1.5"
+            wget -q "https://github.com/lsd-rs/lsd/releases/download/v${LSD_VERSION}/lsd_${LSD_VERSION}_amd64.deb" -O /tmp/lsd.deb
+            $SUDO_CMD dpkg -i /tmp/lsd.deb
+            rm /tmp/lsd.deb
+        elif [ -f /etc/redhat-release ]; then
+            $SUDO_CMD dnf install lsd -y 2>/dev/null || {
+                # Si no está en repos, instalar con cargo
+                if command -v cargo &> /dev/null; then
+                    cargo install lsd
+                else
+                    echo -e "${YELLOW}   ! lsd no disponible. Instala cargo o descárgalo manualmente.${NC}"
+                fi
+            }
+        elif [ -f /etc/arch-release ]; then
+            $SUDO_CMD pacman -S lsd --noconfirm
+        fi
+        echo -e "${CYAN}   ✓ lsd instalado${NC}"
+    else
+        echo -e "${YELLOW}   ! lsd ya está instalado${NC}"
+    fi
+    
+    # Lazydocker - TUI para Docker
+    if ! command -v lazydocker &> /dev/null; then
+        echo -e "${CYAN}   Instalando lazydocker...${NC}"
+        curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+        echo -e "${CYAN}   ✓ lazydocker instalado${NC}"
+    else
+        echo -e "${YELLOW}   ! lazydocker ya está instalado${NC}"
+    fi
+    
+    # Ctop - Top para containers
+    if ! command -v ctop &> /dev/null; then
+        echo -e "${CYAN}   Instalando ctop...${NC}"
+        if [ -f /etc/debian_version ]; then
+            $SUDO_CMD wget https://github.com/bcicen/ctop/releases/download/v0.7.7/ctop-0.7.7-linux-amd64 -O /usr/local/bin/ctop
+            $SUDO_CMD chmod +x /usr/local/bin/ctop
+        elif [ -f /etc/redhat-release ]; then
+            $SUDO_CMD wget https://github.com/bcicen/ctop/releases/download/v0.7.7/ctop-0.7.7-linux-amd64 -O /usr/local/bin/ctop
+            $SUDO_CMD chmod +x /usr/local/bin/ctop
+        elif [ -f /etc/arch-release ]; then
+            $SUDO_CMD pacman -S ctop --noconfirm
+        fi
+        echo -e "${CYAN}   ✓ ctop instalado${NC}"
+    else
+        echo -e "${YELLOW}   ! ctop ya está instalado${NC}"
+    fi
+    
+    # Gping - Ping visual
+    if ! command -v gping &> /dev/null; then
+        echo -e "${CYAN}   Instalando gping...${NC}"
+        if [ -f /etc/debian_version ]; then
+            # Usar cargo si está disponible, si no descargar binario
+            if command -v cargo &> /dev/null; then
+                cargo install gping
+            else
+                echo -e "${YELLOW}   ! gping requiere cargo. Instala rust primero o instálalo manualmente.${NC}"
+            fi
+        elif [ -f /etc/redhat-release ]; then
+            $SUDO_CMD dnf copr enable atim/gping -y 2>/dev/null || true
+            $SUDO_CMD dnf install gping -y 2>/dev/null || echo -e "${YELLOW}   ! gping no disponible en repos${NC}"
+        elif [ -f /etc/arch-release ]; then
+            $SUDO_CMD pacman -S gping --noconfirm
+        fi
+    else
+        echo -e "${YELLOW}   ! gping ya está instalado${NC}"
+    fi
+    
+    echo -e "${CYAN}   ✓ Herramientas de terminal instaladas${NC}"
+    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping${NC}"
+}
 
 install_dev_tools_all() {
     install_gh_cli
     install_nvm_node
     install_npm_global_packages
     install_docker
+    install_terminal_tools
 }
 
 install_system_all() {
@@ -584,12 +677,12 @@ show_menu() {
     echo -e "║  ${BOLD}INSTALACIÓN COMPLETA${NC}${CYAN}                                          ║"
     echo -e "║   1) Instalar TODO (sistema + dev tools + antigravity)         ║"
     echo -e "║   2) Solo Sistema (update + paquetes, aliases, git, ssh)       ║"
-    echo -e "║   3) Solo Dev Tools (gh, nvm, node, npm packages, docker)      ║"
+    echo -e "║   3) Solo Dev Tools (gh, nvm, docker, terminal tools)          ║"
     echo -e "║   4) Solo Antigravity (reglas + workflows)                     ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}SISTEMA (individual)${NC}${CYAN}                                          ║"
     echo -e "║   5) Actualizar sistema (apt/dnf upgrade)                      ║"
-    echo -e "║   6) Paquetes del sistema (git, curl, vim, htop, etc.)         ║"
+    echo -e "║   6) Paquetes (git, fzf, tmux, ranger, mc, htop, btop...)      ║"
     echo -e "║   7) Bash Aliases                                              ║"
     echo -e "║   8) Git Config                                                ║"
     echo -e "║   9) SSH Keys (importar desde GitHub)                          ║"
@@ -600,16 +693,17 @@ show_menu() {
     echo -e "║  12) NVM + Node.js LTS                                         ║"
     echo -e "║  13) npm packages (bitwarden-cli, claude-code)                 ║"
     echo -e "║  14) Docker + Docker Compose                                   ║"
+    echo -e "║  15) Terminal Tools (lsd, lazydocker, ctop, gping)             ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}ANTIGRAVITY (individual)${NC}${CYAN}                                      ║"
-    echo -e "║  15) Solo Reglas (GEMINI.md)                                   ║"
-    echo -e "║  16) Solo Workflows (/commit, /publicar, etc.)                 ║"
+    echo -e "║  16) Solo Reglas (GEMINI.md)                                   ║"
+    echo -e "║  17) Solo Workflows (/commit, /publicar, etc.)                 ║"
     echo -e "║                                                                ║"
     echo -e "║   0) Salir                                                     ║"
     echo -e "║                                                                ║"
     echo -e "╚════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    read -p "Selecciona una opción [0-16]: " choice
+    read -p "Selecciona una opción [0-17]: " choice
     
     case $choice in
         1)
@@ -655,9 +749,12 @@ show_menu() {
             install_docker
             ;;
         15)
-            install_antigravity_rules
+            install_terminal_tools
             ;;
         16)
+            install_antigravity_rules
+            ;;
+        17)
             install_antigravity_workflows
             ;;
         0)
@@ -667,7 +764,6 @@ show_menu() {
         *)
             echo -e "${RED}>>> Opción inválida${NC}"
             sleep 1
-            show_menu
             ;;
     esac
 }
