@@ -49,7 +49,7 @@ update_system() {
 }
 
 install_packages() {
-    echo -e "${GREEN}>>> Instalando paquetes del sistema...${NC}"
+    echo -e "${GREEN}>>> Instalando paquetes del sistema y herramientas de terminal...${NC}"
     
     # Paquetes base disponibles en todos los repos
     PACKAGES=(
@@ -81,7 +81,15 @@ install_packages() {
         fi
     fi
     
-    echo -e "${CYAN}   ✓ Paquetes del sistema instalados${NC}"
+    echo -e "${CYAN}   ✓ Paquetes base instalados${NC}"
+    
+    # Instalar herramientas avanzadas (lsd, lazydocker, ctop, gping)
+    install_terminal_tools
+    
+    # Instalar aliases (incluye lsd como ls)
+    install_bash_aliases
+    
+    echo -e "${CYAN}   ✓ Sistema completo configurado${NC}"
 }
 
 install_bash_aliases() {
@@ -645,21 +653,18 @@ install_dev_tools_all() {
     install_nvm_node
     install_npm_global_packages
     install_docker
-    install_terminal_tools
 }
 
 install_system_all() {
     update_system
-    install_packages
-    install_bash_aliases
+    install_packages  # Ya incluye terminal_tools y bash_aliases
     install_gitconfig
     install_ssh_keys
 }
 
 install_all() {
     update_system
-    install_packages
-    install_bash_aliases
+    install_packages  # Ya incluye terminal_tools y bash_aliases
     install_gitconfig
     install_ssh_keys
     install_dev_tools_all
@@ -676,34 +681,32 @@ show_menu() {
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}INSTALACIÓN COMPLETA${NC}${CYAN}                                          ║"
     echo -e "║   1) Instalar TODO (sistema + dev tools + antigravity)         ║"
-    echo -e "║   2) Solo Sistema (update + paquetes, aliases, git, ssh)       ║"
-    echo -e "║   3) Solo Dev Tools (gh, nvm, docker, terminal tools)          ║"
+    echo -e "║   2) Solo Sistema (update, paquetes, tools, aliases, git, ssh) ║"
+    echo -e "║   3) Solo Dev Tools (gh, nvm, docker)                          ║"
     echo -e "║   4) Solo Antigravity (reglas + workflows)                     ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}SISTEMA (individual)${NC}${CYAN}                                          ║"
     echo -e "║   5) Actualizar sistema (apt/dnf upgrade)                      ║"
-    echo -e "║   6) Paquetes (git, fzf, tmux, ranger, mc, htop, btop...)      ║"
-    echo -e "║   7) Bash Aliases                                              ║"
-    echo -e "║   8) Git Config                                                ║"
-    echo -e "║   9) SSH Keys (importar desde GitHub)                          ║"
-    echo -e "║  10) Copiar SSH desde Windows (solo WSL)                       ║"
+    echo -e "║   6) Paquetes + Tools + Aliases (fzf, lsd, tmux, ranger...)    ║"
+    echo -e "║   7) Git Config                                                ║"
+    echo -e "║   8) SSH Keys (importar desde GitHub)                          ║"
+    echo -e "║   9) Copiar SSH desde Windows (solo WSL)                       ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}DEV TOOLS (individual)${NC}${CYAN}                                        ║"
-    echo -e "║  11) GitHub CLI (gh + auth)                                    ║"
-    echo -e "║  12) NVM + Node.js LTS                                         ║"
-    echo -e "║  13) npm packages (bitwarden-cli, claude-code)                 ║"
-    echo -e "║  14) Docker + Docker Compose                                   ║"
-    echo -e "║  15) Terminal Tools (lsd, lazydocker, ctop, gping)             ║"
+    echo -e "║  10) GitHub CLI (gh + auth con Bitwarden)                      ║"
+    echo -e "║  11) NVM + Node.js LTS                                         ║"
+    echo -e "║  12) npm packages (bitwarden-cli, claude-code)                 ║"
+    echo -e "║  13) Docker + Docker Compose                                   ║"
     echo -e "║                                                                ║"
     echo -e "║  ${BOLD}ANTIGRAVITY (individual)${NC}${CYAN}                                      ║"
-    echo -e "║  16) Solo Reglas (GEMINI.md)                                   ║"
-    echo -e "║  17) Solo Workflows (/commit, /publicar, etc.)                 ║"
+    echo -e "║  14) Solo Reglas (GEMINI.md)                                   ║"
+    echo -e "║  15) Solo Workflows (/commit, /publicar, etc.)                 ║"
     echo -e "║                                                                ║"
     echo -e "║   0) Salir                                                     ║"
     echo -e "║                                                                ║"
     echo -e "╚════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    read -p "Selecciona una opción [0-17]: " choice
+    read -p "Selecciona una opción [0-15]: " choice
     
     case $choice in
         1)
@@ -725,36 +728,30 @@ show_menu() {
             install_packages
             ;;
         7)
-            install_bash_aliases
-            ;;
-        8)
             install_gitconfig
             ;;
-        9)
+        8)
             install_ssh_keys
             ;;
-        10)
+        9)
             copy_ssh_from_windows
             ;;
-        11)
+        10)
             install_gh_cli
             ;;
-        12)
+        11)
             install_nvm_node
             ;;
-        13)
+        12)
             install_npm_global_packages
             ;;
-        14)
+        13)
             install_docker
             ;;
-        15)
-            install_terminal_tools
-            ;;
-        16)
+        14)
             install_antigravity_rules
             ;;
-        17)
+        15)
             install_antigravity_workflows
             ;;
         0)
