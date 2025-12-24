@@ -131,6 +131,29 @@ c      → clear
 myip   → muestra IP pública
 ```
 
+## ⚙️ Git Config (Mejores Prácticas)
+
+El `.gitconfig` incluye configuración optimizada para rebase:
+
+| Configuración | Descripción |
+|:--------------|:------------|
+| `pull.rebase = true` | Siempre usar rebase al hacer pull |
+| `rebase.autoStash = true` | Stash automático antes de rebase |
+| `merge.ff = only` | Solo fast-forward (evita merge commits) |
+| `fetch.prune = true` | Limpia ramas eliminadas en remote |
+| `push.autoSetupRemote = true` | Tracking automático al pushear |
+
+### Git Aliases Útiles
+```bash
+git sync    # Fetch + rebase con origin/main
+git pf      # Push --force-with-lease (seguro)
+git undo    # Deshacer último commit (mantiene cambios)
+git cleanup # Eliminar ramas locales mergeadas
+git amend   # Modificar último commit sin editar mensaje
+git s       # Status corto
+git lg10    # Log bonito últimos 10 commits
+```
+
 ## 🔄 Sincronizar Cambios
 
 Después de hacer cambios en cualquier máquina:
