@@ -453,6 +453,9 @@ install_npm_global_packages() {
 bitwarden_login() {
     echo -e "${GREEN}>>> Iniciando sesión en Bitwarden...${NC}"
     
+    # Email pre-configurado (no es secreto)
+    BW_EMAIL="herwingmacias@gmail.com"
+    
     if ! command -v bw &> /dev/null; then
         echo -e "${RED}   ✗ Bitwarden CLI no está instalado${NC}"
         return 1
@@ -462,8 +465,9 @@ bitwarden_login() {
     BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
     
     if [ "$BW_STATUS" = "unauthenticated" ]; then
-        echo -e "${CYAN}   Iniciando sesión...${NC}"
-        bw login
+        echo -e "${CYAN}   Iniciando sesión con: $BW_EMAIL${NC}"
+        echo -e "${YELLOW}   (Ingresa Master Password + código 2FA de Google Authenticator)${NC}"
+        bw login "$BW_EMAIL"
     elif [ "$BW_STATUS" = "locked" ]; then
         echo -e "${YELLOW}   ! Sesión existente pero bloqueada${NC}"
     else
