@@ -338,26 +338,37 @@ install_nvm_node() {
 install_npm_global_packages() {
     echo -e "${GREEN}>>> Instalando paquetes npm globales...${NC}"
     
-    # Cargar NVM obligatoriamente
+    # Intentar cargar NVM si existe
     export NVM_DIR="$HOME/.nvm"
-    
-    if [ ! -d "$NVM_DIR" ]; then
-        echo -e "${RED}   ✗ NVM no está instalado. Ejecuta primero la opción 11 (NVM + Node)${NC}"
-        return 1
-    fi
-    
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     
-    # Verificar que npm viene de NVM (no del sistema)
+    # Detectar npm disponible
     NPM_PATH=$(which npm 2>/dev/null)
-    if [[ "$NPM_PATH" != *".nvm"* ]]; then
-        echo -e "${RED}   ✗ npm detectado no es de NVM: $NPM_PATH${NC}"
-        echo -e "${YELLOW}   Esto causaría errores de permisos.${NC}"
-        echo -e "${YELLOW}   Ejecuta primero la opción 11 (NVM + Node) y reinicia la terminal.${NC}"
-        return 1
+    
+    if [ -z "$NPM_PATH" ]; then
+        # No hay npm instalado, ofrecer instalar NVM
+        echo -e "${YELLOW}   ! npm no está instalado${NC}"
+        read -p "   ¿Deseas instalar NVM + Node ahora? (s/n): " install_nvm
+        if [[ "$install_nvm" =~ ^[Ss]$ ]]; then
+            install_nvm_node
+            # Recargar NVM
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            NPM_PATH=$(which npm 2>/dev/null)
+        else
+            echo -e "${RED}   ✗ Instalación cancelada. Necesitas npm para continuar.${NC}"
+            return 1
+        fi
     fi
     
-    echo -e "${CYAN}   Usando npm de NVM: $NPM_PATH${NC}"
+    # Determinar si usar sudo o no
+    USE_SUDO=""
+    if [[ "$NPM_PATH" == *".nvm"* ]]; then
+        echo -e "${CYAN}   Usando npm de NVM: $NPM_PATH (sin sudo)${NC}"
+    else
+        echo -e "${CYAN}   Usando npm del sistema: $NPM_PATH (con sudo)${NC}"
+        USE_SUDO="$SUDO_CMD"
+    fi
     
     NPM_PACKAGES=(
         "@bitwarden/cli"
@@ -366,9 +377,11 @@ install_npm_global_packages() {
     
     for package in "${NPM_PACKAGES[@]}"; do
         echo -e "${CYAN}   Instalando $package...${NC}"
-        npm install -g "$package"
+        $USE_SUDO npm install -g "$package"
         if [ $? -ne 0 ]; then
             echo -e "${RED}   ✗ Error instalando $package${NC}"
+        else
+            echo -e "${CYAN}   ✓ $package instalado${NC}"
         fi
     done
     
