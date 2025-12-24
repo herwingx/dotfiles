@@ -276,10 +276,57 @@ gh_auth_login() {
         return
     fi
     
-    echo -e "${CYAN}   Opciones de autenticación:${NC}"
+    # Intentar obtener token de Bitwarden primero
+    if command -v bw &> /dev/null; then
+        echo -e "${CYAN}   Intentando obtener token desde Bitwarden...${NC}"
+        
+        # Verificar si Bitwarden está desbloqueado
+        BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+        
+        if [ "$BW_STATUS" = "unlocked" ]; then
+            # Intentar obtener el token
+            GH_TOKEN=$(bw get notes "Github Personal Access Token" 2>/dev/null)
+            
+            if [ -n "$GH_TOKEN" ]; then
+                echo -e "${CYAN}   Token encontrado en Bitwarden${NC}"
+                echo "$GH_TOKEN" | gh auth login --with-token
+                if [ $? -eq 0 ]; then
+                    echo -e "${CYAN}   ✓ Autenticación exitosa (desde Bitwarden)${NC}"
+                    return 0
+                else
+                    echo -e "${YELLOW}   ! Token de Bitwarden falló, usando método alternativo${NC}"
+                fi
+            else
+                echo -e "${YELLOW}   ! No se encontró 'Github Personal Access Token' en Bitwarden${NC}"
+            fi
+        elif [ "$BW_STATUS" = "locked" ]; then
+            echo -e "${YELLOW}   ! Bitwarden está bloqueado${NC}"
+            read -p "   ¿Deseas desbloquearlo para obtener el token? (s/n): " unlock_bw
+            if [[ "$unlock_bw" =~ ^[Ss]$ ]]; then
+                BW_SESSION=$(bw unlock --raw 2>/dev/null)
+                if [ -n "$BW_SESSION" ]; then
+                    export BW_SESSION
+                    GH_TOKEN=$(bw get notes "Github Personal Access Token" 2>/dev/null)
+                    if [ -n "$GH_TOKEN" ]; then
+                        echo "$GH_TOKEN" | gh auth login --with-token
+                        if [ $? -eq 0 ]; then
+                            echo -e "${CYAN}   ✓ Autenticación exitosa (desde Bitwarden)${NC}"
+                            return 0
+                        fi
+                    fi
+                fi
+            fi
+        else
+            echo -e "${YELLOW}   ! Bitwarden no está logueado${NC}"
+        fi
+    fi
+    
+    # Fallback: métodos manuales
+    echo -e "${CYAN}   Métodos alternativos:${NC}"
     echo -e "   1) Interactivo (abre navegador)"
-    echo -e "   2) Con token (pegarlo aquí)"
-    read -p "   Selecciona [1-2]: " auth_method
+    echo -e "   2) Pegar token manualmente"
+    echo -e "   3) Cancelar"
+    read -p "   Selecciona [1-3]: " auth_method
     
     case $auth_method in
         1)
@@ -300,7 +347,7 @@ gh_auth_login() {
             fi
             ;;
         *)
-            echo -e "${YELLOW}   Omitiendo autenticación${NC}"
+            echo -e "${YELLOW}   Autenticación cancelada${NC}"
             ;;
     esac
 }
@@ -387,6 +434,54 @@ install_npm_global_packages() {
     
     echo -e "${CYAN}   ✓ Paquetes npm globales instalados${NC}"
     echo -e "${CYAN}   Disponibles: bw (Bitwarden), claude (Claude Code)${NC}"
+    
+    # Ofrecer login a Bitwarden
+    if command -v bw &> /dev/null; then
+        echo ""
+        read -p "   ¿Deseas iniciar sesión en Bitwarden ahora? (s/n): " bw_login
+        if [[ "$bw_login" =~ ^[Ss]$ ]]; then
+            bitwarden_login
+        fi
+    fi
+}
+
+bitwarden_login() {
+    echo -e "${GREEN}>>> Iniciando sesión en Bitwarden...${NC}"
+    
+    if ! command -v bw &> /dev/null; then
+        echo -e "${RED}   ✗ Bitwarden CLI no está instalado${NC}"
+        return 1
+    fi
+    
+    # Verificar si ya está logueado
+    BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+    
+    if [ "$BW_STATUS" = "unauthenticated" ]; then
+        echo -e "${CYAN}   Iniciando sesión...${NC}"
+        bw login
+    elif [ "$BW_STATUS" = "locked" ]; then
+        echo -e "${YELLOW}   ! Sesión existente pero bloqueada${NC}"
+    else
+        echo -e "${YELLOW}   ! Ya estás logueado en Bitwarden${NC}"
+    fi
+    
+    # Desbloquear bóveda
+    echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
+    echo -e "${YELLOW}   (Ingresa tu Master Password)${NC}"
+    BW_SESSION=$(bw unlock --raw 2>/dev/null)
+    
+    if [ -n "$BW_SESSION" ]; then
+        export BW_SESSION
+        echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
+        echo -e "${YELLOW}   ! Sesión válida solo para esta terminal${NC}"
+        
+        # Sincronizar
+        bw sync &>/dev/null
+        echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
+    else
+        echo -e "${RED}   ✗ Error desbloqueando Bitwarden${NC}"
+        return 1
+    fi
 }
 
 install_docker() {
