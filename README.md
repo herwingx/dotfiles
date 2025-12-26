@@ -1,193 +1,150 @@
-# 🚀 Dotfiles - herwingx
+# 🚀 Dotfiles
 
-Configuración personal para sincronizar entorno de desarrollo en múltiples máquinas Linux (Ubuntu, Fedora, Arch, WSL).
+> **Sincronización Total** — Entorno de desarrollo unificado y automatizado para Linux (Ubuntu, Fedora, Arch, WSL).
 
-## ⚡ Instalación Rápida
+<!-- BADGES: Usa style=flat-square -->
+[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Linux](https://img.shields.io/badge/OS-Linux-FCC624?style=flat-square&logo=linux&logoColor=black)](https://www.linux.org/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/herwingx/dotfiles/main/docs/assets/banner.png" alt="Dotfiles Preview" width="800"/>
+  <!-- TODO: Asegurar que exista una imagen o gif de demo aquí -->
+</p>
+
+---
+
+## ✨ Características
+
+| Característica              | Descripción                                                                          |
+| :-------------------------- | :----------------------------------------------------------------------------------- |
+| 🔹 **Sistema Base**          | Configuración esencial optimizada (`vim`, `tmux`, `fzf`, `ranger`).                  |
+| 🔸 **Dev Suite**             | Toolkit completo con Docker, GitHub CLI (`gh`), Node.js (nvm) y utilidades modernas. |
+| 🔐 **Seguridad Zero-Config** | Autenticación automática con Bitwarden CLI para tokens de GitHub y claves SSH.       |
+| 🤖 **Antigravity AI**        | Protocolos `GEMINI.md` y workflows inteligentes para desarrollo asistido.            |
+| 🖥️ **Soporte WSL**           | Integración nativa con Windows, incluyendo copiado automático de llaves SSH.         |
+
+---
+
+## � Inicio Rápido
+
+### Requisitos
+- Distribución Linux basada en Debian, Fedora o Arch.
+- Conexión a Internet.
+- Cuenta de Bitwarden (opcional, para automatización completa).
+
+### 1. Clonar el repositorio
 ```bash
-# Clonar (HTTPS, no necesita SSH)
 git clone https://github.com/herwingx/dotfiles.git ~/dotfiles
 cd ~/dotfiles
+```
 
-# Ejecutar instalador
+### 2. Ejecutar Instalador
+El script es interactivo y detectará tu distribución automáticamente.
+
+```bash
 chmod +x install.sh
 ./install.sh
 ```
 
-## 📦 ¿Qué incluye?
+### 3. Seleccionar Opción
+Verás un menú interactivo. Para una instalación completa seleccione la opción **1**.
 
-### Sistema Base (Opción 6)
-| Paquete | Descripción |
-|:--------|:------------|
-| `git`, `curl`, `wget` | Esenciales |
-| `vim`, `tmux` | Editor y multiplexor |
-| `htop`, `btop` | Monitores de sistema |
-| `fzf` | Fuzzy finder |
-| `ranger`, `mc` | File managers de terminal |
-| `neofetch`, `tree` | Utilidades |
-
-### Dev Tools (Opción 3)
-| Herramienta | Descripción |
-|:------------|:------------|
-| GitHub CLI (`gh`) | Con auth automático desde Bitwarden |
-| NVM + Node.js LTS | Manejo de versiones de Node |
-| npm packages | `@bitwarden/cli`, `@anthropic-ai/claude-code` |
-| Docker + Compose | Contenedores |
-| Terminal Tools | `lsd`, `lazydocker`, `ctop`, `gping` |
-
-### Antigravity (Opción 4)
-Configuración de Gemini AI:
-- `GEMINI.md` - Reglas globales de desarrollo
-- Workflows: `/commit`, `/publicar`, `/sync-main`, `/crear-pr`, `/nueva-feature`, `/release`, `/limpiar-ramas`
-
-## 🔐 Autenticación Automática
-
-El script usa **Bitwarden CLI** para obtener automáticamente:
-- Tu token de GitHub (desde la nota "Github Personal Access Token")
-
-Solo necesitas ingresar:
-1. 🔐 Master Password de Bitwarden
-2. 📱 Código 2FA (si tienes habilitado)
-
-## 🖥️ WSL (Windows Subsystem for Linux)
-
-Si usas WSL, puedes copiar tus llaves SSH desde Windows:
-
-```bash
-./install.sh
-# Selecciona opción 10: Copiar SSH desde Windows
+```text
+INSTALACIÓN COMPLETA
+ 1) Instalar TODO (sistema + dev tools + antigravity)
 ```
-
-Detecta automáticamente tu usuario de Windows.
-
-## 📋 Menú Completo
-
-```
-╔════════════════════════════════════════════════════════════════╗
-║            🚀 DOTFILES INSTALLER - herwingx 🚀                 ║
-╠════════════════════════════════════════════════════════════════╣
-║                                                                ║
-║  INSTALACIÓN COMPLETA                                          ║
-║   1) Instalar TODO (sistema + dev tools + antigravity)         ║
-║   2) Solo Sistema (update, paquetes, tools, aliases, git, ssh) ║
-║   3) Solo Dev Tools (gh, nvm, docker)                          ║
-║   4) Solo Antigravity (reglas + workflows)                     ║
-║                                                                ║
-║  SISTEMA (individual)                                          ║
-║   5) Actualizar sistema (apt/dnf upgrade)                      ║
-║   6) Paquetes + Tools + Aliases (fzf, lsd, tmux, ranger...)    ║
-║   7) Git Config                                                ║
-║   8) SSH Keys (importar desde GitHub)                          ║
-║   9) Copiar SSH desde Windows (solo WSL)                       ║
-║                                                                ║
-║  DEV TOOLS (individual)                                        ║
-║  10) GitHub CLI (gh + auth con Bitwarden)                      ║
-║  11) NVM + Node.js LTS                                         ║
-║  12) npm packages (bitwarden-cli, claude-code)                 ║
-║  13) Docker + Docker Compose                                   ║
-║                                                                ║
-║  ANTIGRAVITY (individual)                                      ║
-║  14) Solo Reglas (GEMINI.md)                                   ║
-║  15) Solo Workflows (/commit, /publicar, etc.)                 ║
-║                                                                ║
-║   0) Salir                                                     ║
-╚════════════════════════════════════════════════════════════════╝
-```
-
-## 🎨 Aliases Incluidos
-
-### LSD (ls moderno)
-```bash
-ls   → lsd
-ll   → lsd -la
-lt   → lsd --tree
-```
-
-### Git
-```bash
-gs   → git status
-ga   → git add
-gc   → git commit -m
-gp   → git push
-gl   → git pull
-glog → git log --oneline --graph
-```
-
-### Docker
-```bash
-d    → docker
-dc   → docker compose
-dps  → docker ps
-dlog → docker logs -f
-```
-
-### Sistema
-```bash
-update → actualiza el sistema (detecta apt/dnf/pacman)
-c      → clear
-..     → cd ..
-myip   → muestra IP pública
-```
-
-## ⚙️ Git Config (Mejores Prácticas)
-
-El `.gitconfig` incluye configuración optimizada para rebase:
-
-| Configuración | Descripción |
-|:--------------|:------------|
-| `pull.rebase = true` | Siempre usar rebase al hacer pull |
-| `rebase.autoStash = true` | Stash automático antes de rebase |
-| `merge.ff = only` | Solo fast-forward (evita merge commits) |
-| `fetch.prune = true` | Limpia ramas eliminadas en remote |
-| `push.autoSetupRemote = true` | Tracking automático al pushear |
-
-### Git Aliases Útiles
-```bash
-git sync    # Fetch + rebase con origin/main
-git pf      # Push --force-with-lease (seguro)
-git undo    # Deshacer último commit (mantiene cambios)
-git cleanup # Eliminar ramas locales mergeadas
-git amend   # Modificar último commit sin editar mensaje
-git s       # Status corto
-git lg10    # Log bonito últimos 10 commits
-```
-
-## 🔄 Sincronizar Cambios
-
-Después de hacer cambios en cualquier máquina:
-
-```bash
-# En la máquina donde hiciste cambios
-cd ~/dotfiles
-git add . && git commit -m "feat: descripción" && git push
-
-# En otras máquinas
-sync-dotfiles   # Alias incluido
-```
-
-## 📁 Estructura
-
-```
-dotfiles/
-├── install.sh          # Script principal
-├── .bash_aliases       # Aliases de terminal
-├── .gitconfig          # Configuración de Git
-├── GEMINI.md           # Reglas de Antigravity
-├── global_workflows/   # Workflows de Antigravity
-│   ├── commit.md
-│   ├── crear-pr.md
-│   ├── limpiar-ramas.md
-│   ├── nueva-feature.md
-│   ├── publicar.md
-│   ├── release.md
-│   └── sync-main.md
-└── README.md           # Este archivo
-```
-
-## 📄 Licencia
-
-MIT - Usa y modifica libremente.
 
 ---
 
-Made with ❤️ by [herwingx](https://github.com/herwingx)
+## 🏗️ Arquitectura
+
+```mermaid
+graph TD
+    User([Usuario]) --> Installer[install.sh]
+    Installer --> Detect{Detectar Distro}
+    Detect -->|Debian/Fedora/Arch| System[Paquetes Sistema]
+    Detect -->|WSL| WSLConfig[Configuración WSL]
+    
+    Installer --> DevTools[Dev Tools]
+    DevTools --> GH[GitHub CLI]
+    DevTools --> Docker[Docker]
+    DevTools --> Node[Node.js + NVM]
+    
+    Installer --> Auth[Bitwarden Auth]
+    Auth --> SSH[SSH Keys]
+    Auth --> Tokens[Tokens API]
+```
+
+## 📦 Opciones de Despliegue
+
+| Método           | Comando    | Ideal para                      |
+| :--------------- | :--------- | :------------------------------ |
+| Full Install     | `Option 1` | Máquina nueva de desarrollo     |
+| Minimal          | `Option 2` | Servidores o entornos ligeros   |
+| Antigravity Only | `Option 4` | Solo reglas y workflows para IA |
+
+📘 Ver detalles de instalación: [install.sh](install.sh)
+
+## 🔧 Comandos Útiles (Aliases)
+
+Este dotfiles incluye `lsd` y aliases modernos para productividad.
+
+```bash
+# Navegación y Listado
+lsd        # Reemplazo moderno de ls
+ll         # Listado detallado (lsd -la)
+lt         # Árbol de directorios (lsd --tree)
+
+# Git (Workflow Optimizado)
+gs         # git status
+ga .       # git add .
+gc "msg"   # git commit -m "msg"
+gp         # git push
+gl         # git pull --rebase
+undo       # Deshacer último commit manteniendo cambios
+
+# Docker
+d          # docker
+dc up -d   # docker compose up -d
+dlog       # docker logs -f
+```
+
+## 📚 Documentación
+
+| Documento                      | Descripción                                             |
+| :----------------------------- | :------------------------------------------------------ |
+| [GEMINI.md](GEMINI.md)         | **Protocolo Antigravity**: Reglas para el asistente IA. |
+| [Workflows](global_workflows/) | Flujos automatizados (`/commit`, `/release`, etc.).     |
+
+## 🛠️ Stack Tecnológico
+
+**Core**
+- [Bash]: Scripting y automatización.
+- [Bitwarden CLI]: Gestión de secretos.
+
+**Herramientas**
+- [Git]: Versionado con configuración avanzada.
+- [Docker]: Contenedorización.
+- [Tmux]: Multiplexor de terminal.
+- [Neovim/Vim]: Edición de texto.
+
+## � Seguridad
+- ✅ **Sin secretos en código**: Todo se extrae en runtime desde Bitwarden.
+- ✅ **SSH Keys seguras**: Importación automática sin exponer archivos.
+- ✅ **Commits firmados**: Configuración lista para GPG/SSH signing.
+
+## 🤝 Contribuir
+1. Fork del repositorio
+2. Crear rama: `git checkout -b feat/nueva-feature`
+3. Commit: `git commit -m "feat: descripción"`
+4. Push: `git push origin feat/nueva-feature`
+5. Crear Pull Request
+
+## 📄 Licencia
+Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+
+---
+<p align="center">
+  Made with ❤️ by <b>herwingx</b>
+</p>
