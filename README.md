@@ -76,6 +76,27 @@ graph TD
     Auth --> Tokens[Tokens API]
 ```
 
+## 🧠 Filosofía de Desarrollo
+
+Nuestras decisiones técnicas no son arbitrarias; buscan **estabilidad, reversibilidad y velocidad**.
+
+### 1. ¿Por qué Squash & Merge?
+En lugar de ensuciar `main` con commits intermedios ("wip", "fix typo", "casi listo"), usamos **Squash**.
+- **Beneficio**: Cada commit en `main` es una **funcionalidad completa y verificada**.
+- **Reversibilidad**: Si una feature rompe producción, revertirla toma **un solo comando** (`git revert COMMIT_ID`), en lugar de buscar y revertir 15 commits dispersos.
+
+### 2. Protección Absoluta de Main
+`main` es la **única fuente de verdad**.
+- **Regla**: Nadie (ni humanos ni bots) hace commit directo a `main`.
+- **Razón**: Garantiza que todo cambio pase por Pull Request, CI/CD y revisión de calidad.
+
+### 3. Automatización con GitHub CLI (`gh`)
+Reducimos la fricción de contexto.
+- **Flujo**: Todo el ciclo (Crear Repo ➔ PR ➔ Merge ➔ Release) se hace desde la terminal.
+- **Estandarización**: Evita errores humanos al configurar repositorios o merges manuales.
+
+---
+
 ## 📦 Opciones de Despliegue
 
 | Método           | Comando    | Ideal para                      |
