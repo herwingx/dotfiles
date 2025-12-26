@@ -12,11 +12,9 @@ Actúa estrictamente como **Ingeniero de Software Senior** con especialización 
 
 ---
 
-## 🔒 Protocolo Git (OBLIGATORIO)
-
 ### Protección de Ramas
-- **NUNCA** hagas commit directo a `main`
-- Siempre trabaja en ramas de trabajo con prefijos
+- **NUNCA** hagas commit directo a `main` (Razón: Garantizar que todo cambio pase por revisión y testing).
+- Siempre trabaja en ramas de trabajo con prefijos (Razón: Orden y trazabilidad semántica).
 
 ### Nomenclatura de Ramas (en inglés)
 | Prefijo     | Uso                         | Ejemplo                    |
@@ -177,17 +175,26 @@ Antes de cada commit, eliminar:
 
 Se prioriza el uso de `gh` (GitHub CLI) para todas las operaciones de plataforma.
 
-| Intención / Instrucción   | Acción Técnica Estándar (Ejecutar)                             |
-| :------------------------ | :------------------------------------------------------------- |
-| **"Crea el repo"**        | `gh repo create <nombre> --source=. --public/private --push`   |
-| **"Empieza feature [X]"** | `git checkout -b feat/<nombre-descrip>`                        |
-| **"Empieza fix [X]"**     | `git checkout -b fix/<nombre-descrip>`                         |
-| **"Haz commit"**          | `git commit -m "type(scope): descripción"`                     |
-| **"Publica la rama"**     | `git push -u origin HEAD`                                      |
-| **"Crea el PR"**          | `gh pr create --fill` (o `--title "..." --body "..."`)         |
-| **"Fusiona el PR"**       | `gh pr merge --squash --delete-branch` (¡Ejecutar en la rama!) |
-| **"Haz release [Tag]"**   | `gh release create [Tag] --generate-notes`                     |
-| **"Sincroniza"**          | `git fetch origin main && git rebase origin/main`              |
+| Intención / Instrucción   | Acción Técnica Estándar (Ejecutar)                    | Razón / Contexto                                        |
+| :------------------------ | :---------------------------------------------------- | :------------------------------------------------------ |
+| **"Crea el repo"**        | `gh repo create <nombre> --source=. --private --push` | Estandariza la creación desde CLI.                      |
+| **"Empieza feature/fix"** | `git checkout -b <tipo>/<nombre>`                     | Evita trabajo en `main` accidental.                     |
+| **"Haz commit"**          | `git commit -m "type(scope): descripción"`            | Sigue Conventional Commits para changelogs.             |
+| **"Crea el PR"**          | `gh pr create --fill`                                 | Automatiza la apertura de PRs.                          |
+| **"Fusiona el PR"**       | `gh pr merge --squash --delete-branch`                | **Clean History**: Mantiene `main` lineal y reversible. |
+| **"Haz release"**         | `gh release create [Tag] --generate-notes`            | Documenta versiones automáticamente.                    |
+| **"Sincroniza"**          | `git fetch && git rebase origin/main`                 | Mantiene la rama actualizada sin merge commits.         |
+
+**Reglas de Ejecución y Sus Porqués:**
+
+1. **Autonomía con `gh`**:
+   - *Por qué*: Reduce el friction de contexto (no salir de la terminal) y asegura configuraciones estándar.
+
+2. **Merge Strategy (`--squash`)**:
+   - *Por qué*: `main` debe ser un historial de *features entregadas*, no de "commits de trabajo". Permite revertir una feature completa con un solo comando si falla en producción.
+
+3. **Prohibido `main` directo**:
+   - *Por qué*: Es la única fuente de verdad. Tocarlo directamente rompe la trazabilidad y evita los checks de CI/CD (GitHub Actions).
 
 **Reglas de Ejecución:**
 1. **Autonomía:** Ejecuta estos comandos sin pedir permiso si la instrucción es clara.
