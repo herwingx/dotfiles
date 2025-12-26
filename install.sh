@@ -44,9 +44,44 @@ decrypt_secrets() {
             echo -e "${CYAN}   Descifrando secrets...${NC}"
             DECRYPTED=$(age --decrypt "$DOTFILES_DIR/.env.age" 2>/dev/null)
             if [ $? -eq 0 ]; then
-                export BW_CLIENTID=$(echo "$DECRYPTED" | grep "BW_CLIENTID" | cut -d'=' -f2)
-                export BW_CLIENTSECRET=$(echo "$DECRYPTED" | grep "BW_CLIENTSECRET" | cut -d'=' -f2)
-                export GH_TOKEN=$(echo "$DECRYPTED" | grep "GH_TOKEN" | cut -d'=' -f2)
+                # Extraer variables soportando valores con '=' (usando cut -d'=' -f2-)
+                export BW_CLIENTID=$(echo "$DECRYPTED" | grep "^BW_CLIENTID=" | cut -d'=' -f2-)
+                export BW_CLIENTSECRET=$(echo "$DECRYPTED" | grep "^BW_CLIENTSECRET=" | cut -d'=' -f2-)
+                export GH_TOKEN=$(echo "$DECRYPTED" | grep "^GH_TOKEN=" | cut -d'=' -f2-)
+                
+                # --- RCLONE SETUP ---
+                # Extraer config en base64 y decodificarla
+                # --- RCLONE SETUP ---
+                # Método: Construir config desde el token JSON crudo
+                RCLONE_TOKEN_JSON=$(echo "$DECRYPTED" | grep "^RCLONE_TOKEN_JSON=" | cut -d'=' -f2-)
+                
+                if [ -n "$RCLONE_TOKEN_JSON" ]; then
+                    echo -e "${CYAN}   Configurando rclone (generando desde token)...${NC}"
+                    mkdir -p "$HOME/.config/rclone"
+                    
+                    # Crear archivo de configuración manualmente
+                    cat > "$HOME/.config/rclone/rclone.conf" <<EOF
+[gdrive]
+type = drive
+scope = drive
+token = $RCLONE_TOKEN_JSON
+team_drive =
+EOF
+                    chmod 600 "$HOME/.config/rclone/rclone.conf"
+                    
+                    # Verificar conexión
+                    echo -e "${CYAN}   Verificando conexión rclone...${NC}"
+                    if rclone listremotes &>/dev/null; then
+                        echo -e "${CYAN}   Remotos disponibles: $(rclone listremotes)${NC}"
+                        if rclone lsd gdrive: --max-depth 1 &>/dev/null; then 
+                             echo -e "${CYAN}   ✓ Conexión a gdrive exitosa (listando carpetas raíz):${NC}"
+                             rclone lsd gdrive: --max-depth 1 | head -3
+                        else
+                             echo -e "${YELLOW}   ! Configuración creada pero fallo al conectar con gdrive (token expirado?)${NC}"
+                        fi
+                    fi
+                fi
+
                 export SECRETS_LOADED=1
                 echo -e "${CYAN}   ✓ Secrets cargados${NC}"
                 return 0
@@ -92,7 +127,7 @@ install_packages() {
     # Paquetes base disponibles en todos los repos
     PACKAGES=(
         "git" "curl" "wget" "htop" "btop" "vim" "unzip" "tree" 
-        "net-tools" "neofetch" "tmux" "fzf" "ranger" "mc"
+        "net-tools" "neofetch" "tmux" "fzf" "ranger" "mc" "rclone"
     )
     
     if [ -f /etc/debian_version ]; then

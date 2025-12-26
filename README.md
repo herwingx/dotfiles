@@ -20,8 +20,9 @@
 | :-------------------------- | :----------------------------------------------------------------------------------- |
 | 🔹 **Sistema Base**          | Configuración esencial optimizada (`vim`, `tmux`, `fzf`, `ranger`).                  |
 | 🔸 **Dev Suite**             | Toolkit completo con Docker, GitHub CLI (`gh`), Node.js (nvm) y utilidades modernas. |
-| 🔐 **Seguridad Zero-Config** | Autenticación automática con Bitwarden CLI para tokens de GitHub y claves SSH.       |
+| 🔐 **Seguridad Zero-Config** | Gestión de secretos con `.env.age`, `age` y autenticación Bitwarden automática.      |
 | 🤖 **Antigravity AI**        | Protocolos `GEMINI.md` y workflows inteligentes para desarrollo asistido.            |
+| ☁️ **Cloud Tools**           | Configuración automática de `rclone` (Google Drive) desde secretos encriptados.      |
 | 🖥️ **Soporte WSL**           | Integración nativa con Windows, incluyendo copiado automático de llaves SSH.         |
 
 ---
@@ -107,7 +108,21 @@ Reducimos la fricción de contexto.
 
 📘 Ver detalles de instalación: [install.sh](install.sh)
 
-## 🔧 Comandos Útiles (Aliases)
+## � Gestión de Secretos (.env.age)
+
+Este repositorio utiliza **Age** para proteger variables sensibles (Tokens de GitHub, Credenciales Rclone).
+
+**Script de Gestión:** `scripts/manage_secrets.sh`
+
+```bash
+./scripts/manage_secrets.sh
+# Opción 1: Editar (Desencripta -> Abre nano -> Encripta al guardar)
+# Opción 2: Ver (Muestra el contenido desencriptado)
+```
+
+> **Nota:** Al instalar, el sistema configuración automáticamente `rclone` a partir de estos secretos.
+
+## �🔧 Comandos Útiles (Aliases)
 
 Este dotfiles incluye `lsd` y aliases modernos para productividad.
 
@@ -142,7 +157,9 @@ dlog       # docker logs -f
 
 **Core**
 - [Bash]: Scripting y automatización.
-- [Bitwarden CLI]: Gestión de secretos.
+- [Bitwarden CLI]: Gestión de credenciales.
+- [Age]: Encriptación de secretos (`.env.age`).
+- [Rclone]: Sincronización de almacenamiento en la nube.
 
 **Herramientas**
 - [Git]: Versionado con configuración avanzada.
