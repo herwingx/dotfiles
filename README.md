@@ -27,7 +27,7 @@
 
 ---
 
-## � Inicio Rápido
+## 🚀 Inicio Rápido
 
 ### Requisitos
 - Distribución Linux basada en Debian, Fedora o Arch.
@@ -60,21 +60,32 @@ INSTALACIÓN COMPLETA
 
 ## 🏗️ Arquitectura
 
-```mermaid
-graph TD
-    User([Usuario]) --> Installer[install.sh]
-    Installer --> Detect{Detectar Distro}
-    Detect -->|Debian/Fedora/Arch| System[Paquetes Sistema]
-    Detect -->|WSL| WSLConfig[Configuración WSL]
-    
-    Installer --> DevTools[Dev Tools]
-    DevTools --> GH[GitHub CLI]
-    DevTools --> Docker[Docker]
-    DevTools --> Node[Node.js + NVM]
-    
-    Installer --> Auth[Bitwarden Auth]
-    Auth --> SSH[SSH Keys]
-    Auth --> Tokens[Tokens API]
+```
+dotfiles/
+├── install.sh              # Orquestador principal (menú interactivo)
+├── README.md               # Documentación
+├── .env.age                # Secrets encriptados con age
+│
+├── config/                 # Archivos de configuración (dotfiles puros)
+│   ├── .bash_aliases       # Aliases de terminal
+│   └── .gitconfig          # Configuración global de Git
+│
+├── scripts/                # Módulos de instalación
+│   ├── common.sh           # Colores, variables, decrypt_secrets()
+│   ├── system.sh           # Paquetes del sistema, terminal tools
+│   ├── git.sh              # Configuración Git y SSH
+│   ├── dev-tools.sh        # GitHub CLI, NVM, Docker
+│   ├── antigravity.sh      # Reglas y workflows de IA
+│   ├── cloud.sh            # Configuración rclone
+│   └── manage_secrets.sh   # Gestión de .env.age
+│
+└── gemini/                 # Configuración Antigravity/Gemini
+    ├── GEMINI.md           # Reglas globales de desarrollo
+    └── workflows/          # Comandos slash (/commit, /publicar, etc.)
+        ├── commit.md
+        ├── crear-pr.md
+        ├── nueva-feature.md
+        └── ...
 ```
 
 ## 🧠 Filosofía de Desarrollo
@@ -108,7 +119,7 @@ Reducimos la fricción de contexto.
 
 📘 Ver detalles de instalación: [install.sh](install.sh)
 
-## � Gestión de Secretos (.env.age)
+## 🔐 Gestión de Secretos (.env.age)
 
 Este repositorio utiliza **Age** para proteger variables sensibles (Tokens de GitHub, Credenciales Rclone).
 
@@ -120,9 +131,9 @@ Este repositorio utiliza **Age** para proteger variables sensibles (Tokens de Gi
 # Opción 2: Ver (Muestra el contenido desencriptado)
 ```
 
-> **Nota:** Al instalar, el sistema configuración automáticamente `rclone` a partir de estos secretos.
+> **Nota:** Al instalar, el sistema configura automáticamente `rclone` a partir de estos secretos.
 
-## �🔧 Comandos Útiles (Aliases)
+## 🔧 Comandos Útiles (Aliases)
 
 Este dotfiles incluye `lsd` y aliases modernos para productividad.
 
@@ -150,8 +161,8 @@ dlog       # docker logs -f
 
 | Documento                      | Descripción                                             |
 | :----------------------------- | :------------------------------------------------------ |
-| [GEMINI.md](GEMINI.md)         | **Protocolo Antigravity**: Reglas para el asistente IA. |
-| [Workflows](global_workflows/) | Flujos automatizados (`/commit`, `/release`, etc.).     |
+| [GEMINI.md](gemini/GEMINI.md)  | **Protocolo Antigravity**: Reglas para el asistente IA. |
+| [Workflows](gemini/workflows/) | Flujos automatizados (`/commit`, `/release`, etc.).     |
 
 ## 🛠️ Stack Tecnológico
 
@@ -167,7 +178,7 @@ dlog       # docker logs -f
 - [Tmux]: Multiplexor de terminal.
 - [Neovim/Vim]: Edición de texto.
 
-## � Seguridad
+## 🔒 Seguridad
 - ✅ **Sin secretos en código**: Todo se extrae en runtime desde Bitwarden.
 - ✅ **SSH Keys seguras**: Importación automática sin exponer archivos.
 - ✅ **Commits firmados**: Configuración lista para GPG/SSH signing.
