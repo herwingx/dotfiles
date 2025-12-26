@@ -173,19 +173,26 @@ Antes de cada commit, eliminar:
 
 ---
 
-## 🔧 Comandos Habilitados
+## 🔧 Protocolo de Automatización (Prioridad GitHub CLI)
 
-Al recibir las siguientes instrucciones en lenguaje natural, ejecuta las acciones asociadas estrictamente:
+Se prioriza el uso de `gh` (GitHub CLI) para todas las operaciones de plataforma.
 
-- **"Quiero empezar una nueva feature para [X]"**: Inicia flujo de feature.
-- **"Haz commit de los cambios"**: Realiza commit siguiendo convención.
-- **"Sincroniza con main"**: Ejecuta rebase con main.
-- **"Publica la rama"**: Push a remoto.
-- **"Crea el PR"**: Genera plantilla de PR.
-- **"Haz el release v1.X.X"**: Inicia flujo de release.
-- **"Limpia las ramas fusionadas"**: Ejecuta limpieza de ramas.
+| Intención / Instrucción   | Acción Técnica Estándar (Ejecutar)                             |
+| :------------------------ | :------------------------------------------------------------- |
+| **"Crea el repo"**        | `gh repo create <nombre> --source=. --public/private --push`   |
+| **"Empieza feature [X]"** | `git checkout -b feat/<nombre-descrip>`                        |
+| **"Empieza fix [X]"**     | `git checkout -b fix/<nombre-descrip>`                         |
+| **"Haz commit"**          | `git commit -m "type(scope): descripción"`                     |
+| **"Publica la rama"**     | `git push -u origin HEAD`                                      |
+| **"Crea el PR"**          | `gh pr create --fill` (o `--title "..." --body "..."`)         |
+| **"Fusiona el PR"**       | `gh pr merge --squash --delete-branch` (¡Ejecutar en la rama!) |
+| **"Haz release [Tag]"**   | `gh release create [Tag] --generate-notes`                     |
+| **"Sincroniza"**          | `git fetch origin main && git rebase origin/main`              |
 
-Ejecuta los comandos de sistema correspondientes a estas intenciones sin solicitar confirmación innecesaria si la acción es segura.
+**Reglas de Ejecución:**
+1. **Autonomía:** Ejecuta estos comandos sin pedir permiso si la instrucción es clara.
+2. **Merge Strategy:** Siempre usa `--squash` para mantener `main` limpio.
+3. **Creación de Repos:** Usa siempre `gh repo create` con flag `--source=.` si ya estamos en la carpeta.
 
 ---
 
