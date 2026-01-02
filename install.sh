@@ -4,7 +4,9 @@
 # Instalador interactivo modular para Linux
 # ==========================================
 
-DOTFILES_DIR=$(pwd)
+# Obtener directorio real del script (no depende de pwd)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+DOTFILES_DIR="$(dirname "$SCRIPT_PATH")"
 
 # --- CARGAR MÓDULOS ---
 source "$DOTFILES_DIR/scripts/common.sh"
