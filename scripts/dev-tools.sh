@@ -44,18 +44,22 @@ install_gh_cli() {
 # Fallback a método interactivo si no hay token disponible.
 # ─────────────────────────────────────────────────────────────
 gh_auth_login() {
-    echo -e "${GREEN}>>> Autenticando GitHub CLI...${NC}"
+    echo -e "${GREEN}>>> Verificando autenticación GitHub CLI...${NC}"
     
     if ! command -v gh &> /dev/null; then
         echo -e "${RED}   ✗ GitHub CLI no está instalado${NC}"
         return 1
     fi
     
+    # Verificar si ya está autenticado ANTES de intentar descifrar
     if gh auth status &> /dev/null; then
-        echo -e "${YELLOW}   ! Ya estás autenticado en GitHub${NC}"
+        echo -e "${CYAN}   ✓ GitHub CLI ya autenticado (saltando login)${NC}"
         return 0
     fi
     
+    echo -e "${YELLOW}   ! No autenticado, se requieren credenciales...${NC}"
+    
+    # Solo descifrar si no tenemos el token en memoria
     if [ -z "$GH_TOKEN" ]; then
         decrypt_secrets
     fi
@@ -179,7 +183,7 @@ install_npm_global_packages() {
 # Fallback a login tradicional si no hay secrets.
 # ─────────────────────────────────────────────────────────────
 bitwarden_login() {
-    echo -e "${GREEN}>>> Configurando Bitwarden...${NC}"
+    echo -e "${GREEN}>>> Verificando Bitwarden CLI...${NC}"
     
     if ! command -v bw &> /dev/null; then
         echo -e "${RED}   ✗ Bitwarden CLI no está instalado${NC}"
@@ -187,16 +191,37 @@ bitwarden_login() {
     fi
     
     BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+    echo -e "${CYAN}   Estado actual: $BW_STATUS${NC}"
     
     # Si ya está desbloqueado, no hacer nada
     if [ "$BW_STATUS" = "unlocked" ]; then
-        echo -e "${CYAN}   ✓ Bitwarden ya está desbloqueado${NC}"
+        echo -e "${CYAN}   ✓ Bitwarden ya desbloqueado (saltando login)${NC}"
         bw sync &>/dev/null
         return 0
     fi
     
-    # Si no está autenticado, hacer login
+    # Si está bloqueado (ya logueado), solo necesita unlock - NO descifrar
+    if [ "$BW_STATUS" = "locked" ]; then
+        echo -e "${CYAN}   ✓ Ya autenticado, solo necesita desbloquear${NC}"
+        echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
+        BW_SESSION=$(bw unlock --raw)
+        
+        if [ -n "$BW_SESSION" ]; then
+            export BW_SESSION
+            echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
+            bw sync &>/dev/null
+            echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
+            return 0
+        else
+            echo -e "${RED}   ✗ Error desbloqueando${NC}"
+            return 1
+        fi
+    fi
+    
+    # Si no está autenticado, necesita login completo
     if [ "$BW_STATUS" = "unauthenticated" ]; then
+        echo -e "${YELLOW}   ! No autenticado, se requieren credenciales...${NC}"
+        
         if [ -z "$BW_CLIENTID" ] || [ -z "$BW_CLIENTSECRET" ]; then
             decrypt_secrets
         fi
@@ -214,12 +239,7 @@ bitwarden_login() {
             bw login "herwingmacias@gmail.com"
         fi
         
-        # Verificar estado después del login
-        BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
-    fi
-    
-    # Solo desbloquear si está bloqueado
-    if [ "$BW_STATUS" = "locked" ]; then
+        # Desbloquear después del login
         echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
         BW_SESSION=$(bw unlock --raw)
         
