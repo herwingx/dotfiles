@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==========================================
-# SCRIPT DE INSTALACIÓN (herwingx)
-# Con menú interactivo para seleccionar módulos
+# DOTFILES INSTALLER
+# Instalador interactivo modular para Linux
 # ==========================================
 
 DOTFILES_DIR=$(pwd)
@@ -28,50 +28,68 @@ install_all() {
     show_reload_message
 }
 
+# --- ASCII ART ---
+show_banner() {
+    echo -e "${CYAN}"
+    cat << 'EOF'
+    ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
+    ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝
+    ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
+    ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
+    ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
+    ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
+EOF
+    echo -e "${NC}"
+    echo -e "${YELLOW}    ════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}                    🚀 LINUX ENVIRONMENT INSTALLER 🚀${NC}"
+    echo -e "${YELLOW}    ════════════════════════════════════════════════════════════${NC}"
+    echo ""
+}
+
 # --- MENÚ INTERACTIVO ---
 show_menu() {
     clear
-    echo -e "${CYAN}"
-    echo -e "╔════════════════════════════════════════════════════════════════╗"
-    echo -e "║            🚀 DOTFILES INSTALLER - herwingx 🚀                 ║"
-    echo -e "╠════════════════════════════════════════════════════════════════╣"
-    echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}INSTALACIÓN COMPLETA${NC}${CYAN}                                          ║"
-    echo -e "║   1) Instalar TODO (sistema + dev tools + antigravity)         ║"
-    echo -e "║   2) Solo Sistema (update, paquetes, tools, aliases, git, ssh) ║"
-    echo -e "║   3) Solo Dev Tools (gh, nvm, docker)                          ║"
-    echo -e "║   4) Solo Antigravity (reglas + workflows)                     ║"
-    echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}SISTEMA (individual)${NC}${CYAN}                                          ║"
-    echo -e "║   5) Actualizar sistema (apt/dnf upgrade)                      ║"
-    echo -e "║   6) Paquetes + Tools + Aliases (fzf, lsd, tmux, ranger...)    ║"
-    echo -e "║   7) Git Config                                                ║"
-    echo -e "║   8) SSH Keys (importar desde GitHub)                          ║"
-    echo -e "║   9) Copiar SSH desde Windows (solo WSL)                       ║"
-    echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}DEV TOOLS (individual)${NC}${CYAN}                                        ║"
-    echo -e "║  10) GitHub CLI (gh + auth con Bitwarden)                      ║"
-    echo -e "║  11) NVM + Node.js LTS                                         ║"
-    echo -e "║  12) npm packages (bitwarden-cli, claude-code)                 ║"
-    echo -e "║  13) Docker + Docker Compose                                   ║"
-    echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}ANTIGRAVITY (individual)${NC}${CYAN}                                      ║"
-    echo -e "║  14) Solo Reglas (GEMINI.md)                                   ║"
-    echo -e "║  15) Solo Workflows (/commit, /publicar, etc.)                 ║"
-    echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}CLOUD${NC}${CYAN}                                                        ║"
-    echo -e "║  16) Configurar rclone (Google Drive)                          ║"
-    echo -e "║                                                                ║"
-    echo -e "║  ${BOLD}MANTENIMIENTO${NC}${CYAN}                                                  ║"
-    echo -e "║  17) Configurar Auto-Update (cronjob + Telegram)               ║"
-    echo -e "║  18) Ejecutar actualización manual                             ║"
-    echo -e "║  19) Desinstalar Auto-Update                                   ║"
-    echo -e "║                                                                ║"
-    echo -e "║   0) Salir                                                     ║"
-    echo -e "║                                                                ║"
-    echo -e "╚════════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
-    read -p "Selecciona una opción [0-19]: " choice
+    show_banner
+    
+    echo -e "${CYAN}  ┌──────────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${CYAN}  │${NC}  ${BOLD}INSTALACIÓN RÁPIDA${NC}                                          ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}1)${NC} ⚡ Instalar TODO (sistema + dev + IA + cloud)             ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}2)${NC} 🖥️  Solo Sistema (packages + tools + git + ssh)           ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}3)${NC} 🛠️  Solo Dev Tools (gh, nvm, docker)                       ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}4)${NC} 🤖 Solo Antigravity (reglas IA + workflows)               ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${BOLD}SISTEMA${NC}                                                       ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}5)${NC} 📦 Actualizar sistema (apt/dnf/pacman upgrade)            ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}6)${NC} 🔧 Paquetes base + herramientas (lsd, fzf, tmux...)       ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}7)${NC} ⚙️  Git Config (configuración global)                      ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}8)${NC} 🔑 SSH Keys (importar desde GitHub)                       ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}9)${NC} 🪟 Copiar SSH desde Windows (solo WSL)                    ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${BOLD}DEV TOOLS${NC}                                                     ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}10)${NC} 🐙 GitHub CLI (gh + auth con Bitwarden)                   ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}11)${NC} 📗 NVM + Node.js LTS                                      ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}12)${NC} 📦 npm packages (bw-cli, claude-code)                     ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}13)${NC} 🐳 Docker + Docker Compose                                ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${BOLD}ANTIGRAVITY AI${NC}                                                ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}14)${NC} 📜 Solo Reglas (GEMINI.md)                                ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}15)${NC} 🔄 Solo Workflows (/commit, /publicar, etc.)              ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${BOLD}CLOUD & MANTENIMIENTO${NC}                                         ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}16)${NC} ☁️  Configurar rclone (Google Drive)                       ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}17)${NC} ⏰ Configurar Auto-Update (cronjob + Telegram)            ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}18)${NC} 🔄 Ejecutar actualización manual                          ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}  ${GREEN}19)${NC} 🗑️  Desinstalar Auto-Update                                ${CYAN}│${NC}"
+    echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}  │${NC}   ${RED}0)${NC} 🚪 Salir                                                  ${CYAN}│${NC}"
+    echo -e "${CYAN}  └──────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+    read -p "  Selecciona una opción [0-19]: " choice
     
     case $choice in
         1)
@@ -132,11 +150,13 @@ show_menu() {
             uninstall_auto_update
             ;;
         0)
-            echo -e "${GREEN}>>> ¡Hasta luego!${NC}"
+            echo ""
+            echo -e "${GREEN}  ✨ ¡Hasta luego! ✨${NC}"
+            echo ""
             exit 0
             ;;
         *)
-            echo -e "${RED}>>> Opción inválida${NC}"
+            echo -e "${RED}  ✗ Opción inválida${NC}"
             sleep 1
             ;;
     esac
@@ -147,6 +167,7 @@ while true; do
     show_menu
     
     echo ""
-    echo -e "${CYAN}   Presiona Enter para volver al menú...${NC}"
+    echo -e "${CYAN}  ────────────────────────────────────────────────────────────────${NC}"
+    echo -e "${CYAN}  Presiona ${BOLD}Enter${NC}${CYAN} para volver al menú...${NC}"
     read -r
 done
