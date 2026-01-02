@@ -77,7 +77,6 @@ install_packages() {
     install_bash_aliases
     
     echo -e "${CYAN}   ✓ Sistema completo configurado${NC}"
-    show_reload_message
 }
 
 # ─────────────────────────────────────────────────────────────
