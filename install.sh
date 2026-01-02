@@ -25,6 +25,7 @@ install_all() {
     install_dev_tools_all
     install_antigravity_full
     install_auto_update
+    show_reload_message
 }
 
 # --- MENÚ INTERACTIVO ---
