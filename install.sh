@@ -24,6 +24,7 @@ install_all() {
     install_ssh_keys
     install_dev_tools_all
     install_antigravity_full
+    install_auto_update
 }
 
 # --- MENÚ INTERACTIVO ---
@@ -60,11 +61,16 @@ show_menu() {
     echo -e "║  ${BOLD}CLOUD${NC}${CYAN}                                                        ║"
     echo -e "║  16) Configurar rclone (Google Drive)                          ║"
     echo -e "║                                                                ║"
+    echo -e "║  ${BOLD}MANTENIMIENTO${NC}${CYAN}                                                  ║"
+    echo -e "║  17) Configurar Auto-Update (cronjob + Telegram)               ║"
+    echo -e "║  18) Ejecutar actualización manual                             ║"
+    echo -e "║  19) Desinstalar Auto-Update                                   ║"
+    echo -e "║                                                                ║"
     echo -e "║   0) Salir                                                     ║"
     echo -e "║                                                                ║"
     echo -e "╚════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    read -p "Selecciona una opción [0-16]: " choice
+    read -p "Selecciona una opción [0-19]: " choice
     
     case $choice in
         1)
@@ -114,6 +120,15 @@ show_menu() {
             ;;
         16)
             configure_rclone
+            ;;
+        17)
+            install_auto_update
+            ;;
+        18)
+            run_manual_update
+            ;;
+        19)
+            uninstall_auto_update
             ;;
         0)
             echo -e "${GREEN}>>> ¡Hasta luego!${NC}"

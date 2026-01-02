@@ -181,3 +181,133 @@ install_system_all() {
     install_gitconfig
     install_ssh_keys
 }
+
+# ─────────────────────────────────────────────────────────────
+# Configura el cronjob de actualizaciones automáticas.
+# Permite personalizar el horario para evitar conflictos en Proxmox.
+#
+# El cronjob ejecuta cron-update.sh que:
+# - Actualiza el sistema (apt/dnf/pacman)
+# - Notifica via Telegram
+# - Reinicia si hay actualización de kernel
+# ─────────────────────────────────────────────────────────────
+install_auto_update() {
+    echo -e "${GREEN}>>> Configurando actualizaciones automáticas...${NC}"
+    
+    # Verificar que existan las credenciales de Telegram
+    decrypt_secrets
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        echo -e "${RED}   ✗ Credenciales de Telegram no encontradas en .env.age${NC}"
+        echo -e "${YELLOW}   Agrega TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID a ~/.env.age${NC}"
+        return 1
+    fi
+    
+    # Solicitar horario personalizado
+    echo -e "${CYAN}   Configuración del horario de actualización:${NC}"
+    echo -e "${YELLOW}   (Importante: En Proxmox, usa horarios diferentes para PVE y guests)${NC}"
+    echo ""
+    
+    read -p "   Hora (0-23) [default: 3]: " CRON_HOUR
+    CRON_HOUR=${CRON_HOUR:-3}
+    
+    read -p "   Minuto (0-59) [default: 0]: " CRON_MINUTE
+    CRON_MINUTE=${CRON_MINUTE:-0}
+    
+    # Validar entrada
+    if ! [[ "$CRON_HOUR" =~ ^[0-9]+$ ]] || [ "$CRON_HOUR" -gt 23 ]; then
+        echo -e "${RED}   ✗ Hora inválida, usando 3${NC}"
+        CRON_HOUR=3
+    fi
+    
+    if ! [[ "$CRON_MINUTE" =~ ^[0-9]+$ ]] || [ "$CRON_MINUTE" -gt 59 ]; then
+        echo -e "${RED}   ✗ Minuto inválido, usando 0${NC}"
+        CRON_MINUTE=0
+    fi
+    
+    echo -e "${CYAN}   Horario configurado: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario${NC}"
+    
+    # Copiar script de actualización a /usr/local/bin
+    echo -e "${CYAN}   Instalando script de actualización...${NC}"
+    $SUDO_CMD cp "$DOTFILES_DIR/scripts/cron-update.sh" /usr/local/bin/dotfiles-update
+    $SUDO_CMD chmod +x /usr/local/bin/dotfiles-update
+    
+    # Crear archivo de configuración con credenciales de Telegram
+    echo -e "${CYAN}   Configurando credenciales de Telegram...${NC}"
+    $SUDO_CMD tee /etc/dotfiles-telegram.env > /dev/null <<EOF
+# Credenciales de Telegram para notificaciones de actualizaciones
+# Generado por dotfiles installer
+TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID
+EOF
+    $SUDO_CMD chmod 600 /etc/dotfiles-telegram.env
+    
+    # Configurar cronjob
+    echo -e "${CYAN}   Configurando cronjob...${NC}"
+    
+    # Crear archivo cron en /etc/cron.d/
+    $SUDO_CMD tee /etc/cron.d/dotfiles-update > /dev/null <<EOF
+# Actualizaciones automáticas del sistema - dotfiles
+# Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+$CRON_MINUTE $CRON_HOUR * * * root /usr/local/bin/dotfiles-update >> /var/log/dotfiles-updates.log 2>&1
+EOF
+    $SUDO_CMD chmod 644 /etc/cron.d/dotfiles-update
+    
+    # Crear archivo de log si no existe
+    $SUDO_CMD touch /var/log/dotfiles-updates.log
+    $SUDO_CMD chmod 644 /var/log/dotfiles-updates.log
+    
+    echo -e "${CYAN}   ✓ Cronjob instalado: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario${NC}"
+    echo -e "${CYAN}   ✓ Script: /usr/local/bin/dotfiles-update${NC}"
+    echo -e "${CYAN}   ✓ Log: /var/log/dotfiles-updates.log${NC}"
+    echo -e "${CYAN}   ✓ Cron: /etc/cron.d/dotfiles-update${NC}"
+    
+    # Enviar notificación de prueba
+    echo -e "${CYAN}   Enviando notificación de prueba a Telegram...${NC}"
+    
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d chat_id="$TELEGRAM_CHAT_ID" \
+        -d text="🔧 <b>[$(hostname)]</b>
+Actualizaciones automáticas configuradas.
+• Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario
+• Log: /var/log/dotfiles-updates.log" \
+        -d parse_mode="HTML" > /dev/null 2>&1
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${CYAN}   ✓ Notificación de prueba enviada${NC}"
+    else
+        echo -e "${YELLOW}   ! No se pudo enviar notificación de prueba${NC}"
+    fi
+    
+    echo -e "${GREEN}>>> Actualizaciones automáticas configuradas${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Desinstala el cronjob de actualizaciones automáticas.
+# ─────────────────────────────────────────────────────────────
+uninstall_auto_update() {
+    echo -e "${GREEN}>>> Desinstalando actualizaciones automáticas...${NC}"
+    
+    $SUDO_CMD rm -f /etc/cron.d/dotfiles-update
+    $SUDO_CMD rm -f /usr/local/bin/dotfiles-update
+    $SUDO_CMD rm -f /etc/dotfiles-telegram.env
+    
+    echo -e "${CYAN}   ✓ Cronjob eliminado${NC}"
+    echo -e "${YELLOW}   Nota: El log /var/log/dotfiles-updates.log se mantiene${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Ejecuta manualmente una actualización (para testing).
+# ─────────────────────────────────────────────────────────────
+run_manual_update() {
+    echo -e "${GREEN}>>> Ejecutando actualización manual...${NC}"
+    
+    if [ -f /usr/local/bin/dotfiles-update ]; then
+        $SUDO_CMD /usr/local/bin/dotfiles-update
+    else
+        echo -e "${RED}   ✗ Script no instalado. Ejecuta primero la opción de instalar auto-update${NC}"
+    fi
+}
+
