@@ -217,6 +217,9 @@ flowchart TD
 |   14   | Reglas    | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA        |
 |   15   | Workflows | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/` |
 
+> 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal (@herwingx).
+> ¡Siéntete libre de editarlos! Puedes modificar las reglas para adaptarlas a tu estilo o crear nuevos workflows en `~/.gemini/workflows/` para automatizar tus propias tareas.
+
 ### Cloud & Mantenimiento
 
 | Opción | Módulo        | Descripción                                                             |
@@ -368,6 +371,57 @@ fi
 ```
 
 </details>
+
+---
+
+## ⚡ Bonus: SSH Power User (Red Local)
+
+Si trabajas con Máquinas Virtuales (VMs), LXC o Home Labs, esta configuración en `~/.ssh/config` automatiza tu flujo de trabajo.
+
+> 💡 **Objetivo**: Evitar errores de "Host Key Verification" al recrear VMs y usar tus credenciales de GitHub desde dentro de las VMs sin copiar llaves privadas.
+
+### Configuración Recomendada
+
+Edita o crea tu archivo `~/.ssh/config`:
+
+```ssh
+# --- CONFIGURACIÓN GLOBAL (Red Local) ---
+# Aplica a cualquier IP que empiece con 192.168...
+Host 192.168.*
+    # 🚀 CRÍTICO: ForwardAgent
+    # Permite que la VM use la llave SSH de tu máquina local.
+    # Ejemplo: Hacer 'git clone' dentro de la VM usando tu identidad local.
+    ForwardAgent yes
+
+    # 🛡️ Modo Desarrollo / Home Lab
+    # Evita el error "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED"
+    # útil si destruyes y creas VMs frecuentemente con la misma IP.
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+    # 👤 Usuario por defecto
+    # Ajusta esto a tu usuario común en las VMs (ej: ubuntu, root, etc)
+    User tu_usuario_general
+
+# --- EJEMPLOS ESPECÍFICOS ---
+# Sobrescribe la regla global para casos particulares
+
+Host vm-database
+    HostName 192.168.0.140
+    User admin_db
+    Port 2222
+
+Host k8s-master
+    HostName 192.168.1.50
+    # Si es un LXC o requiere root
+    User root
+```
+
+### ¿Por qué activar `ForwardAgent`?
+
+Es una técnica de seguridad y conveniencia:
+1. **Seguridad**: Tu llave privada **nunca** sale de tu PC principal.
+2. **Conveniencia**: Cuando intentas clonar un repo privado desde la VM, la petición de autenticación "viaja" de regreso a tu PC, usa tu llave local y autoriza la operación.
 
 ---
 
