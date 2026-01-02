@@ -9,7 +9,8 @@
 
 # --- CONFIGURACIÓN ---
 LOG_FILE="/var/log/dotfiles-updates.log"
-HOSTNAME=$(hostname)
+# Usar $HOSTNAME con fallback para WSL donde hostname puede no estar
+HOSTNAME="${HOSTNAME:-$(cat /etc/hostname 2>/dev/null || hostname 2>/dev/null || echo 'unknown')}"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Cargar variables de entorno del sistema

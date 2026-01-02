@@ -245,6 +245,9 @@ EOF
     # Configurar cronjob
     echo -e "${CYAN}   Configurando cronjob...${NC}"
     
+    # Crear directorio /etc/cron.d/ si no existe (para WSL)
+    $SUDO_CMD mkdir -p /etc/cron.d
+    
     # Crear archivo cron en /etc/cron.d/
     $SUDO_CMD tee /etc/cron.d/dotfiles-update > /dev/null <<EOF
 # Actualizaciones automáticas del sistema - dotfiles
@@ -268,9 +271,12 @@ EOF
     # Enviar notificación de prueba
     echo -e "${CYAN}   Enviando notificación de prueba a Telegram...${NC}"
     
+    # Usar $HOSTNAME en lugar de $(hostname) para compatibilidad
+    CURRENT_HOST="${HOSTNAME:-$(cat /etc/hostname 2>/dev/null || echo 'unknown')}"
+    
     curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         -d chat_id="$TELEGRAM_CHAT_ID" \
-        -d text="🔧 <b>[$(hostname)]</b>
+        -d text="🔧 <b>[$CURRENT_HOST]</b>
 Actualizaciones automáticas configuradas.
 • Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario
 • Log: /var/log/dotfiles-updates.log" \
