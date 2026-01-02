@@ -15,6 +15,13 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# --- DIRECTORIO BASE ---
+# Si DOTFILES_DIR no está definido, calcularlo desde la ubicación de este script
+if [ -z "$DOTFILES_DIR" ]; then
+    SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+    DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
+fi
+
 # ─────────────────────────────────────────────────────────────
 # Detecta si el script corre como root (LXC) o usuario (VM).
 # Configura SUDO_CMD vacío para root, "sudo" para usuario.

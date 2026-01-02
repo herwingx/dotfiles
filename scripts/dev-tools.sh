@@ -161,9 +161,15 @@ install_npm_global_packages() {
         fi
     done
     
+    # Refrescar hash para encontrar binarios recién instalados
+    hash -r 2>/dev/null || true
+    
     echo -e "${CYAN}   ✓ Paquetes npm verificados${NC}"
     
-    if command -v bw &> /dev/null; then
+    # Buscar bw en el path de npm si no está en PATH
+    BW_CMD=$(which bw 2>/dev/null || echo "$HOME/.nvm/versions/node/$(node -v 2>/dev/null)/bin/bw" 2>/dev/null)
+    
+    if [ -x "$BW_CMD" ] || command -v bw &> /dev/null; then
         bitwarden_login
     fi
 }
