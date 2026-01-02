@@ -193,34 +193,22 @@ bitwarden_login() {
     BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
     echo -e "${CYAN}   Estado actual: $BW_STATUS${NC}"
     
-    # Si ya está desbloqueado, no hacer nada
+    # Si ya está autenticado (locked o unlocked), no hacer nada
     if [ "$BW_STATUS" = "unlocked" ]; then
-        echo -e "${CYAN}   ✓ Bitwarden ya desbloqueado (saltando login)${NC}"
+        echo -e "${CYAN}   ✓ Bitwarden ya desbloqueado${NC}"
         bw sync &>/dev/null
         return 0
     fi
     
-    # Si está bloqueado (ya logueado), solo necesita unlock - NO descifrar
     if [ "$BW_STATUS" = "locked" ]; then
-        echo -e "${CYAN}   ✓ Ya autenticado, solo necesita desbloquear${NC}"
-        echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
-        BW_SESSION=$(bw unlock --raw)
-        
-        if [ -n "$BW_SESSION" ]; then
-            export BW_SESSION
-            echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
-            bw sync &>/dev/null
-            echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
-            return 0
-        else
-            echo -e "${RED}   ✗ Error desbloqueando${NC}"
-            return 1
-        fi
+        echo -e "${CYAN}   ✓ Bitwarden ya autenticado (bóveda bloqueada)${NC}"
+        echo -e "${YELLOW}   Tip: Usa 'bw unlock' cuando necesites acceder a la bóveda${NC}"
+        return 0
     fi
     
-    # Si no está autenticado, necesita login completo
+    # Solo si está unauthenticated, hacer login con API keys
     if [ "$BW_STATUS" = "unauthenticated" ]; then
-        echo -e "${YELLOW}   ! No autenticado, se requieren credenciales...${NC}"
+        echo -e "${YELLOW}   ! No autenticado, iniciando sesión...${NC}"
         
         if [ -z "$BW_CLIENTID" ] || [ -z "$BW_CLIENTSECRET" ]; then
             decrypt_secrets
@@ -233,27 +221,13 @@ bitwarden_login() {
                 echo -e "${RED}   ✗ Error en login${NC}"
                 return 1
             fi
-            echo -e "${CYAN}   ✓ Login exitoso${NC}"
+            echo -e "${CYAN}   ✓ Login exitoso (bóveda bloqueada)${NC}"
+            echo -e "${YELLOW}   Tip: Usa 'bw unlock' cuando necesites acceder a la bóveda${NC}"
         else
-            echo -e "${YELLOW}   ! Usando login tradicional${NC}"
-            bw login "herwingmacias@gmail.com"
-        fi
-        
-        # Desbloquear después del login
-        echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
-        BW_SESSION=$(bw unlock --raw)
-        
-        if [ -n "$BW_SESSION" ]; then
-            export BW_SESSION
-            echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
-        else
-            echo -e "${RED}   ✗ Error desbloqueando${NC}"
-            return 1
+            echo -e "${YELLOW}   ! API keys no disponibles${NC}"
+            echo -e "${YELLOW}   Usa 'bw login' manualmente cuando lo necesites${NC}"
         fi
     fi
-    
-    bw sync &>/dev/null
-    echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────
