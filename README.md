@@ -305,9 +305,29 @@ sequenceDiagram
 
 ## 🔑 Configuración WSL
 
-Si usas **Windows Subsystem for Linux** y ya tienes llaves SSH configuradas en Windows, puedes copiarlas fácilmente.
+Si usas **Windows Subsystem for Linux** y ya tienes llaves SSH configuradas en Windows, puedes migrarlas a WSL fácilmente.
 
-### 1. Copiar Llaves SSH desde Windows
+> 💡 **Recomendado**: Usa la **opción 9** del menú del instalador para copiar automáticamente las llaves SSH de Windows a WSL con los permisos correctos.
+
+### Método Automático (Recomendado)
+
+El instalador detecta si estás en WSL y ofrece copiar tus llaves SSH de Windows:
+
+```bash
+./install.sh  # Selecciona opción 9: "SSH desde Windows"
+```
+
+**El script automáticamente:**
+- ✅ Copia las llaves de `/mnt/c/Users/<tu_usuario>/.ssh` a `~/.ssh`
+- ✅ Ajusta los permisos correctos (`600` para privadas, `644` para públicas)
+- ✅ Configura el SSH Agent para cargar las llaves al iniciar
+
+### Método Manual (Alternativo)
+
+<details>
+<summary>📋 Ver pasos manuales</summary>
+
+#### 1. Copiar Llaves SSH desde Windows
 
 ```bash
 # Desde WSL, copia las llaves de Windows a WSL
@@ -321,7 +341,7 @@ chmod 644 ~/.ssh/known_hosts 2>/dev/null
 chmod 644 ~/.ssh/config 2>/dev/null
 ```
 
-### 2. Verificar Configuración
+#### 2. Verificar Configuración
 
 ```bash
 # Verificar que la llave se carga correctamente
@@ -335,7 +355,7 @@ ssh-add ~/.ssh/id_ed25519  # o id_rsa según tu llave
 ssh -T git@github.com
 ```
 
-### 3. Persistencia con SSH Agent
+#### 3. Persistencia con SSH Agent
 
 Agrega esto a tu `~/.bashrc` para cargar la llave automáticamente:
 
@@ -347,7 +367,7 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
 fi
 ```
 
-> 📘 **Alternativa**: Usa la opción **9** del menú del instalador para automatizar este proceso.
+</details>
 
 ---
 
