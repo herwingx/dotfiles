@@ -20,7 +20,7 @@
 - [🚀 Inicio Rápido](#-inicio-rápido)
 - [🏗️ Arquitectura](#️-arquitectura)
 - [📦 Módulos Disponibles](#-módulos-disponibles)
-- [🔐 Gestión de Secretos](#-gestión-de-secretos)
+- [🔐 Gestión de Secretos](#-gestión-de-secretos-envage)
 - [🔑 Configuración WSL](#-configuración-wsl)
 - [🔧 Aliases Incluidos](#-aliases-incluidos)
 - [📚 Documentación](#-documentación)
