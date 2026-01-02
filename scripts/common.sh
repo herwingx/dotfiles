@@ -102,3 +102,21 @@ EOF
         return 1
     fi
 }
+
+# ─────────────────────────────────────────────────────────────
+# Recarga la terminal automáticamente para aplicar aliases.
+# Usa exec bash para reemplazar el shell actual con uno nuevo.
+# ─────────────────────────────────────────────────────────────
+reload_shell() {
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}   ✓ Instalación completa. Recargando terminal...${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    exec bash
+}
+
+# Alias para compatibilidad con código existente
+show_reload_message() {
+    reload_shell
+}
