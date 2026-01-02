@@ -173,7 +173,7 @@ install_npm_global_packages() {
 # Fallback a login tradicional si no hay secrets.
 # ─────────────────────────────────────────────────────────────
 bitwarden_login() {
-    echo -e "${GREEN}>>> Iniciando sesión en Bitwarden...${NC}"
+    echo -e "${GREEN}>>> Configurando Bitwarden...${NC}"
     
     if ! command -v bw &> /dev/null; then
         echo -e "${RED}   ✗ Bitwarden CLI no está instalado${NC}"
@@ -182,6 +182,14 @@ bitwarden_login() {
     
     BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
     
+    # Si ya está desbloqueado, no hacer nada
+    if [ "$BW_STATUS" = "unlocked" ]; then
+        echo -e "${CYAN}   ✓ Bitwarden ya está desbloqueado${NC}"
+        bw sync &>/dev/null
+        return 0
+    fi
+    
+    # Si no está autenticado, hacer login
     if [ "$BW_STATUS" = "unauthenticated" ]; then
         if [ -z "$BW_CLIENTID" ] || [ -z "$BW_CLIENTSECRET" ]; then
             decrypt_secrets
@@ -190,29 +198,36 @@ bitwarden_login() {
         if [ -n "$BW_CLIENTID" ] && [ -n "$BW_CLIENTSECRET" ]; then
             echo -e "${CYAN}   Usando API key (sin 2FA)...${NC}"
             bw login --apikey
-            [ $? -eq 0 ] && echo -e "${CYAN}   ✓ Login exitoso${NC}" || return 1
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}   ✗ Error en login${NC}"
+                return 1
+            fi
+            echo -e "${CYAN}   ✓ Login exitoso${NC}"
         else
             echo -e "${YELLOW}   ! Usando login tradicional${NC}"
             bw login "herwingmacias@gmail.com"
         fi
-    elif [ "$BW_STATUS" = "locked" ]; then
-        echo -e "${YELLOW}   ! Sesión bloqueada${NC}"
-    else
-        echo -e "${YELLOW}   ! Ya estás logueado en Bitwarden${NC}"
+        
+        # Verificar estado después del login
+        BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
     fi
     
-    echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
-    BW_SESSION=$(bw unlock --raw)
-    
-    if [ -n "$BW_SESSION" ]; then
-        export BW_SESSION
-        echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
-        bw sync &>/dev/null
-        echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
-    else
-        echo -e "${RED}   ✗ Error desbloqueando${NC}"
-        return 1
+    # Solo desbloquear si está bloqueado
+    if [ "$BW_STATUS" = "locked" ]; then
+        echo -e "${CYAN}   Desbloqueando bóveda...${NC}"
+        BW_SESSION=$(bw unlock --raw)
+        
+        if [ -n "$BW_SESSION" ]; then
+            export BW_SESSION
+            echo -e "${CYAN}   ✓ Bitwarden desbloqueado${NC}"
+        else
+            echo -e "${RED}   ✗ Error desbloqueando${NC}"
+            return 1
+        fi
     fi
+    
+    bw sync &>/dev/null
+    echo -e "${CYAN}   ✓ Bóveda sincronizada${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────
