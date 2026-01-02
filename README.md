@@ -121,7 +121,15 @@ Reducimos la fricción de contexto.
 
 ## 🔐 Gestión de Secretos (.env.age)
 
-Este repositorio utiliza **Age** para proteger variables sensibles (Tokens de GitHub, Credenciales Rclone).
+Este repositorio utiliza **Age** para proteger variables sensibles.
+
+**Variables incluidas:**
+| Variable             | Descripción                      |
+| :------------------- | :------------------------------- |
+| `GITHUB_TOKEN`       | Token de autenticación de GitHub |
+| `RCLONE_TOKEN`       | Token OAuth de Google Drive      |
+| `TELEGRAM_BOT_TOKEN` | Token del bot de Telegram        |
+| `TELEGRAM_CHAT_ID`   | ID del chat para notificaciones  |
 
 **Script de Gestión:** `scripts/manage_secrets.sh`
 
@@ -132,6 +140,55 @@ Este repositorio utiliza **Age** para proteger variables sensibles (Tokens de Gi
 ```
 
 > **Nota:** Al instalar, el sistema configura automáticamente `rclone` a partir de estos secretos.
+
+---
+
+## 🔑 Copiar SSH de Windows a WSL
+
+Si usas WSL y ya tienes configuradas tus llaves SSH en Windows, puedes copiarlas fácilmente:
+
+### 1. Copiar las llaves desde Windows
+
+```bash
+# Desde WSL, copia las llaves de Windows a WSL
+cp -r /mnt/c/Users/TU_USUARIO/.ssh ~/
+
+# Ajustar permisos (OBLIGATORIO, SSH rechaza llaves con permisos incorrectos)
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_*
+chmod 644 ~/.ssh/*.pub
+chmod 644 ~/.ssh/known_hosts 2>/dev/null
+chmod 644 ~/.ssh/config 2>/dev/null
+```
+
+### 2. Verificar la configuración
+
+```bash
+# Verificar que la llave se carga correctamente
+ssh-add -l
+
+# Si no hay agente corriendo, iniciarlo
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519  # o id_rsa según tu llave
+
+# Probar conexión con GitHub
+ssh -T git@github.com
+```
+
+### 3. (Opcional) Agregar al .bashrc para persistencia
+
+```bash
+# Agrega esto al final de ~/.bashrc para auto-cargar la llave
+echo '
+# SSH Agent Auto-Start
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)" > /dev/null
+    ssh-add ~/.ssh/id_ed25519 2>/dev/null
+fi
+' >> ~/.bashrc
+```
+
+> **Importante:** Reemplaza `TU_USUARIO` con tu nombre de usuario de Windows y `id_ed25519` con el nombre de tu llave si es diferente.
 
 ## 🔧 Comandos Útiles (Aliases)
 
