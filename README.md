@@ -137,24 +137,45 @@ dotfiles/
 ### Diagrama de Flujo
 
 ```mermaid
-graph TD
-    A[install.sh] --> B[common.sh]
-    B --> C{Menú Interactivo}
-    C --> D[system.sh]
-    C --> E[git.sh]
-    C --> F[dev-tools.sh]
-    C --> G[antigravity.sh]
-    C --> H[cloud.sh]
-    
-    D --> I[Paquetes + Tools]
-    E --> J[Git Config + SSH]
-    F --> K[gh + nvm + docker]
-    G --> L[GEMINI.md + Workflows]
-    H --> M[rclone Config]
-    
-    B --> N[.env.age]
-    N --> O[decrypt_secrets()]
-    O --> P[Credenciales en Runtime]
+flowchart TD
+    subgraph ENTRY["🎛️ Entry Point"]
+        A["📦 install.sh"] --> B["⚙️ common.sh"]
+    end
+
+    B --> C{"🎯 Menú Interactivo"}
+
+    subgraph MODULES["📂 Módulos de Instalación"]
+        direction LR
+        D["🖥️ system.sh"]
+        E["🔑 git.sh"]
+        F["🛠️ dev-tools.sh"]
+        G["🤖 antigravity.sh"]
+        H["☁️ cloud.sh"]
+    end
+
+    C --> D & E & F & G & H
+
+    subgraph OUTPUTS["✅ Resultados"]
+        I["Paquetes + Tools"]
+        J["Git Config + SSH"]
+        K["gh + nvm + docker"]
+        L["GEMINI.md + Workflows"]
+        M["rclone Config"]
+    end
+
+    D --> I
+    E --> J
+    F --> K
+    G --> L
+    H --> M
+
+    subgraph SECRETS["🔐 Gestión de Secretos"]
+        N["🔒 .env.age"] --> O["decrypt_secrets()"]
+        O --> P["🔓 Variables en Runtime"]
+    end
+
+    B -.->|"Carga secretos"| N
+    P -.->|"Disponibles para"| MODULES
 ```
 
 ---
@@ -241,16 +262,43 @@ Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para prot
 
 ```mermaid
 sequenceDiagram
-    participant Install as install.sh
-    participant Common as common.sh
-    participant Age as age decrypt
-    participant Env as Variables
+    autonumber
+    
+    box rgb(40, 44, 52) Orchestration
+        participant Install as 📦 install.sh
+        participant Common as ⚙️ common.sh
+    end
+    
+    box rgb(30, 60, 50) Security Layer
+        participant Age as 🔐 age decrypt
+        participant Secrets as 🔒 .env.age
+    end
+    
+    box rgb(50, 40, 60) Runtime
+        participant Env as 🔓 Variables
+    end
 
     Install->>Common: source common.sh
-    Common->>Age: decrypt .env.age
+    activate Common
+    
+    Common->>Secrets: Leer archivo encriptado
+    Secrets->>Age: Datos cifrados + passphrase
+    activate Age
+    
     Age-->>Common: Contenido descifrado
-    Common->>Env: export BW_CLIENTID, GH_TOKEN, etc.
-    Note over Env: Disponibles en runtime
+    deactivate Age
+    
+    Common->>Env: export BW_CLIENTID
+    Common->>Env: export GH_TOKEN
+    Common->>Env: export RCLONE_TOKEN_JSON
+    Common->>Env: export TELEGRAM_*
+    deactivate Common
+    
+    Note over Env: ✅ Variables disponibles<br/>para todos los módulos
+    
+    rect rgb(35, 45, 35)
+        Note right of Env: 🛡️ Secretos nunca<br/>expuestos en código
+    end
 ```
 
 ---
