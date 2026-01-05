@@ -137,5 +137,3 @@ fi
 # Waydroid (si aplica)
 # -----------------------------------------------------------------------------
 alias waydroid='waydroid show-full-ui'
-
-echo "✓ Aliases cargados"
