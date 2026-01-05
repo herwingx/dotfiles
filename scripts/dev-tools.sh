@@ -181,6 +181,9 @@ install_npm_global_packages() {
 # ─────────────────────────────────────────────────────────────
 # Inicia sesión en Bitwarden CLI usando API key de secrets.
 # Fallback a login tradicional si no hay secrets.
+#
+# Nota: bw login --apikey requiere que BW_CLIENTID y BW_CLIENTSECRET
+# estén exportadas como variables de entorno ANTES de ejecutar el comando.
 # ─────────────────────────────────────────────────────────────
 bitwarden_login() {
     echo -e "${GREEN}>>> Verificando Bitwarden CLI...${NC}"
@@ -210,22 +213,36 @@ bitwarden_login() {
     if [ "$BW_STATUS" = "unauthenticated" ]; then
         echo -e "${YELLOW}   ! No autenticado, iniciando sesión...${NC}"
         
+        # Cargar secrets si no están en memoria
         if [ -z "$BW_CLIENTID" ] || [ -z "$BW_CLIENTSECRET" ]; then
             decrypt_secrets
         fi
         
+        # Verificar que las credenciales se cargaron correctamente
         if [ -n "$BW_CLIENTID" ] && [ -n "$BW_CLIENTSECRET" ]; then
             echo -e "${CYAN}   Usando API key (sin 2FA)...${NC}"
-            bw login --apikey
+            
+            # Debug: mostrar que las variables están cargadas (sin exponer valores)
+            echo -e "${CYAN}   BW_CLIENTID: ${BW_CLIENTID:0:10}...${NC}"
+            echo -e "${CYAN}   BW_CLIENTSECRET: ****${NC}"
+            
+            # Ejecutar login con variables de entorno explícitas
+            BW_CLIENTID="$BW_CLIENTID" BW_CLIENTSECRET="$BW_CLIENTSECRET" bw login --apikey
+            
             if [ $? -ne 0 ]; then
                 echo -e "${RED}   ✗ Error en login${NC}"
+                echo -e "${YELLOW}   Posibles causas:${NC}"
+                echo -e "${YELLOW}   - API keys expiradas (regenerar en vault.bitwarden.com)${NC}"
+                echo -e "${YELLOW}   - Client ID y Secret no coinciden${NC}"
+                echo -e "${YELLOW}   - Problemas de conexión a Bitwarden${NC}"
                 return 1
             fi
             echo -e "${CYAN}   ✓ Login exitoso (bóveda bloqueada)${NC}"
             echo -e "${YELLOW}   Tip: Usa 'bw unlock' cuando necesites acceder a la bóveda${NC}"
         else
-            echo -e "${YELLOW}   ! API keys no disponibles${NC}"
-            echo -e "${YELLOW}   Usa 'bw login' manualmente cuando lo necesites${NC}"
+            echo -e "${YELLOW}   ! API keys no disponibles en .env.age${NC}"
+            echo -e "${YELLOW}   Agrega BW_CLIENTID y BW_CLIENTSECRET a tu archivo de secrets${NC}"
+            echo -e "${YELLOW}   O usa 'bw login' manualmente${NC}"
         fi
     fi
 }

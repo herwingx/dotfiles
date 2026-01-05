@@ -185,7 +185,12 @@ install_system_all() {
 
 # ─────────────────────────────────────────────────────────────
 # Configura el cronjob de actualizaciones automáticas.
-# Permite personalizar el horario para evitar conflictos en Proxmox.
+# Permite personalizar el horario y frecuencia para evitar conflictos en Proxmox.
+#
+# Opciones de frecuencia:
+# - Diario: Todos los días a la hora configurada
+# - Semanal: Cada domingo a la hora configurada
+# - Mensual: El día 1 de cada mes a la hora configurada
 #
 # El cronjob ejecuta cron-update.sh que:
 # - Actualiza el sistema (apt/dnf/pacman)
@@ -203,7 +208,51 @@ install_auto_update() {
         return 1
     fi
     
+    # Menú de frecuencia
+    echo ""
+    echo -e "${CYAN}   ┌──────────────────────────────────────────┐${NC}"
+    echo -e "${CYAN}   │${NC}  ${BOLD}Frecuencia de actualizaciones${NC}            ${CYAN}│${NC}"
+    echo -e "${CYAN}   ├──────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}   │${NC}   ${GREEN}1)${NC} 📅 Diario (recomendado servidores)    ${CYAN}│${NC}"
+    echo -e "${CYAN}   │${NC}   ${GREEN}2)${NC} 📆 Semanal (domingos)                 ${CYAN}│${NC}"
+    echo -e "${CYAN}   │${NC}   ${GREEN}3)${NC} 🗓️  Mensual (día 1 de cada mes)        ${CYAN}│${NC}"
+    echo -e "${CYAN}   └──────────────────────────────────────────┘${NC}"
+    echo ""
+    read -p "   Selecciona frecuencia [1-3, default: 1]: " FREQ_OPTION
+    FREQ_OPTION=${FREQ_OPTION:-1}
+    
+    case "$FREQ_OPTION" in
+        1)
+            CRON_FREQUENCY="daily"
+            CRON_DAY_OF_WEEK="*"
+            CRON_DAY_OF_MONTH="*"
+            FREQ_LABEL="diario"
+            ;;
+        2)
+            CRON_FREQUENCY="weekly"
+            CRON_DAY_OF_WEEK="0"  # Domingo
+            CRON_DAY_OF_MONTH="*"
+            FREQ_LABEL="semanal (domingos)"
+            ;;
+        3)
+            CRON_FREQUENCY="monthly"
+            CRON_DAY_OF_WEEK="*"
+            CRON_DAY_OF_MONTH="1"  # Día 1
+            FREQ_LABEL="mensual (día 1)"
+            ;;
+        *)
+            echo -e "${YELLOW}   ! Opción inválida, usando diario${NC}"
+            CRON_FREQUENCY="daily"
+            CRON_DAY_OF_WEEK="*"
+            CRON_DAY_OF_MONTH="*"
+            FREQ_LABEL="diario"
+            ;;
+    esac
+    
+    echo -e "${CYAN}   Frecuencia seleccionada: $FREQ_LABEL${NC}"
+    
     # Solicitar horario personalizado
+    echo ""
     echo -e "${CYAN}   Configuración del horario de actualización:${NC}"
     echo -e "${YELLOW}   (Importante: En Proxmox, usa horarios diferentes para PVE y guests)${NC}"
     echo ""
@@ -225,7 +274,7 @@ install_auto_update() {
         CRON_MINUTE=0
     fi
     
-    echo -e "${CYAN}   Horario configurado: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario${NC}"
+    echo -e "${CYAN}   Horario configurado: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) $FREQ_LABEL${NC}"
     
     # Copiar script de actualización a /usr/local/bin
     echo -e "${CYAN}   Instalando script de actualización...${NC}"
@@ -249,13 +298,15 @@ EOF
     $SUDO_CMD mkdir -p /etc/cron.d
     
     # Crear archivo cron en /etc/cron.d/
+    # Formato cron: minuto hora día_del_mes mes día_de_la_semana
     $SUDO_CMD tee /etc/cron.d/dotfiles-update > /dev/null <<EOF
 # Actualizaciones automáticas del sistema - dotfiles
-# Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario
+# Frecuencia: $FREQ_LABEL
+# Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE)
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-$CRON_MINUTE $CRON_HOUR * * * root /usr/local/bin/dotfiles-update >> /var/log/dotfiles-updates.log 2>&1
+$CRON_MINUTE $CRON_HOUR $CRON_DAY_OF_MONTH * $CRON_DAY_OF_WEEK root /usr/local/bin/dotfiles-update >> /var/log/dotfiles-updates.log 2>&1
 EOF
     $SUDO_CMD chmod 644 /etc/cron.d/dotfiles-update
     
@@ -263,7 +314,7 @@ EOF
     $SUDO_CMD touch /var/log/dotfiles-updates.log
     $SUDO_CMD chmod 644 /var/log/dotfiles-updates.log
     
-    echo -e "${CYAN}   ✓ Cronjob instalado: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario${NC}"
+    echo -e "${CYAN}   ✓ Cronjob instalado: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) $FREQ_LABEL${NC}"
     echo -e "${CYAN}   ✓ Script: /usr/local/bin/dotfiles-update${NC}"
     echo -e "${CYAN}   ✓ Log: /var/log/dotfiles-updates.log${NC}"
     echo -e "${CYAN}   ✓ Cron: /etc/cron.d/dotfiles-update${NC}"
@@ -278,7 +329,8 @@ EOF
         -d chat_id="$TELEGRAM_CHAT_ID" \
         -d text="🔧 <b>[$CURRENT_HOST]</b>
 Actualizaciones automáticas configuradas.
-• Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE) diario
+• Frecuencia: $FREQ_LABEL
+• Horario: ${CRON_HOUR}:$(printf "%02d" $CRON_MINUTE)
 • Log: /var/log/dotfiles-updates.log" \
         -d parse_mode="HTML" > /dev/null 2>&1
     
