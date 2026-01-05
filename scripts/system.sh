@@ -166,9 +166,50 @@ install_terminal_tools() {
     else
         echo -e "${YELLOW}   ! gping ya está instalado${NC}"
     fi
+
+    # Oh My Posh
+    install_oh_my_posh
     
     echo -e "${CYAN}   ✓ Herramientas de terminal instaladas${NC}"
-    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping${NC}"
+    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping, oh-my-posh${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Instala Oh My Posh y configura el tema personalizado.
+# ─────────────────────────────────────────────────────────────
+install_oh_my_posh() {
+    echo -e "${GREEN}>>> Instalando Oh My Posh...${NC}"
+    
+    if ! command -v oh-my-posh &> /dev/null; then
+        echo -e "${CYAN}   Descargando e instalando Oh My Posh...${NC}"
+        curl -s https://ohmyposh.dev/install.sh | $SUDO_CMD bash -s
+        echo -e "${CYAN}   ✓ Oh My Posh instalado${NC}"
+    else
+        echo -e "${YELLOW}   ! Oh My Posh ya está instalado${NC}"
+    fi
+
+    # Configurar tema
+    THEME_DIR="$HOME/.cache/oh-my-posh/themes"
+    mkdir -p "$THEME_DIR"
+    
+    if [ -f "$DOTFILES_DIR/config/herwingx.omp.json" ]; then
+        echo -e "${CYAN}   Instalando tema herwingx...${NC}"
+        ln -sf "$DOTFILES_DIR/config/herwingx.omp.json" "$THEME_DIR/herwingx.omp.json"
+    else
+        echo -e "${RED}   ✗ No se encontró el tema config/herwingx.omp.json${NC}"
+    fi
+
+    # Configurar .bashrc
+    BASHRC="$HOME/.bashrc"
+    OMP_INIT='eval "$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"'
+    
+    # Remover configuraciones viejas de oh-my-posh si existen (limpieza)
+    sed -i '/oh-my-posh init bash/d' "$BASHRC"
+    
+    # Agregar la nueva configuración al final
+    echo "$OMP_INIT" >> "$BASHRC"
+    
+    echo -e "${CYAN}   ✓ Tema herwingx configurado en .bashrc${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────
