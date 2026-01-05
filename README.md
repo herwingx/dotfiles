@@ -246,6 +246,23 @@ Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para prot
 | `TELEGRAM_BOT_TOKEN` | Token del bot de Telegram                   | Notificaciones de auto-update        |
 | `TELEGRAM_CHAT_ID`   | ID del chat para notificaciones             | Destino de notificaciones Telegram   |
 
+### Configuración de Bitwarden (Oficial vs Self-Hosted)
+
+Por defecto, la CLI de Bitwarden (`bw`) apunta a los servidores oficiales (`bitwarden.com`). 
+Si utilizas una instancia **Self-Hosted (Vaultwarden)**, debes cambiar la URL del servidor manualmente:
+
+**Para usar Vaultwarden (Self-Hosted):**
+```bash
+bw config server https://tu-instancia-vaultwarden.com
+```
+
+**Para volver a Bitwarden Oficial:**
+```bash
+bw config server https://bitwarden.com
+```
+
+> ⚠️ **Importante**: Las API Keys (`BW_CLIENTID` y `BW_CLIENTSECRET`) son específicas de cada servidor. Si cambias de servidor, debes regenerar las keys en la web correspondiente y actualizar tu archivo `.env.age`.
+
 ### Script de Gestión
 
 ```bash
