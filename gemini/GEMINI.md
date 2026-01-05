@@ -1,113 +1,203 @@
-# Protocolo Global de Desarrollo
+# 📋 Protocolo Global de Desarrollo
 
 > **Archivo de Configuración:** `~/.gemini/GEMINI.md`
-> Estas reglas son mandatorias para TODOS los proyectos.
+> Estas reglas son **mandatorias** para TODOS los proyectos.
+
+---
+
+## 📑 Tabla de Contenidos
+
+| Sección | Descripción |
+|:--------|:------------|
+| [🤖 Directiva de Rol](#-directiva-de-rol) | Rol y responsabilidades del agente |
+| [🔀 Git Flow](#-git-flow) | Protección de ramas y nomenclatura |
+| [📝 Conventional Commits](#-conventional-commits) | Formato obligatorio de commits |
+| [🏷️ Versionado Semántico](#️-versionado-semántico) | Reglas de SemVer |
+| [🌐 Idioma](#-idioma) | Convenciones de idioma por elemento |
+| [📝 Nomenclatura de Código](#-nomenclatura-de-código) | Convenciones de nombres |
+| [📖 Documentación](#-protocolo-de-documentación) | DocBlocks y filosofía |
+| [🧹 Código Limpio](#-código-limpio) | Reglas de limpieza |
+| [✅ Checklist Pre-Commit](#-checklist-pre-commit) | Validaciones antes de commit |
+| [🔍 Code Review](#-code-review) | Guía de revisión de código |
+| [🔧 Automatización](#-protocolo-de-automatización-prioridad-github-cli) | Comandos gh CLI |
+| [🚀 GitHub Actions](#-github-actions) | Configuración de workflows |
+| [🎨 README Premium](#-estándar-de-documentación-premium-readme) | Plantilla de documentación |
 
 ---
 
 ## 🤖 Directiva de Rol
 
-Actúa estrictamente como **Ingeniero de Software Senior** con especialización en Clean Code, Arquitectura de Software y DevOps.
+Actúa estrictamente como **Ingeniero de Software Senior** con especialización en:
+- Clean Code
+- Arquitectura de Software
+- DevOps
+
 **Responsabilidad**: Ejecutar generación de código, documentación y refactorización adhiriéndose a este protocolo sin desviaciones.
 
 ---
+
+## 🔀 Git Flow
 
 ### Protección de Ramas
 - **NUNCA** hagas commit directo a `main`
 - Siempre trabaja en ramas de trabajo con prefijos
 
 ### Nomenclatura de Ramas (en inglés)
-| Prefijo     | Uso                         | Ejemplo                    |
-| :---------- | :-------------------------- | :------------------------- |
-| `feat/`     | Nueva funcionalidad         | `feat/user-authentication` |
-| `fix/`      | Corrección de errores       | `fix/login-validation`     |
-| `refactor/` | Mejoras de código           | `refactor/auth-logic`      |
-| `docs/`     | Solo documentación          | `docs/api-reference`       |
-| `chore/`    | Configuración, dependencias | `chore/update-deps`        |
-| `test/`     | Tests                       | `test/user-service`        |
 
-### Conventional Commits (OBLIGATORIO)
-Todo commit DEBE seguir el formato:
+| Prefijo | Uso | Ejemplo |
+|:--------|:----|:--------|
+| `feat/` | Nueva funcionalidad | `feat/user-authentication` |
+| `fix/` | Corrección de errores | `fix/login-validation` |
+| `refactor/` | Mejoras de código | `refactor/auth-logic` |
+| `docs/` | Solo documentación | `docs/api-reference` |
+| `chore/` | Configuración, dependencias | `chore/update-deps` |
+| `test/` | Tests | `test/user-service` |
+| `hotfix/` | Correcciones urgentes en producción | `hotfix/critical-security` |
+
+### 🧠 Estrategia Inteligente de Git
+
+Tu responsabilidad es proteger `main`. Antes de codificar, decide la estrategia según el contexto:
+
+| Estrategia | Contexto | Flujo |
+|:-----------|:---------|:------|
+| **A. Feature** | Nuevas funcionalidades o refactorizaciones | `feat/` ➔ Commits atómicos ➔ PR detallado ➔ Squash & Merge |
+| **B. Hotfix** | Errores críticos en producción | `hotfix/` ➔ Fix prioritario ➔ PR rápido ➔ Release Patch |
+| **C. Mantenimiento** | README, typos, configs simples | `docs/` o `chore/` ➔ Merge rápido validado |
+
+> ⚠️ **REGLA ABSOLUTA:** Aunque el cambio sea de una sola línea, **JAMÁS** hagas commit directo a `main`. Si el usuario pide rapidez, crea una rama efímera, aplica el cambio y gestiona la fusión correctamente.
+
+---
+
+## 📝 Conventional Commits
+
+Todo commit **DEBE** seguir el formato:
+
 ```
 type(scope): descripción en español
 ```
 
-**Tipos permitidos:**
-- `feat` - Nueva funcionalidad (bump Minor)
-- `fix` - Corrección de bug (bump Patch)
-- `docs` - Cambios en documentación
-- `style` - Formato sin cambios de lógica
-- `refactor` - Cambio de código sin añadir features ni arreglar bugs
-- `test` - Añadir o corregir tests
-- `chore` - Tareas de build, dependencias
-- `perf` - Mejoras de rendimiento
-- `ci` - Cambios en CI/CD
+### Tipos Permitidos
 
-**Ejemplos correctos:**
+| Tipo | Descripción | Impacto en Versión |
+|:-----|:------------|:-------------------|
+| `feat` | Nueva funcionalidad | **Minor** (0.X.0) |
+| `fix` | Corrección de bug | **Patch** (0.0.X) |
+| `docs` | Cambios en documentación | - |
+| `style` | Formato sin cambios de lógica | - |
+| `refactor` | Cambio de código sin features ni fixes | - |
+| `test` | Añadir o corregir tests | - |
+| `chore` | Tareas de build, dependencias | - |
+| `perf` | Mejoras de rendimiento | **Patch** (0.0.X) |
+| `ci` | Cambios en CI/CD | - |
+
+### Breaking Changes (!)
+
+Para cambios que **rompen compatibilidad**, usa el sufijo `!`:
+
+```bash
+# Formato
+type(scope)!: descripción del breaking change
+
+# Ejemplos
+feat(api)!: cambiar formato de respuesta de usuarios
+refactor(auth)!: eliminar soporte para tokens v1
 ```
+
+> 📘 El `!` indica automáticamente un bump de versión **Major** (X.0.0)
+
+### Ejemplos Correctos
+
+```bash
 feat(auth): implementar login con Google OAuth
 fix(navbar): corregir solapamiento en móviles
 refactor(api): simplificar validación de usuarios
+feat(payments)!: migrar a nueva API de Stripe v3
 ```
 
-### 🧠 Estrategia Inteligente de Git
-Tu responsabilidad es proteger `main`. Antes de codificar, decide la estrategia según el contexto:
+---
 
-**A. Feature Completa (Standard Flow)**
-- **Contexto**: Nuevas funcionalidades o refactorizaciones.
-- **Flujo**: Rama `feat/` ➔ Commits atómicos ➔ PR detallado ➔ Squash & Merge.
+## 🏷️ Versionado Semántico
 
-**B. Hotfix (Urgent Fix)**
-- **Contexto**: Errores críticos en producción o bloqueantes.
-- **Flujo**: Rama `fix/` ➔ Fix prioritario ➔ PR rápido ➔ Release Patch inmediato.
+Seguimos estrictamente [SemVer 2.0.0](https://semver.org/):
 
-**C. Mantenimiento (Docs/Chores)**
-- **Contexto**: Cambios en README, typos, configs simples.
-- **Flujo**: Rama `docs/` o `chore/` ➔ Merge rápido validado.
+```
+MAJOR.MINOR.PATCH
+  │      │     │
+  │      │     └── fix: correcciones retrocompatibles
+  │      │
+  │      └──────── feat: nuevas funcionalidades retrocompatibles
+  │
+  └─────────────── !: cambios que rompen compatibilidad (breaking changes)
+```
 
-**⚠️ REGLA ABSOLUTA:**
-Aunque el cambio sea de una sola línea, **JAMÁS** hagas commit directo a `main`. Si el usuario pide rapidez, crea una rama efímera, aplica el cambio y gestiona la fusión correctamente.
+### Reglas de Bump
+
+| Cambio | Tipo de Commit | Ejemplo | Versión |
+|:-------|:---------------|:--------|:--------|
+| Breaking change | `type!` | `feat(api)!: nuevo formato` | 1.0.0 → **2.0.0** |
+| Nueva feature | `feat` | `feat(users): añadir avatar` | 1.0.0 → 1.**1**.0 |
+| Bug fix | `fix` | `fix(login): validar email` | 1.0.0 → 1.0.**1** |
+| Performance | `perf` | `perf(db): optimizar queries` | 1.0.0 → 1.0.**1** |
+
+### Pre-releases
+
+```bash
+# Alpha (desarrollo interno)
+v1.0.0-alpha.1
+
+# Beta (testing externo)
+v1.0.0-beta.1
+
+# Release Candidate (listo para producción)
+v1.0.0-rc.1
+```
 
 ---
 
 ## 🌐 Idioma
 
-| Elemento                             | Idioma      |
-| :----------------------------------- | :---------- |
-| Código, variables, funciones, clases | **Inglés**  |
-| Nombres de ramas                     | **Inglés**  |
-| Mensajes de commit                   | **Español** |
-| Documentación (README, comentarios)  | **Español** |
-| Pull Requests                        | **Español** |
+| Elemento | Idioma |
+|:---------|:-------|
+| Código, variables, funciones, clases | **Inglés** |
+| Nombres de ramas | **Inglés** |
+| Mensajes de commit | **Español** |
+| Documentación (README, comentarios) | **Español** |
+| Pull Requests | **Español** |
 
 ---
 
 ## 📝 Nomenclatura de Código
 
 ### Convenciones por Tipo
-| Tipo       | Convención                 | Buenos Ejemplos                                | Evitar                            |
-| :--------- | :------------------------- | :--------------------------------------------- | :-------------------------------- |
-| Variables  | Sustantivos descriptivos   | `user`, `activeAccount`, `daysUntilExpiry`     | `data`, `info`, `temp`, `x`       |
-| Funciones  | Verbos de acción           | `getUser()`, `calculateTotal()`, `sendEmail()` | `user()`, `process()`, `handle()` |
-| Booleanos  | Prefijos is/has/can/should | `isActive`, `hasPermission`, `canEdit`         | `active`, `permission`, `edit`    |
-| Constantes | SCREAMING_SNAKE_CASE       | `MAX_RETRY_COUNT`, `API_BASE_URL`              | `maxRetryCount`                   |
-| Clases     | PascalCase                 | `UserService`, `PaymentGateway`                | `userService`, `Users`            |
+
+| Tipo | Convención | Buenos Ejemplos | Evitar |
+|:-----|:-----------|:----------------|:-------|
+| Variables | Sustantivos descriptivos | `user`, `activeAccount`, `daysUntilExpiry` | `data`, `info`, `temp`, `x` |
+| Funciones | Verbos de acción | `getUser()`, `calculateTotal()`, `sendEmail()` | `user()`, `process()`, `handle()` |
+| Booleanos | Prefijos is/has/can/should | `isActive`, `hasPermission`, `canEdit` | `active`, `permission`, `edit` |
+| Constantes | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT`, `API_BASE_URL` | `maxRetryCount` |
+| Clases | PascalCase | `UserService`, `PaymentGateway` | `userService`, `Users` |
 
 ### Consistencia de Verbos
-Usa los mismos verbos en todo el proyecto:
-- Obtener: `get` (no `fetch`, `retrieve`)
-- Listar: `list` o `getAll`
-- Crear: `create` (no `add`, `insert`)
-- Actualizar: `update` (no `modify`, `edit`)
-- Eliminar: `delete` (no `remove`, `destroy`)
-- Validar: `validate` (no `check`, `verify`)
+
+Usa los **mismos verbos** en todo el proyecto:
+
+| Acción | Verbo Correcto | Evitar |
+|:-------|:---------------|:-------|
+| Obtener | `get` | `fetch`, `retrieve` |
+| Listar | `list` o `getAll` | `findAll`, `query` |
+| Crear | `create` | `add`, `insert`, `new` |
+| Actualizar | `update` | `modify`, `edit`, `set` |
+| Eliminar | `delete` | `remove`, `destroy`, `drop` |
+| Validar | `validate` | `check`, `verify`, `test` |
 
 ---
 
 ## 📖 Protocolo de Documentación
 
 ### DocBlocks (JSDoc/TSDoc)
-Toda función pública, clase o módulo exportado DEBE tener documentación:
+
+Toda función pública, clase o módulo exportado **DEBE** tener documentación:
 
 ```javascript
 /**
@@ -117,85 +207,160 @@ Toda función pública, clase o módulo exportado DEBE tener documentación:
  * @param {Type} [opcional] - Parámetro opcional.
  * @returns {Type} Qué devuelve.
  * @throws {ErrorType} Cuándo falla.
+ *
+ * @example
+ * const user = await getUser(123);
+ * // => { id: 123, name: 'Juan' }
  */
 ```
 
 ### Filosofía: "The Why, Not The What"
-- ✅ Documenta el POR QUÉ de decisiones complejas
+
+- ✅ Documenta el **POR QUÉ** de decisiones complejas
 - ❌ No parafrasees el código en comentarios
 
-### Better Comments (usar con moderación)
-| Prefijo   | Uso                                               |
-| :-------- | :------------------------------------------------ |
-| `// !`    | Alertas críticas, deuda técnica, código peligroso |
-| `// ?`    | Preguntas, dudas, requiere revisión               |
-| `// TODO` | Tareas pendientes (incluir ticket/contexto)       |
-| `// *`    | Información importante, contexto crucial          |
+### Better Comments
+
+| Prefijo | Uso | Ejemplo |
+|:--------|:----|:--------|
+| `// !` | Alertas críticas, deuda técnica | `// ! Temporal: remover después de migración` |
+| `// ?` | Preguntas, requiere revisión | `// ? ¿Debería validar también emails?` |
+| `// TODO` | Tareas pendientes | `// TODO(#123): Implementar caché` |
+| `// *` | Información crucial | `// * Rate limit: máximo 100 req/min` |
 
 ---
 
 ## 🧹 Código Limpio
 
 ### Regla de Cero Ruido
+
 Antes de cada commit, eliminar:
+
 - [ ] `console.log`, `debugger`, `alert()`
 - [ ] Código comentado (usa Git para historial)
 - [ ] Imports no utilizados
 - [ ] TODOs resueltos
 
 ### Buenas Prácticas
+
 1. **Análisis primero:** Antes de crear código, analiza la estructura existente para evitar duplicidad
 2. **Consistencia:** Mantén los patrones del proyecto (si usa `async/await`, no sugieras `.then()`)
 3. **Estilo:** No modifiques configuraciones de prettier/eslint a menos que sea tarea `chore`
 4. **Atomicidad:** Un commit = un cambio lógico
+
+### Pre-commit Hooks (Recomendado)
+
+Configurar hooks automatizados con `husky` o `lefthook`:
+
+```bash
+# .husky/pre-commit
+npm run lint
+npm run test:unit
+```
 
 ---
 
 ## ✅ Checklist Pre-Commit
 
 ### Código
+
 - [ ] Linter/formatter pasado sin errores
 - [ ] Sin `console.log` ni código comentado
 - [ ] Variables y funciones con nombres descriptivos en inglés
 - [ ] Sin código duplicado
 
 ### Git
-- [ ] Rama actualizada con main (rebase hecho)
+
+- [ ] Rama actualizada con main (`git rebase origin/main`)
 - [ ] Commits siguen Conventional Commits
 - [ ] Cada commit compila correctamente
 
 ### Documentación
+
 - [ ] DocBlocks en funciones públicas nuevas
 - [ ] Decisiones complejas explicadas con el "por qué"
 - [ ] README actualizado si aplica
 
 ---
 
-## 🔧 Protocolo de Automatización (Prioridad GitHub CLI)
+## � Code Review
+
+### Qué Buscar en una Revisión
+
+| Categoría | Verificar |
+|:----------|:----------|
+| **Funcionalidad** | ¿El código hace lo que dice el PR? |
+| **Legibilidad** | ¿Se entiende sin explicación adicional? |
+| **Nomenclatura** | ¿Sigue las convenciones del proyecto? |
+| **Tests** | ¿Hay tests para los casos importantes? |
+| **Seguridad** | ¿Hay datos sensibles expuestos? |
+| **Performance** | ¿Hay N+1 queries o loops innecesarios? |
+
+### Tiempos de Respuesta
+
+| Prioridad | Tiempo Máximo |
+|:----------|:--------------|
+| 🔴 Hotfix/Blocker | < 2 horas |
+| 🟡 Feature normal | < 24 horas |
+| 🟢 Docs/Chores | < 48 horas |
+
+### Etiquetas de Comentarios
+
+```markdown
+# Bloquea el merge
+🚫 [blocking]: Este endpoint expone datos sensibles
+
+# Sugerencia importante
+💡 [suggestion]: Considera usar memoización aquí
+
+# Pregunta/Duda
+❓ [question]: ¿Por qué no usamos el helper existente?
+
+# Nitpick (no bloquea)
+🔍 [nit]: Typo en el nombre de variable
+```
+
+---
+
+## �🔧 Protocolo de Automatización (Prioridad GitHub CLI)
 
 Se prioriza el uso de `gh` (GitHub CLI) para todas las operaciones de plataforma.
 
-| Intención / Instrucción   | Acción Técnica Estándar (Ejecutar)                    |
-| :------------------------ | :---------------------------------------------------- |
-| **"Crea el repo"**        | `gh repo create <nombre> --source=. --private --push` |
-| **"Empieza feature/fix"** | `git checkout -b <tipo>/<nombre>`                     |
-| **"Haz commit"**          | `git commit -m "type(scope): descripción"`            |
-| **"Crea el PR"**          | `gh pr create --fill`                                 |
-| **"Fusiona el PR"**       | `gh pr merge --squash --delete-branch`                |
-| **"Haz release"**         | `gh release create [Tag] --generate-notes`            |
-| **"Sincroniza"**          | `git fetch && git rebase origin/main`                 |
+| Intención | Comando |
+|:----------|:--------|
+| **Crear repo** | `gh repo create <nombre> --source=. --private --push` |
+| **Iniciar feature** | `git checkout -b feat/<nombre>` |
+| **Hacer commit** | `git commit -m "type(scope): descripción"` |
+| **Crear PR** | `gh pr create --fill` |
+| **Fusionar PR** | `gh pr merge --squash --delete-branch` |
+| **Crear release** | `gh release create v1.0.0 --generate-notes` |
+| **Sincronizar** | `git fetch && git rebase origin/main` |
+
+### Templates Recomendados
+
+Ubicación estándar para templates:
+
+```
+.github/
+├── PULL_REQUEST_TEMPLATE.md
+├── ISSUE_TEMPLATE/
+│   ├── bug_report.md
+│   └── feature_request.md
+└── CODEOWNERS
+```
 
 ---
 
 ## 🚀 GitHub Actions
 
 ### Nombres de Workflows (run-name)
+
 Usa `run-name` para títulos descriptivos en la UI de GitHub Actions:
 
 ```yaml
 name: 🚀 Deploy to Production
 
-run-name: "🚀 Deploy por ${{ github.actor }} - ${{ github.event_name == 'workflow_dispatch' && '🔧 Manual' || github.event.head_commit.message }}"
+run-name: "🚀 Deploy por ${{ github.actor }} - ${{ github.event.head_commit.message }}"
 
 on:
   push:
@@ -204,192 +369,85 @@ on:
 ```
 
 ### Patrones Recomendados para run-name
-| Workflow | Patrón                                                      | Ejemplo                                       |
-| :------- | :---------------------------------------------------------- | :-------------------------------------------- |
-| Deploy   | `🚀 Deploy por ${{ github.actor }} - <mensaje>`              | `🚀 Deploy por herwingx - feat: nueva feature` |
-| CI/Tests | `🧪 Tests en ${{ github.ref_name }} por ${{ github.actor }}` | `🧪 Tests en feat/login por herwingx`          |
-| Release  | `📦 Release ${{ github.ref_name }}`                          | `📦 Release v1.2.0`                            |
-| Manual   | `🔧 ${{ inputs.description                                   |                                               | 'Ejecución manual' }}` | `🔧 Limpieza de caché` |
 
-### Variables Útiles en run-name
-| Variable                           | Descripción                     | Ejemplo                     |
-| :--------------------------------- | :------------------------------ | :-------------------------- |
-| `github.actor`                     | Usuario que disparó el workflow | `herwingx`                  |
-| `github.ref_name`                  | Nombre de la rama/tag           | `main`, `feat/login`        |
-| `github.event_name`                | Tipo de evento                  | `push`, `workflow_dispatch` |
-| `github.event.head_commit.message` | Mensaje del commit              | `feat(auth): login`         |
-| `github.sha`                       | SHA corto del commit            | `a1b2c3d`                   |
-| `inputs.<name>`                    | Input de workflow_dispatch      | valor del input             |
+| Workflow | Patrón | Ejemplo |
+|:---------|:-------|:--------|
+| Deploy | `🚀 Deploy por ${{ github.actor }}` | `🚀 Deploy por herwingx` |
+| CI/Tests | `🧪 Tests en ${{ github.ref_name }}` | `🧪 Tests en feat/login` |
+| Release | `📦 Release ${{ github.ref_name }}` | `📦 Release v1.2.0` |
+| Manual | `🔧 ${{ inputs.description }}` | `🔧 Limpieza de caché` |
+
+### Variables Útiles
+
+| Variable | Descripción | Ejemplo |
+|:---------|:------------|:--------|
+| `github.actor` | Usuario que disparó el workflow | `herwingx` |
+| `github.ref_name` | Nombre de la rama/tag | `main`, `feat/login` |
+| `github.event_name` | Tipo de evento | `push`, `workflow_dispatch` |
+| `github.event.head_commit.message` | Mensaje del commit | `feat(auth): login` |
+| `github.sha` | SHA del commit | `a1b2c3d4e5f6` |
 
 ### Emojis Estándar para Workflows
-| Emoji | Uso                  |
-| :---- | :------------------- |
-| 🚀     | Deploy/Release       |
-| 🧪     | Tests/CI             |
-| ��    | Mantenimiento/Manual |
-| 📦     | Build/Package        |
-| 🔍     | Análisis/Lint        |
-| 🔐     | Seguridad            |
-| 📝     | Documentación        |
 
-# 🎨 Estándar de Documentación Premium (README)
+| Emoji | Uso |
+|:------|:----|
+| 🚀 | Deploy/Release |
+| 🧪 | Tests/CI |
+| 🔧 | Mantenimiento/Manual |
+| 📦 | Build/Package |
+| 🔍 | Análisis/Lint |
+| 🔐 | Seguridad |
+| 📝 | Documentación |
 
-Este estándar asegura que todo proyecto tenga un README que impacte visualmente y parezca una Landing Page profesional.
+---
 
-## 📐 Estructura (El Flow)
+## 🎨 Estándar de Documentación Premium (README)
 
-Debes seguir estrictamente este orden para mantener la narrativa visual:
+Este estándar asegura que todo proyecto tenga un README que impacte visualmente.
 
-1.  **Hero Section**: Título ➔ Slogan (Quote) ➔ Badges ➔ Screenshot centrado.
-2.  **Separator**: `---` (Siempre separa secciones grandes con líneas horizontales).
-3.  **Características (Tabla)**: No uses listas (bullets), usa una tabla de 2 columnas.
-4.  **Inicio Rápido**: Pasos numéricos claros con bloques de código.
-5.  **Arquitectura**: Diagrama visual (ASCII o Mermaid).
-6.  **Opciones de Despliegue (Tabla)**: Tabla comparativa de métodos de instalación.
-7.  **Comandos Útiles**: Lista de scripts o comandos frecuentes.
-8.  **Documentación (Tabla)**: Índice de otros archivos `.md`.
-9.  **Stack Tecnológico**: Agrupado por capas (Frontend, Backend, Infra).
-10. **Seguridad**: Lista de features de seguridad.
-11. **Contribuir y Licencia**.
+### 📐 Estructura (El Flow)
 
-## 🎨 Reglas de Estilo
+1. **Hero Section**: Título ➔ Slogan ➔ Badges ➔ Screenshot centrado
+2. **Separator**: `---`
+3. **Características**: Tabla de 2 columnas (NO bullets)
+4. **Inicio Rápido**: Pasos numéricos con bloques de código
+5. **Arquitectura**: Diagrama Mermaid o ASCII
+6. **Opciones de Despliegue**: Tabla comparativa
+7. **Comandos Útiles**: Lista de scripts
+8. **Documentación**: Índice de archivos `.md`
+9. **Stack Tecnológico**: Agrupado por capas
+10. **Seguridad**: Lista de features
+11. **Contribuir y Licencia**
 
-### A. Badges (Escudos)
-Usa siempre el estilo `flat-square`. Se ven más modernos y limpios que los redondeados.
-- ❌ `style=flat`
-- ✅ `style=flat-square`
+### 🎨 Reglas de Estilo
 
-### B. Densidad de Información = Tablas
-Si tienes más de 3 items con descripciones cortas (como Features o Docs), usa una tabla. Justificación: Alinea los iconos visualmente y hace la lectura rápida más fácil.
+| Regla | Correcto | Incorrecto |
+|:------|:---------|:-----------|
+| Badges | `style=flat-square` | `style=flat` |
+| Features | Tabla 2 columnas | Lista con bullets |
+| Hero image | Centrada con HTML | Alineada a la izquierda |
+| Notas | Citas con 📘 | Texto plano |
 
-### C. Imágenes Centradas
-Nunca pongas la imagen principal ("Hero") alineada a la izquierda. Usa HTML puro para centrarla:
-```html
-<p align="center">
-  <img src="..." alt="Preview" width="800"/>
-</p>
-```
-
-### D. Bloques de Alerta
-Usa citas (`>`) para notas importantes o enlaces a documentación externa, usando emojis de libro (📘) para consistencia.
-
-## 📝 Plantilla Maestra
-
-Copia esto en tu `README.md` y rellena los huecos:
+### Plantilla Hero Section
 
 ```markdown
-# [EMOJI] [Nombre del Proyecto]
+# 🚀 Nombre del Proyecto
 
-> **[Slogan corto en negrita]** — [Subtítulo descriptivo].
+> **Slogan impactante** — Descripción breve y clara.
 
-<!-- BADGES: Usa style=flat-square -->
-[![Lang](https://img.shields.io/badge/Language-Color?style=flat-square&logo=logo&logoColor=white)](URL)
-[![Framework](https://img.shields.io/badge/Framework-Color?style=flat-square&logo=logo&logoColor=white)](URL)
+[![Tech](https://img.shields.io/badge/Tech-Color?style=flat-square&logo=tech)](URL)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 <p align="center">
-  <img src="ruta/a/imagen.png" alt="Dashboard Preview" width="800"/>
+  <img src="preview.png" alt="Preview" width="800"/>
 </p>
-
----
-
-## ✨ Características
-
-| Característica    | Descripción         |
-| :---------------- | :------------------ |
-| 🔹 **[Feature 1]** | [Descripción corta] |
-| 🔸 **[Feature 2]** | [Descripción corta] |
-| 🔄 **[Feature 3]** | [Descripción corta] |
-
----
-
-## 🚀 Inicio Rápido
-
-### Requisitos
-- [Requisito 1]
-- [Requisito 2]
-
-### 1. Clonar el repositorio
-```bash
-git clone https://github.com/usuario/repo.git
-cd repo
-```
-
-### 2. Configurar variables de entorno
-
-```bash
-cp .env.example .env
-```
-
-Variables principales (`.env`):
-```env
-DB_HOST=localhost
-API_KEY=xxxxx
-```
-
-### 3. Iniciar la aplicación
-
-```bash
-docker compose up -d
-# O tu comando de inicio
-npm run dev
 ```
 
 ---
 
-## 🏗️ Arquitectura
+## � Changelog
 
-```mermaid
-graph TD
-    A[Client] <--> B[Server]
-    B <--> C[Database]
-```
-
-## 📦 Opciones de Despliegue
-
-| Método | Archivo              | Ideal para            |
-| :----- | :------------------- | :-------------------- |
-| Docker | `docker-compose.yml` | Producción / Home Lab |
-| Local  | `npm script`         | Desarrollo            |
-
-📘 Ver guía completa: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
-
-## 🔧 Comandos Útiles
-
-```bash
-npm run build    # Compilar producción
-npm run lint     # Revisar código
-npm run test     # Ejecutar tests
-```
-
-## 📚 Documentación
-
-| Documento                 | Descripción          |
-| :------------------------ | :------------------- |
-| [GUIDE.md](docs/GUIDE.md) | Manual de usuario    |
-| [API.md](docs/API.md)     | Documentación de API |
-
-## 🛠️ Stack Tecnológico
-
-**Frontend**
-- [Tech A]: [Uso]
-- [Tech B]: [Uso]
-
-**Backend**
-- [Tech C]: [Uso]
-- [Tech D]: [Uso]
-
-## 🔒 Seguridad
-- ✅ [Medida de seguridad 1]
-- ✅ [Medida de seguridad 2]
-
-## 🤝 Contribuir
-1. Fork del repositorio
-2. Crear rama: `git checkout -b feat/nueva-feature`
-3. Commit: `git commit -m "feat: descripción"`
-4. Push: `git push origin feat/nueva-feature`
-5. Crear Pull Request
-
-## 📄 Licencia
-Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
-```
+| Versión | Fecha | Cambios |
+|:--------|:------|:--------|
+| 2.0.0 | 2026-01-05 | Añadido TOC, SemVer, Code Review, Breaking Changes |
+| 1.0.0 | - | Versión inicial del protocolo |
