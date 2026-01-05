@@ -33,7 +33,7 @@
 
 | Característica              | Descripción                                                                                                                                 |
 | :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| 🔹 **Sistema Base**          | Configuración esencial optimizada con herramientas modernas: `vim`, `tmux`, `fzf`, `ranger`, `lsd`, `htop`, `btop`.                         |
+| 🔹 **Sistema Base**          | Configuración esencial optimizada con herramientas modernas: `vim`, `tmux`, `fzf`, `ranger`, `htop`, `btop`.                                |\n| 🎨 **UI/UX Premium**         | Terminal moderna con **Oh My Posh** (Tema personalizado: `herwingx`), **lsd** (iconos) y fuentes Nerd Fonts integradas.                     |
 | 🔸 **Dev Suite**             | Toolkit completo para desarrollo: Docker, GitHub CLI (`gh`), Node.js (via nvm) y utilidades CLI modernas.                                   |
 | 🔐 **Seguridad Zero-Config** | Gestión de secretos con encriptación Age (`.env.age`). Las credenciales se extraen en runtime, nunca expuestas en código.                   |
 | 🤖 **Antigravity AI**        | Integración de protocolos para asistentes IA: `GEMINI.md` con reglas de desarrollo y workflows automatizados (`/commit`, `/release`, etc.). |
@@ -196,7 +196,7 @@ flowchart TD
 | Opción | Módulo            | Descripción                                                                                                  |
 | :----: | :---------------- | :----------------------------------------------------------------------------------------------------------- |
 |   5    | Update Sistema    | Actualiza el SO (`apt upgrade` / `dnf upgrade` / `pacman -Syu`)                                              |
-|   6    | Paquetes + Tools  | Instala: git, curl, htop, btop, vim, tmux, fzf, ranger, rclone, **lsd**, **lazydocker**, **ctop**, **gping** |
+|   6    | Paquetes + Tools  | Instala: git, curl, vim, tmux, fzf, ranger, **oh-my-posh** (Theme), **lsd**, **lazydocker**, **ctop**, **gping**                             |
 |   7    | Git Config        | Vincula `.gitconfig` con configuración global optimizada                                                     |
 |   8    | SSH Keys          | Importa llaves SSH públicas desde GitHub (via API)                                                           |
 |   9    | SSH desde Windows | Copia llaves SSH de Windows a WSL (solo aplica en WSL)                                                       |
@@ -552,6 +552,7 @@ gh release create v1.0.0 --generate-notes
 | Herramienta    | Descripción                                    |
 | :------------- | :--------------------------------------------- |
 | **lsd**        | Reemplazo moderno de `ls` con iconos y colores |
+| **Oh My Posh** | Motor de temas para prompt personalizado       |
 | **fzf**        | Fuzzy finder para búsqueda interactiva         |
 | **tmux**       | Multiplexor de terminal                        |
 | **ranger**     | File manager con preview en terminal           |

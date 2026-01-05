@@ -1,0 +1,226 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "blocks": [
+    {
+      "alignment": "left",
+      "segments": [
+        {
+          "foreground": "#4EC9B0",
+          "style": "plain",
+          "template": "{{ .Icon }} ",
+          "type": "os"
+        },
+        {
+          "foreground": "#d4d4d4",
+          "style": "plain",
+          "template": "{{ if .WSL }}wsl {{ end }}{{ .UserName }}<#5c6370>@</>{{ .HostName }}",
+          "type": "session"
+        },
+        {
+          "foreground": "#E06C75",
+          "style": "plain",
+          "template": "⚡ ",
+          "type": "root"
+        },
+        {
+          "foreground": "#4EC9B0",
+          "options": {
+            "style": "folder"
+          },
+          "style": "plain",
+          "template": "<#5c6370>:</>{{ .Path }}",
+          "type": "path"
+        },
+        {
+          "foreground": "#E06C75",
+          "options": {
+            "branch_icon": "",
+            "branch_identical_icon": "",
+            "fetch_status": true,
+            "fetch_upstream_icon": true
+          },
+          "style": "plain",
+          "template": " <#61AFEF>(</>{{ .UpstreamIcon }}{{ if .UpstreamIcon }} {{ end }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} <#E5C07B> {{ .Working.String }}</>{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} <#98C379> {{ .Staging.String }}</>{{ end }}<#61AFEF>)</>",
+          "type": "git"
+        },
+        {
+          "foreground": "#98C379",
+          "options": {
+            "fetch_version": true
+          },
+          "style": "plain",
+          "template": " <#5C6370>via</> <#98C379>\ue781 {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }}</>",
+          "type": "node"
+        },
+        {
+          "foreground": "#E5C07B",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#E5C07B>🐍 {{ .Full }}</>",
+          "type": "python"
+        },
+        {
+          "foreground": "#56B6C2",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#56B6C2>\ue627 {{ .Full }}</>",
+          "type": "go"
+        },
+        {
+          "foreground": "#D19A66",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#D19A66>\ue7a8 {{ .Full }}</>",
+          "type": "rust"
+        },
+        {
+          "foreground": "#E06C75",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#E06C75>\ue791 {{ .Full }}</>",
+          "type": "ruby"
+        },
+        {
+          "foreground": "#E5C07B",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#E5C07B>\ue74e {{ .Full }}</>",
+          "type": "java"
+        },
+        {
+          "foreground": "#C678DD",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#C678DD>\ue608 {{ .Full }}</>",
+          "type": "php"
+        },
+        {
+          "foreground": "#56B6C2",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#56B6C2>\ue72e {{ .Full }}</>",
+          "type": "dotnet"
+        },
+        {
+          "foreground": "#C678DD",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#C678DD>\ue628 {{ .Full }}</>",
+          "type": "kotlin"
+        },
+        {
+          "foreground": "#D19A66",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#D19A66>\ue755 {{ .Full }}</>",
+          "type": "swift"
+        },
+        {
+          "foreground": "#56B6C2",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#56B6C2>\ue70e {{ .Full }}</>",
+          "type": "flutter"
+        },
+        {
+          "foreground": "#C678DD",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#C678DD>\ue62d {{ .Full }}</>",
+          "type": "elixir"
+        },
+        {
+          "foreground": "#61AFEF",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#61AFEF>\ue620 {{ .Full }}</>",
+          "type": "lua"
+        },
+        {
+          "foreground": "#D19A66",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#D19A66>\ue6a9 {{ .Full }}</>",
+          "type": "zig"
+        },
+        {
+          "foreground": "#E5C07B",
+          "style": "plain",
+          "template": " <#5C6370>via</> <#E5C07B>\ue79f {{ .Full }}</>",
+          "type": "bun"
+        },
+        {
+          "foreground": "#E06C75",
+          "style": "plain",
+          "template": " <#E06C75>📦 {{ .Full }}</>",
+          "type": "npm"
+        },
+        {
+          "foreground": "#61AFEF",
+          "options": {
+            "display_mode": "files",
+            "extensions": [
+              "Dockerfile",
+              "docker-compose.yml",
+              "docker-compose.yaml",
+              "compose.yml",
+              "compose.yaml",
+              ".dockerignore"
+            ],
+            "fetch_context": true
+          },
+          "style": "plain",
+          "template": " <#5C6370>via</> <#61AFEF> {{ .Context }}</>",
+          "type": "docker"
+        },
+        {
+          "foreground": "#E5C07B",
+          "style": "plain",
+          "template": " <#5C6370>on</> <#E5C07B>☁️ {{ .Profile }}@{{ .Region }}</>",
+          "type": "aws"
+        },
+        {
+          "foreground": "#61AFEF",
+          "style": "plain",
+          "template": " <#5C6370>on</> <#61AFEF>󰠅 {{ .Name }}</>",
+          "type": "az"
+        },
+        {
+          "foreground": "#E06C75",
+          "style": "plain",
+          "template": " <#5C6370>on</> <#E06C75>󱇶 {{ .Project }}</>",
+          "type": "gcp"
+        },
+        {
+          "foreground": "#61AFEF",
+          "style": "plain",
+          "template": " <#5C6370>on</> <#61AFEF>⎈ {{ .Context }}{{ if .Namespace }}/{{ .Namespace }}{{ end }}</>",
+          "type": "kubectl"
+        },
+        {
+          "foreground": "#C678DD",
+          "style": "plain",
+          "template": " <#5C6370>on</> <#C678DD>󱁢 {{ .Workspace }}</>",
+          "type": "terraform"
+        },
+        {
+          "foreground": "#E06C75",
+          "style": "plain",
+          "template": " ✗",
+          "type": "status"
+        },
+        {
+          "foreground": "#5C6370",
+          "style": "plain",
+          "template": " <#E5C07B>󱎫 {{ .FormattedMs }}</>",
+          "type": "executiontime",
+          "options": {
+            "threshold": 500
+          }
+        },
+        {
+          "foreground": "#5C6370",
+          "style": "plain",
+          "template": " <#61AFEF>󰍛</> {{ .PhysicalPercentUsed | printf \"%.2f\" }}%",
+          "type": "sysinfo"
+        },
+        {
+          "foreground": "#98C379",
+          "style": "plain",
+          "template": " ➜",
+          "type": "text"
+        }
+      ],
+      "type": "prompt"
+    }
+  ],
+  "final_space": true,
+  "version": 4
+}
