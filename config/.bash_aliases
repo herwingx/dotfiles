@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 # Dotfiles
 # -----------------------------------------------------------------------------
-alias sync-dotfiles='(cd ~/dotfiles && git pull && ./install.sh) && source ~/.bashrc && echo "✅ Dotfiles Sincronizados"'
+alias sync-dotfiles='(cd ~/dotfiles && git pull && ./install.sh --all) && source ~/.bashrc && echo "✅ Dotfiles Sincronizados"'
 alias reload='exec bash'
 
 # -----------------------------------------------------------------------------

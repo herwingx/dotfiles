@@ -165,6 +165,14 @@ show_menu() {
 }
 
 # --- MAIN ---
+
+# Soporte para ejecución no interactiva (argumento --all)
+if [ "$1" == "--all" ]; then
+    echo -e "${GREEN}>>> Ejecutando instalación completa automática...${NC}"
+    install_all
+    exit 0
+fi
+
 while true; do
     show_menu
     
