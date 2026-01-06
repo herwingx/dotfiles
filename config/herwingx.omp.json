@@ -13,14 +13,8 @@
         {
           "foreground": "#d4d4d4",
           "style": "plain",
-          "template": "{{ if .WSL }}wsl {{ end }}{{ .UserName }}<#5c6370>@</>{{ .HostName }}",
+          "template": "{{ if .WSL }}wsl {{ end }}{{ .UserName }}{{ if .Root }}<#E06C75>⚡</>{{ else }}<#5c6370>@</>{{ end }}{{ .HostName }}",
           "type": "session"
-        },
-        {
-          "foreground": "#E06C75",
-          "style": "plain",
-          "template": "⚡ ",
-          "type": "root"
         },
         {
           "foreground": "#4EC9B0",
