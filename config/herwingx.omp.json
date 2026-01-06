@@ -13,7 +13,7 @@
         {
           "foreground": "#d4d4d4",
           "style": "plain",
-          "template": "{{ if .WSL }}wsl {{ end }}{{ .UserName }}{{ if .Root }}<#E06C75>⚡</>{{ else }}<#5c6370>@</>{{ end }}{{ .HostName }}",
+          "template": "{{ if .WSL }}wsl {{ end }}{{ if .Root }}<#E06C75>{{ .UserName }}@{{ .HostName }}</>{{ else }}{{ .UserName }}<#5c6370>@</>{{ .HostName }}{{ end }}",
           "type": "session"
         },
         {
