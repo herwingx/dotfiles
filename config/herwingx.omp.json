@@ -5,7 +5,10 @@
       "alignment": "left",
       "segments": [
         {
-          "foreground": "#4EC9B0",
+          "foreground": "#61AFEF",
+          "foreground_templates": [
+            "{{ if eq .Env.USER \"root\" }}#E06C75{{ end }}"
+          ],
           "style": "plain",
           "template": "{{ .Icon }} ",
           "type": "os"
@@ -13,11 +16,11 @@
         {
           "foreground": "#d4d4d4",
           "style": "plain",
-          "template": "{{ if .WSL }}wsl {{ end }}{{ if .Root }}<#E06C75>{{ .UserName }}@{{ .HostName }}</>{{ else }}{{ .UserName }}<#5c6370>@</>{{ .HostName }}{{ end }}",
+          "template": "{{ if .WSL }}<#e96d15>wsl</><#5c6370>:{{ end }}{{ if .Root }}<#E06C75>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#61AFEF>{{ .UserName }}</><#61AFEF>@</><#61AFEF>{{ .HostName }}</>{{ end }}",
           "type": "session"
         },
         {
-          "foreground": "#4EC9B0",
+          "foreground": "#61AFEF",
           "options": {
             "style": "folder"
           },
@@ -34,7 +37,7 @@
             "fetch_upstream_icon": true
           },
           "style": "plain",
-          "template": " <#61AFEF>(</>{{ .UpstreamIcon }}{{ if .UpstreamIcon }} {{ end }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} <#E5C07B> {{ .Working.String }}</>{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} <#98C379> {{ .Staging.String }}</>{{ end }}<#61AFEF>)</>",
+          "template": "<#61AFEF>(</>{{ .UpstreamIcon }}{{ if .UpstreamIcon }} {{ end }}{{ .HEAD }}{{ if gt .Ahead 0 }} <#98C379>↑{{ .Ahead }}</>{{ end }}{{ if gt .Behind 0 }} <#E5C07B>↓{{ .Behind }}</>{{ end }}{{ if .Working.Changed }} <#E5C07B> {{ .Working.String }}</>{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} <#98C379> {{ .Staging.String }}</>{{ end }}<#61AFEF>)</>",
           "type": "git"
         },
         {
