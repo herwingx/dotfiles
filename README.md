@@ -33,7 +33,8 @@
 
 | Característica              | Descripción                                                                                                                                 |
 | :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| 🔹 **Sistema Base**          | Configuración esencial optimizada con herramientas modernas: `vim`, `tmux`, `fzf`, `ranger`, `htop`, `btop`.                                |\n| 🎨 **UI/UX Premium**         | Terminal moderna con **Oh My Posh** (Tema personalizado: `herwingx`), **lsd** (iconos) y fuentes Nerd Fonts integradas.                     |
+| 🔹 **Sistema Base**          | Configuración esencial optimizada con herramientas modernas: `vim`, `tmux`, `fzf`, `ranger`, `htop`, `btop`.                                |
+| 🎨 **UI/UX Premium**         | Terminal moderna con **Oh My Posh** (Tema personalizado: `herwingx`), **lsd** (iconos) y fuentes Nerd Fonts integradas.                     |
 | 🔸 **Dev Suite**             | Toolkit completo para desarrollo: Docker, GitHub CLI (`gh`), Node.js (via nvm) y utilidades CLI modernas.                                   |
 | 🔐 **Seguridad Zero-Config** | Gestión de secretos con encriptación Age (`.env.age`). Las credenciales se extraen en runtime, nunca expuestas en código.                   |
 | 🤖 **Antigravity AI**        | Integración de protocolos para asistentes IA: `GEMINI.md` con reglas de desarrollo y workflows automatizados (`/commit`, `/release`, etc.). |
