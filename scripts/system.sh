@@ -182,7 +182,7 @@ install_oh_my_posh() {
     
     if ! command -v oh-my-posh &> /dev/null; then
         echo -e "${CYAN}   Descargando e instalando Oh My Posh...${NC}"
-        curl -s https://ohmyposh.dev/install.sh | $SUDO_CMD bash -s
+        curl -s https://ohmyposh.dev/install.sh | $SUDO_CMD bash -s -- -d /usr/local/bin
         echo -e "${CYAN}   ✓ Oh My Posh instalado${NC}"
     else
         echo -e "${YELLOW}   ! Oh My Posh ya está instalado${NC}"
