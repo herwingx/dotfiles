@@ -78,8 +78,9 @@ show_menu() {
     echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
     echo -e "${CYAN}  │${NC}  ${BOLD}ANTIGRAVITY AI${NC}                                                ${CYAN}│${NC}"
     echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
-    echo -e "${CYAN}  │${NC}  ${GREEN}14)${NC} 📜 Solo Reglas (GEMINI.md)                                ${CYAN}│${NC}"
-    echo -e "${CYAN}  │${NC}  ${GREEN}15)${NC} 🔄 Solo Workflows (/commit, /publicar, etc.)              ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}14)${NC} 📜 Solo Reglas (GEMINI.md)                                ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}15)${NC} 🔄 Solo Workflows (/commit, /publicar, etc.)              ${CYAN}│${NC}"
+    echo -e "${CYAN}  │${NC}   ${GREEN}20)${NC} ⚙️  Solo Settings (settings.json + Token)                  ${CYAN}│${NC}"
     echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
     echo -e "${CYAN}  │${NC}  ${BOLD}CLOUD & MANTENIMIENTO${NC}                                         ${CYAN}│${NC}"
     echo -e "${CYAN}  ├──────────────────────────────────────────────────────────────┤${NC}"
@@ -138,6 +139,9 @@ show_menu() {
             ;;
         15)
             install_antigravity_workflows
+            ;;
+        20)
+            install_gemini_settings
             ;;
         16)
             configure_rclone

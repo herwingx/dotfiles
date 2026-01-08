@@ -126,6 +126,7 @@ dotfiles/
 │
 └── gemini/                 # 🤖 Configuración Antigravity/Gemini
     ├── GEMINI.md           # Reglas globales de desarrollo para IA
+    ├── settings.json       # Template de configuración para Gemini CLI
     └── workflows/          # Comandos slash automatizados
         ├── commit.md       # /commit - Conventional Commits
         ├── crear-pr.md     # /crear-pr - Pull Requests
@@ -217,6 +218,14 @@ flowchart TD
 | :----: | :-------- | :------------------------------------------------------------------------------------- |
 |   14   | Reglas    | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA        |
 |   15   | Workflows | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/` |
+|   20   | Settings  | Configura `settings.json`, el token de GitHub y **extensiones MCP**                    |
+
+#### 🛠️ Servidores MCP Incluidos
+La opción **20** instala automáticamente los siguientes servidores MCP para potenciar a Gemini:
+- 🌐 **Chrome DevTools**: Inspección y control del navegador.
+- 🐙 **GitHub**: Gestión de repositorios, issues y PRs.
+- 🐘 **Postgres**: Interacción directa con bases de datos.
+- 🍌 **Nanobanana**: Extensiones de utilidad adicionales.
 
 > 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal (@herwingx).
 > ¡Siéntete libre de editarlos! Puedes modificar las reglas para adaptarlas a tu estilo o crear nuevos workflows en `~/.gemini/workflows/` para automatizar tus propias tareas.
@@ -242,7 +251,7 @@ Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para prot
 | :------------------- | :------------------------------------------ | :----------------------------------- |
 | `BW_CLIENTID`        | Client ID de API de Bitwarden               | Autenticación automática de `bw` CLI |
 | `BW_CLIENTSECRET`    | Client Secret de API de Bitwarden           | Autenticación automática de `bw` CLI |
-| `GH_TOKEN`           | Personal Access Token de GitHub             | Autenticación de `gh` CLI            |
+| `GH_TOKEN`           | Personal Access Token de GitHub             | Autenticación de `gh` CLI y Gemini MCP       |
 | `RCLONE_TOKEN_JSON`  | Token OAuth de Google Drive (JSON completo) | Configuración automática de rclone   |
 | `TELEGRAM_BOT_TOKEN` | Token del bot de Telegram                   | Notificaciones de auto-update        |
 | `TELEGRAM_CHAT_ID`   | ID del chat para notificaciones             | Destino de notificaciones Telegram   |
