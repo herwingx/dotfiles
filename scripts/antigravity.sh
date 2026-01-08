@@ -118,7 +118,7 @@ install_gemini_extensions() {
 
     for ext in "${extensions[@]}"; do
         echo -e "${CYAN}   Instalando: $ext...${NC}"
-        gemini extensions install "$ext" || echo -e "${RED}   ✗ Error instalando $ext (posiblemente ya instalada)${NC}"
+        gemini extensions install "$ext" --consent || echo -e "${RED}   ✗ Error instalando $ext (posiblemente ya instalada)${NC}"
     done
     
     echo -e "${CYAN}   ✓ Extensiones procesadas${NC}"
