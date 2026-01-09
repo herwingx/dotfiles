@@ -86,31 +86,31 @@ El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para co
   ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
                             v2.0_PREMIUM_BUILD // SYSTEM_READY
 
-  // DEPLOYMENT_PROTOCOLS
+  // 🚀 ONE-CLICK INSTALL
   +------------------------------------------------------------+
-  [1 ] FULL_STACK_DEPLOY (All Modules)
+  [1 ] Install Everything (Full Setup)
   +------------------------------------------------------------+
-  [2 ] SYSTEM_ONLY                       [3 ] DEV_TOOLS
-  [4 ] ANTIGRAVITY_AI
+  [2 ] Install System Essentials          [3 ] Install Dev Tools Only
+  [4 ] Install Antigravity AI Only
   +------------------------------------------------------------+
 
-  // SYSTEM_MODULES
-  [5 ] System Upgrade                    [6 ] Base Packages
-  [7 ] Git Config                        [8 ] SSH Keys
-  [9 ] WSL Sync
+  // 📦 SYSTEM & BASE
+  [5 ] Upgrade OS Packages                [6 ] Install Base Utils (vim, fzf...)
+  [7 ] Configure Git & Aliases            [8 ] Import SSH Keys (from GitHub)
+  [9 ] Sync SSH from Windows (WSL)
 
-  // DEV_ENV
-  [10] GitHub CLI                        [11] Node.js (LTS)
-  [12] NPM Globals                       [13] Docker Engine
+  // 🛠️ DEVELOPER TOOLS
+  [10] Install GitHub CLI (gh)            [11] Install Node.js (LTS)
+  [12] Install NPM Globals                [13] Install Docker Engine
 
-  // CLOUD_OPS
-  [14] AI Rules                          [15] AI Workflows
-  [20] Load Secrets                      [21] Create New Vault
-  [16] Rclone Sync
+  // ☁️ CLOUD & AI INTEGRATIONS
+  [14] Install AI Rules (GEMINI.md)      [15] Install AI Slash Commands
+  [16] Decrypt/Load Secrets              [17] Reset/Create My Secrets
+  [18] Configure Rclone (GDrive)
 
-  // MAINTENANCE
-  [17] Enable Auto-Up                    [18] Manual Update
-  [19] Disable Auto-Up
+  // 🔄 UPDATES & MAINTENANCE
+  [19] Enable Auto-Updates               [20] Run Manual Update
+  [21] Disable Auto-Updates
 
   +------------------------------------------------------------+
   [0 ] ABORT / EXIT
@@ -121,7 +121,7 @@ El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para co
 
 > 📘 **Recomendación**: Para una máquina nueva personal, selecciona la opción **[1]** "FULL_STACK_DEPLOY".
 >
-> 🔱 **Para Forks/Colaboradores**: Usad la opción **[21] Create New Vault** para generar vuestra propia bóveda de secretos `.env.local.age` y limpiar la configuración del autor original.
+> 🔱 **Para Forks/Colaboradores**: Usad la opción **[17] Create New Vault** para generar vuestra propia bóveda de secretos `.env.local.age` y limpiar la configuración del autor original.
 
 ---
 
@@ -134,6 +134,7 @@ dotfiles/
 ├── install.sh              # 🎛️ Orquestador principal (menú interactivo)
 ├── README.md               # 📖 Documentación del proyecto
 ├── .env.age                # 🔐 Secrets encriptados con Age
+├── .env.local.age          # 🔐 Secrets locales (usuario)
 │
 ├── config/                 # 📁 Archivos de configuración (dotfiles puros)
 │   ├── .bash_aliases       # Aliases de terminal (gs, ga, ll, etc.)
@@ -146,8 +147,7 @@ dotfiles/
 │   ├── dev-tools.sh        # GitHub CLI, NVM, Docker
 │   ├── antigravity.sh      # Reglas y workflows de IA
 │   ├── cloud.sh            # Configuración rclone (Google Drive)
-│   ├── cron-update.sh      # Script de actualización automática
-│   └── manage_secrets.sh   # Gestión interactiva de .env.age
+│   └── cron-update.sh      # Script de actualización automática
 │
 └── gemini/                 # 🤖 Configuración Antigravity/Gemini
     ├── README.md           # Guía completa de extensiones MCP y workflows
@@ -200,7 +200,8 @@ flowchart TD
     H --> M
 
     subgraph SECRETS["🔐 Gestión de Secretos"]
-        N["🔒 .env.age"] --> O["decrypt_secrets()"]
+        N["🔒 .env.local.age"] --> O["decrypt_secrets()"]
+        N2["🔒 .env.age"] --> N
         O --> P["🔓 Variables en Runtime"]
     end
 
