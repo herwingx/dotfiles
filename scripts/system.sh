@@ -319,9 +319,70 @@ install_modern_tools() {
         echo -e "${CYAN}   ✓ tmux.conf enlazado${NC}"
     fi
     
+    # Configuración de Google Antigravity (WSL Fix)
+    install_antigravity_fix
+
     echo -e "${CYAN}   ✓ Herramientas Modern Unix instaladas${NC}"
-    echo -e "${CYAN}   Disponibles: zoxide, bat, rg, delta, atuin, ble.sh, tmux${NC}"
+    echo -e "${CYAN}   Disponibles: zoxide, bat, rg, delta, atuin, ble.sh, tmux, agy${NC}"
 }
+
+# ─────────────────────────────────────────────────────────────
+# Configura Google Antigravity (agy) en WSL.
+# - Crea symlink al ejecutable de Windows.
+# - Parchea el archivo de lanzamiento para corregir el bug de ID de extensión.
+# ─────────────────────────────────────────────────────────────
+install_antigravity_fix() {
+    # Solo ejecutar en WSL
+    if ! grep -qi microsoft /proc/version 2>/dev/null; then
+        return
+    fi
+
+    echo -e "${GREEN}>>> Configurando Google Antigravity (agy) para WSL...${NC}"
+    
+    # 1. Detectar usuario de Windows dinámicamente
+    # cmd.exe devuelve el usuario con retorno de carro (\r), hay que limpiarlo.
+    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+    
+    if [ -n "$WIN_USER" ]; then
+        # Ruta estándar de instalación en Windows (accedida desde /mnt/c)
+        AGY_PATH="/mnt/c/Users/$WIN_USER/AppData/Local/Programs/Antigravity/bin/antigravity"
+        
+        if [ -f "$AGY_PATH" ]; then
+            # 2. Crear Symlink en ~/.local/bin
+            # Forzamos la creación del directorio por si acaso
+            mkdir -p "$HOME/.local/bin"
+            
+            # Eliminamos link previo si existe y creamos uno nuevo
+            rm -f "$HOME/.local/bin/agy"
+            ln -s "$AGY_PATH" "$HOME/.local/bin/agy"
+            echo -e "${CYAN}   ✓ Symlink 'agy' vinculado al ejecutable de Windows${NC}"
+            
+            # 3. Parchear el bug de WSL_EXT_ID (Fix 2026)
+            # El script original busca la extensión de VS Code en lugar de la de Antigravity
+            if grep -q "WSL_EXT_ID=\"ms-vscode-remote.remote-wsl\"" "$AGY_PATH"; then
+                    echo -e "${YELLOW}   ! Detectado bug de ID en lanzador de Windows. Aplicando parche...${NC}"
+                    
+                    # Crear backup por seguridad
+                    cp "$AGY_PATH" "${AGY_PATH}.bak"
+                    
+                    # Reemplazar el ID usando sed
+                    # Nota: Al estar en /mnt/c, asegúrate de que WSL tenga permisos de escritura (usualmente sí)
+                    sed -i 's/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/WSL_EXT_ID="google.antigravity-remote-wsl"/' "$AGY_PATH"
+                    
+                    echo -e "${CYAN}   ✓ Parche aplicado: 'agy .' ahora abrirá el entorno WSL nativo${NC}"
+            elif grep -q "WSL_EXT_ID=\"google.antigravity-remote-wsl\"" "$AGY_PATH"; then
+                    echo -e "${CYAN}   ✓ El lanzador ya tiene el ID correcto (Google Antigravity)${NC}"
+            else
+                    echo -e "${YELLOW}   ! No se pudo verificar el ID en el script de Antigravity. Revisa manualmente.${NC}"
+            fi
+        else
+            echo -e "${RED}   ✗ No se encontró Antigravity en: $AGY_PATH${NC}"
+            echo -e "${YELLOW}     Verifica que esté instalado en la ruta por defecto.${NC}"
+        fi
+    else
+        echo -e "${RED}   ✗ No se pudo detectar el usuario de Windows automáticamente${NC}"
+    fi
+
 
 # ─────────────────────────────────────────────────────────────
 # Instala Ble.sh (Syntax Highlighting & Auto-suggestions for Bash)
