@@ -79,39 +79,39 @@ show_menu() {
         printf "${GRAY}[${WHITE}%-2s${GRAY}]${NC} %-38s" "$1" "$2"
     }
 
-    echo -e "${NEON_GREEN}  // DEPLOYMENT_PROTOCOLS${NC}"
+    echo -e "${NEON_GREEN}  // 🚀 ONE-CLICK INSTALL${NC}"
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     
     # Fila 1: Full
-    echo -ne "  "; p_opt "1" "FULL_STACK_DEPLOY (All Modules)"; echo ""
+    echo -ne "  "; p_opt "1" "Install Everything (Full Setup)"; echo ""
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     
     # Fila 2: Groups
-    echo -ne "  "; p_opt "2" "SYSTEM_ONLY"; p_opt "3" "DEV_TOOLS"; echo ""
-    echo -ne "  "; p_opt "4" "ANTIGRAVITY_AI"; echo ""
+    echo -ne "  "; p_opt "2" "Install System Essentials"; p_opt "3" "Install Dev Tools Only"; echo ""
+    echo -ne "  "; p_opt "4" "Install Antigravity AI Only"; echo ""
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     echo ""
 
-    echo -e "${NEON_CYAN}  // SYSTEM_MODULES${NC}"
-    echo -ne "  "; p_opt "5" "System Upgrade"; p_opt "6" "Base Packages"; echo ""
-    echo -ne "  "; p_opt "7" "Git Config"; p_opt "8" "SSH Keys"; echo ""
-    echo -ne "  "; p_opt "9" "WSL Sync"; echo ""
+    echo -e "${NEON_CYAN}  // 📦 SYSTEM & BASE${NC}"
+    echo -ne "  "; p_opt "5" "Upgrade OS Packages"; p_opt "6" "Install Base Utils (vim, fzf...)"; echo ""
+    echo -ne "  "; p_opt "7" "Configure Git & Aliases"; p_opt "8" "Import SSH Keys (from GitHub)"; echo ""
+    echo -ne "  "; p_opt "9" "Sync SSH from Windows (WSL)"; echo ""
     echo ""
 
-    echo -e "${NEON_CYAN}  // DEV_ENV${NC}"
-    echo -ne "  "; p_opt "10" "GitHub CLI"; p_opt "11" "Node.js (LTS)"; echo ""
-    echo -ne "  "; p_opt "12" "NPM Globals"; p_opt "13" "Docker Engine"; echo ""
+    echo -e "${NEON_CYAN}  // 🛠️ DEVELOPER TOOLS${NC}"
+    echo -ne "  "; p_opt "10" "Install GitHub CLI (gh)"; p_opt "11" "Install Node.js (LTS)"; echo ""
+    echo -ne "  "; p_opt "12" "Install NPM Globals"; p_opt "13" "Install Docker Engine"; echo ""
     echo ""
 
-    echo -e "${NEON_CYAN}  // CLOUD_OPS${NC}"
-    echo -ne "  "; p_opt "14" "AI Rules"; p_opt "15" "AI Workflows"; echo ""
-    echo -ne "  "; p_opt "20" "Load Secrets"; p_opt "21" "Create New Vault"; echo ""
-    echo -ne "  "; p_opt "16" "Rclone Sync"; echo ""
+    echo -e "${NEON_CYAN}  // ☁️ CLOUD & AI INTEGRATIONS${NC}"
+    echo -ne "  "; p_opt "14" "Install AI Rules (GEMINI.md)"; p_opt "15" "Install AI Slash Commands"; echo ""
+    echo -ne "  "; p_opt "16" "Decrypt/Load Secrets"; p_opt "17" "Reset/Create My Secrets"; echo ""
+    echo -ne "  "; p_opt "18" "Configure Rclone (GDrive)"; echo ""
     echo ""
 
-    echo -e "${NEON_CYAN}  // MAINTENANCE${NC}"
-    echo -ne "  "; p_opt "17" "Enable Auto-Up"; p_opt "18" "Manual Update"; echo ""
-    echo -ne "  "; p_opt "19" "Disable Auto-Up"; echo ""
+    echo -e "${NEON_CYAN}  // 🔄 UPDATES & MAINTENANCE${NC}"
+    echo -ne "  "; p_opt "19" "Enable Auto-Updates"; p_opt "20" "Run Manual Update"; echo ""
+    echo -ne "  "; p_opt "21" "Disable Auto-Updates"; echo ""
     echo ""
     
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
@@ -138,12 +138,12 @@ show_menu() {
         13) install_docker || handle_error $? "DOCKER_DEPLOY" ;;
         14) install_antigravity_rules || handle_error $? "AI_RULES" ;;
         15) install_antigravity_workflows || handle_error $? "AI_WORKFLOWS" ;;
-        20) install_gemini_settings || handle_error $? "SECRETS_CONFIG" ;;
-        21) reset_secrets_interactive || handle_error $? "NEW_VAULT_CREATION" ;;
-        16) configure_rclone || handle_error $? "RCLONE_CONFIG" ;;
-        17) install_auto_update || handle_error $? "AUTO_UPDATE_ENABLE" ;;
-        18) run_manual_update || handle_error $? "MANUAL_UPDATE" ;;
-        19) uninstall_auto_update || handle_error $? "AUTO_UPDATE_DISABLE" ;;
+        16) install_gemini_settings || handle_error $? "SECRETS_CONFIG" ;;
+        17) reset_secrets_interactive || handle_error $? "NEW_VAULT_CREATION" ;;
+        18) configure_rclone || handle_error $? "RCLONE_CONFIG" ;;
+        19) install_auto_update || handle_error $? "AUTO_UPDATE_ENABLE" ;;
+        20) run_manual_update || handle_error $? "MANUAL_UPDATE" ;;
+        21) uninstall_auto_update || handle_error $? "AUTO_UPDATE_DISABLE" ;;
         0)
             echo ""
             echo -e "${NEON_GREEN}  >> SYSTEM SHUTDOWN... GOODBYE.${NC}"
