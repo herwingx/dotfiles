@@ -58,6 +58,30 @@ fi
 
 # --- GESTIÓN DE SECRETOS ---
 
+# Función explícita para resetear/crear secretos desde el menú
+reset_secrets_interactive() {
+    print_header "RESET SECRETS VAULT"
+    echo -e "${YELLOW}  [!] WARNING: A NEW local secrets vault will be generated.${NC}"
+    echo -e "${GRAY}      If .env.local.age exists, it will be OVERWRITTEN.${NC}"
+    echo ""
+    
+    # Detección y recomendación para Forks
+    if [ -f "$DOTFILES_DIR/.env.age" ]; then
+        echo -e "${NEON_CYAN}  [INFO] FORK DETECTED :: Original .env.age found.${NC}"
+        echo -e "${GRAY}         Creating your own vault allows you to safely remove/archive${NC}"
+        echo -e "${GRAY}         the original author's encrypted file.${NC}" 
+        echo ""
+    fi
+    
+    echo -ne "${NEON_GREEN}  >> Proceed with new vault creation? [y/N]: ${NC}"
+    read CONFIRM
+    if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
+        create_local_secrets
+    else
+        print_warning "Aborted by user."
+    fi
+}
+
 # Función auxiliar para guiar la creación de secretos locales
 create_local_secrets() {
     print_header "🔐 Configuración de Secretos Personales"
