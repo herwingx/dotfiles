@@ -202,7 +202,7 @@ flowchart TD
 | Opción | Módulo            | Descripción                                                                                                      |
 | :----: | :---------------- | :--------------------------------------------------------------------------------------------------------------- |
 |   5    | Update Sistema    | Actualiza el SO (`apt upgrade` / `dnf upgrade` / `pacman -Syu`)                                                  |
-|   6    | Paquetes + Tools  | Instala: git, curl, vim, tmux, fzf, ranger, **oh-my-posh**, **lsd**, **lazydocker**, **ctop**, **gping** y herramientas de compilación (`make`, `gcc`, `gawk`). |
+|   6    | Paquetes + Tools  | Instala: git, curl, vim, **micro**, **tldr**, tmux, fzf, ranger, **oh-my-posh**, **lsd**, **lazydocker**, **ctop**, **gping** y herramientas de compilación (`make`, `gcc`, `gawk`). |
 |   7    | Git Config        | Vincula `.gitconfig` con configuración global optimizada                                                         |
 |   8    | SSH Keys          | Importa llaves SSH públicas desde GitHub (via API)                                                               |
 |   9    | SSH desde Windows | Copia llaves SSH de Windows a WSL (solo aplica en WSL)                                                           |
@@ -224,9 +224,11 @@ Para generar confianza, aquí detallamos el propósito de las librerías base qu
 | :----------------------- | :-------------------------------------------------------------------------------------- |
 | 🛠️ **Build Essentials** | `make`, `gcc`, `g++`, `build-essential`. Necesarios para compilar `ble.sh` y otros bins. |
 | 📋 **GNU AWK (gawk)**    | Requerido específicamente por `ble.sh` para el procesamiento avanzado de texto en Bash. |
-| 📦 **Modern Unix Tools** | `lsd`, `bat`, `zoxide`, `delta`. Mejoran la visualización y navegación de archivos.     |
+| 📦 **Modern Unix Tools** | `lsd`, `bat`, `zoxide`, `delta`, `micro`. Mejoran la visualización y edición de archivos. |
+| 📗 **TLDR / Help**       | `tldr`. Páginas de ayuda simplificadas para comandos comunes.                           |
 | 🐳 **Docker Suite**      | Docker Engine y Compose para containerización local.                                    |
 | 🔒 **Age / Secrets**     | Encriptación de nivel bancario para tus tokens y llaves privadas.                       |
+| 📦 **System Utils**      | `xz-utils`, `unzip`. Necesarios para descomprimir paquetes binarios (ej. herramientas npm). |
 
 > 💡 **Auditoría**: Puedes revisar los scripts en `scripts/*.sh` para ver cada comando `apt install` o `curl` ejecutado. No instalamos nada que no sea estándar o de código abierto.
 
