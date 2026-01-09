@@ -387,32 +387,31 @@ install_antigravity_fix() {
             BASE_DIR="$(dirname "$(dirname "$AGY_PATH")")"
             EXT_DIR="$BASE_DIR/resources/app/extensions"
             
-            # Nombres posibles de la carpeta de extensión
-            NEW_EXT_FOLDER="antigravity-remote-wsl" # Lo que busca el script con el nuevo ID
-            OLD_EXT_FOLDER="ms-vscode-remote.remote-wsl"
+            # Lógica ULTRA-SEGURA para evitar "No such file"
+            # Solo aplicamos el parche si la carpeta de destino EXISTE FÍSICAMENTE.
+            # Si no existe, nos aseguramos de que el ID sea el original (legacy) para que funcione siempre.
             
-            if grep -q "WSL_EXT_ID=\"ms-vscode-remote.remote-wsl\"" "$AGY_PATH"; then
-                if [ -d "$EXT_DIR/$NEW_EXT_FOLDER" ]; then
-                    echo -e "${YELLOW}   ! Bug detectado y estructura compatible. Aplicando parche...${NC}"
-                    cp "$AGY_PATH" "${AGY_PATH}.bak"
-                    sed -i 's/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/WSL_EXT_ID="google.antigravity-remote-wsl"/' "$AGY_PATH"
-                    echo -e "${CYAN}   ✓ Parche aplicado: 'agy' usará la extensión nativa${NC}"
-                elif [ -d "$EXT_DIR/$OLD_EXT_FOLDER" ]; then
-                    echo -e "${YELLOW}   ! Advertencia: ID incorrecto pero carpeta antigua detectada.${NC}"
-                    echo -e "${YELLOW}     No se aplicó el parche para evitar romper el inicio (Error 127).${NC}"
-                    echo -e "${YELLOW}     Solución manual: Renombrar carpeta '$OLD_EXT_FOLDER' a '$NEW_EXT_FOLDER' en Windows.${NC}"
+            if [ -d "$EXT_DIR/$NEW_EXT_FOLDER" ]; then
+                # La carpeta premium existe, podemos activar el modo nativo
+                if grep -q "WSL_EXT_ID=\"ms-vscode-remote.remote-wsl\"" "$AGY_PATH"; then
+                     echo -e "${GREEN}   ✓ Carpeta nativa detectada. Activando modo optimizado (Google ID)...${NC}"
+                     cp "$AGY_PATH" "${AGY_PATH}.bak"
+                     sed -i 's/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/WSL_EXT_ID="google.antigravity-remote-wsl"/' "$AGY_PATH"
                 else
-                     echo -e "${YELLOW}   ! No se encontraron extensiones en $EXT_DIR. Omitiendo parche.${NC}"
+                     echo -e "${CYAN}   ✓ Antigravity ya está optimizado (Modo Nativo)${NC}"
                 fi
-            elif grep -q "WSL_EXT_ID=\"google.antigravity-remote-wsl\"" "$AGY_PATH"; then
-                 # Verificar si la carpeta realmente existe, si no, revertir (Auto-Healing)
-                 if [ ! -d "$EXT_DIR/$NEW_EXT_FOLDER" ] && [ -d "$EXT_DIR/$OLD_EXT_FOLDER" ]; then
-                     echo -e "${RED}   ! Detectado ID parcheado pero sin carpeta de extensión. Revertiendo...${NC}"
+            else
+                # La carpeta nueva NO existe. Debemos usar el modo legacy (Microsoft ID)
+                if grep -q "WSL_EXT_ID=\"google.antigravity-remote-wsl\"" "$AGY_PATH"; then
+                     echo -e "${YELLOW}   ! Carpeta nativa no encontrada. Revertiendo a modo compatibilidad...${NC}"
+                     echo -e "${YELLOW}     (Esto evita el error 'wslCode.sh not found')${NC}"
                      sed -i 's/WSL_EXT_ID="google.antigravity-remote-wsl"/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/' "$AGY_PATH"
-                     echo -e "${GREEN}   ✓ Configuración revertida. 'agy' funcionará con la extensión legacy.${NC}"
-                 else
-                     echo -e "${CYAN}   ✓ Antigravity ya está correctamente configurado${NC}"
-                 fi
+                     echo -e "${GREEN}   ✓ Restaurado modo compatibilidad. 'agy' funcionará por red.${NC}"
+                else
+                     echo -e "${CYAN}   ✓ Configuración compatible verificada (Modo Red)${NC}"
+                fi
+                # Mensaje educativo
+                echo -e "${DIM}     Tip: Para modo nativo, copia 'ms-vscode-remote...' a 'antigravity-remote-wsl' en Windows.${NC}"
             fi
 
         else
