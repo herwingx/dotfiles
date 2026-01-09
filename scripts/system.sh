@@ -357,24 +357,34 @@ install_antigravity_fix() {
             ln -s "$AGY_PATH" "$HOME/.local/bin/agy"
             echo -e "${CYAN}   ✓ Symlink 'agy' vinculado al ejecutable de Windows${NC}"
             
-            # 3. Parchear el bug de WSL_EXT_ID (Fix 2026)
-            # El script original busca la extensión de VS Code en lugar de la de Antigravity
+            # 3. Parchear el bug de WSL_EXT_ID (Fix Smart)
+            # Solo parcheamos si detectamos que la estructura de archivos soporta el nuevo ID
+            # o si el usuario ya lo tenía parcheado.
+            
+            BASE_DIR="$(dirname "$(dirname "$AGY_PATH")")"
+            EXT_DIR="$BASE_DIR/resources/app/extensions"
+            
+            # Nombres posibles de la carpeta de extensión
+            NEW_EXT_FOLDER="antigravity-remote-wsl" # Lo que busca el script con el nuevo ID
+            OLD_EXT_FOLDER="ms-vscode-remote.remote-wsl"
+            
             if grep -q "WSL_EXT_ID=\"ms-vscode-remote.remote-wsl\"" "$AGY_PATH"; then
-                    echo -e "${YELLOW}   ! Detectado bug de ID en lanzador de Windows. Aplicando parche...${NC}"
-                    
-                    # Crear backup por seguridad
+                if [ -d "$EXT_DIR/$NEW_EXT_FOLDER" ]; then
+                    echo -e "${YELLOW}   ! Bug detectado y estructura compatible. Aplicando parche...${NC}"
                     cp "$AGY_PATH" "${AGY_PATH}.bak"
-                    
-                    # Reemplazar el ID usando sed
-                    # Nota: Al estar en /mnt/c, asegúrate de que WSL tenga permisos de escritura (usualmente sí)
                     sed -i 's/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/WSL_EXT_ID="google.antigravity-remote-wsl"/' "$AGY_PATH"
-                    
-                    echo -e "${CYAN}   ✓ Parche aplicado: 'agy .' ahora abrirá el entorno WSL nativo${NC}"
+                    echo -e "${CYAN}   ✓ Parche aplicado: 'agy' usará la extensión nativa${NC}"
+                elif [ -d "$EXT_DIR/$OLD_EXT_FOLDER" ]; then
+                    echo -e "${YELLOW}   ! Advertencia: ID incorrecto pero carpeta antigua detectada.${NC}"
+                    echo -e "${YELLOW}     No se aplicó el parche para evitar romper el inicio (Error 127).${NC}"
+                    echo -e "${YELLOW}     Solución manual: Renombrar carpeta '$OLD_EXT_FOLDER' a '$NEW_EXT_FOLDER' en Windows.${NC}"
+                else
+                     echo -e "${YELLOW}   ! No se encontraron extensiones en $EXT_DIR. Omitiendo parche.${NC}"
+                fi
             elif grep -q "WSL_EXT_ID=\"google.antigravity-remote-wsl\"" "$AGY_PATH"; then
-                    echo -e "${CYAN}   ✓ El lanzador ya tiene el ID correcto (Google Antigravity)${NC}"
-            else
-                    echo -e "${YELLOW}   ! No se pudo verificar el ID en el script de Antigravity. Revisa manualmente.${NC}"
+                 echo -e "${CYAN}   ✓ Antigravity ya está parcheado${NC}"
             fi
+
         else
             echo -e "${RED}   ✗ No se encontró Antigravity en: $AGY_PATH${NC}"
             echo -e "${YELLOW}     Verifica que esté instalado en la ruta por defecto.${NC}"
