@@ -34,6 +34,11 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
 
+# zoxide (Smarter cd)
+if command -v zoxide &> /dev/null; then
+    alias cd="z"
+fi
+
 # -----------------------------------------------------------------------------
 # Git shortcuts
 # -----------------------------------------------------------------------------
@@ -107,7 +112,11 @@ fi
 # -----------------------------------------------------------------------------
 alias c='clear'
 alias h='history'
-alias grep='grep --color=auto'
+if command -v rg &> /dev/null; then
+    alias grep='rg'
+else
+    alias grep='grep --color=auto'
+fi
 alias df='df -h'
 alias du='du -h'
 alias free='free -h'
