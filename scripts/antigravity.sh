@@ -128,20 +128,23 @@ install_gemini_settings() {
 # Instala extensiones MCP para Gemini CLI.
 # ─────────────────────────────────────────────────────────────
 install_gemini_extensions() {
-    # Asegurar que nvm/npm estén cargados si se instalaron en esta sesión
+    # 1. Asegurar que el binario de gemini sea accesible
     if [ -z "$(command -v gemini)" ]; then
         export NVM_DIR="$HOME/.nvm"
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     fi
 
-    if ! command -v gemini &> /dev/null; then
-        echo -e "${YELLOW}   ! Gemini CLI no detectado. Saltando instalación de extensiones.${NC}"
-        echo -e "${YELLOW}     (El script dev-tools.sh debería haberlo instalado)${NC}"
+    # 2. Obtener la ruta absoluta del binario para evitar ambigüedades en subshells
+    GEMINI_BIN=$(command -v gemini)
+
+    if [ -z "$GEMINI_BIN" ]; then
+        echo -e "${YELLOW}   ! Gemini CLI no encontrado en PATH ni NVM. Saltando extensiones.${NC}"
         return
     fi
     
-    # Usar timeout para evitar bloqueos en la detección de versión
-    GEMINI_VERSION=$(timeout 10s gemini --version 2>/dev/null || echo "undetected")
+    # 3. Verificar versión con un timeout más generoso para WSL
+    echo -e "${CYAN}   Detectando versión de Gemini en $GEMINI_BIN...${NC}"
+    GEMINI_VERSION=$(timeout 20s "$GEMINI_BIN" --version 2>/dev/null || echo "undetected")
     echo -e "${GREEN}>>> Procesando extensiones MCP en Gemini ($GEMINI_VERSION)...${NC}"
     
     declare -a extensions=(
@@ -155,25 +158,30 @@ install_gemini_extensions() {
         echo -e "${CYAN}   Instalando: $ext...${NC}"
         LOG_FILE=$(mktemp)
         
-        # Usar timeout para evitar bloqueos eternos (120s)
-        # Capturamos output en log para mostrarlo si falla
-        if timeout 120s bash -c "yes | gemini extensions install \"$ext\"" > "$LOG_FILE" 2>&1; then
+        # 4. Usar el binario absoluto y enviar 'yes' de forma robusta
+        # En WSL, a veces 'bash -c' pierde el entorno si no se exporta todo.
+        # Ejecutar directamente con la ruta absoluta del binario detectado.
+        if timeout 120s bash -c "yes | \"$GEMINI_BIN\" extensions install \"$ext\"" > "$LOG_FILE" 2>&1; then
              echo -e "${CYAN}   ✓ Instalada: $ext${NC}"
         else
              # Comprobar si el error es porque ya está instalada
-             if grep -q "already installed" "$LOG_FILE"; then
+             if grep -qE "already installed|already registered" "$LOG_FILE"; then
                  echo -e "${YELLOW}   ! La extensión ya estaba registrada (Saltando...)${NC}"
              else
                  echo -e "${RED}   ✗ Error instalando $ext${NC}"
                  echo -e "${YELLOW}     Detalles del error:${NC}"
-                 cat "$LOG_FILE" | sed 's/^/     /'
+                 if [ -s "$LOG_FILE" ]; then
+                     cat "$LOG_FILE" | sed 's/^/     /'
+                 else
+                     echo -e "     (Sin salida del comando - Posible timeout o error de shell)"
+                 fi
              fi
         fi
         rm -f "$LOG_FILE"
     done
     
     echo -e "${CYAN}   Verificando actualizaciones de extensiones...${NC}"
-    if gemini extensions update --all &>/dev/null; then
+    if timeout 60s "$GEMINI_BIN" extensions update --all &>/dev/null; then
         echo -e "${CYAN}   ✓ Todas las extensiones están actualizadas${NC}"
     else
         echo -e "${YELLOW}   ! Hubo un problema actualizando extensiones (no crítico)${NC}"
