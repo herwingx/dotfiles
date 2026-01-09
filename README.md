@@ -31,17 +31,17 @@
 
 ## ✨ Características
 
-| Característica              | Descripción                                                                                                                                 |
-| :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| 🔹 **Sistema Base**          | Configuración esencial optimizada con herramientas modernas: `vim`, `tmux`, `fzf`, `ranger`, `htop`, `btop`.                                |
-| 🎨 **UI/UX Premium**         | Terminal moderna con **Oh My Posh** (Tema `herwingx`), **lsd** y **Nerd Fonts** (Recomendada: `Maple Mono NF`).                             |
-| 🔸 **Dev Suite**             | Toolkit completo para desarrollo: Docker, GitHub CLI (`gh`), Node.js (via nvm) y utilidades CLI modernas.                                   |
-| 🔐 **Seguridad Zero-Config** | Gestión de secretos con encriptación Age (`.env.age`). Las credenciales se extraen en runtime, nunca expuestas en código.                   |
-| 🤖 **Antigravity AI**        | Integración de protocolos para asistentes IA: `GEMINI.md` con reglas de desarrollo y workflows automatizados (`/commit`, `/release`, etc.). |
-| ☁️ **Cloud Tools**           | Configuración automática de `rclone` para sincronización con Google Drive. El token se extrae de secretos encriptados.                      |
-| 🖥️ **Soporte WSL**           | Integración nativa con Windows Subsystem for Linux, incluyendo copiado automático de llaves SSH y configuración transparente.               |
-| 🔄 **Auto-Update**           | Sistema de actualizaciones automáticas con notificaciones vía Telegram. Configurable con horarios personalizados para evitar conflictos.    |
-| 📦 **Multi-Distro**          | Compatible con Debian/Ubuntu (apt), Fedora/RHEL (dnf) y Arch Linux (pacman). Detección automática de distribución.                          |
+| Característica              | Descripción                                                                                                                                                                                                           |
+| :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔹 **Sistema Base**          | Configuración esencial optimizada con herramientas modernas: `vim`, `tmux`, `fzf`, `ranger`, `htop`, `btop`.                                                                                                          |
+| 🎨 **UI/UX Premium**         | Terminal moderna con **Oh My Posh** (Tema `herwingx`), **lsd** y **Nerd Fonts** (Recomendada: `Maple Mono NF`).                                                                                                       |
+| 🔸 **Dev Suite**             | Toolkit completo para desarrollo: Docker, GitHub CLI (`gh`), Node.js (via nvm) y utilidades CLI modernas.                                                                                                             |
+| 🔐 **Seguridad Zero-Config** | Gestión de secretos con encriptación Age (`.env.age`). Las credenciales se extraen en runtime, nunca expuestas en código.                                                                                             |
+| 🤖 **Antigravity AI**        | Integración completa con Gemini: `GEMINI.md` con reglas de desarrollo, workflows automatizados (`/commit`, `/release`), extensiones **MCP** (Chrome DevTools, GitHub, Postgres) y configuración automática de tokens. |
+| ☁️ **Cloud Tools**           | Configuración automática de `rclone` para sincronización con Google Drive. El token se extrae de secretos encriptados.                                                                                                |
+| 🖥️ **Soporte WSL**           | Integración nativa con Windows Subsystem for Linux, incluyendo copiado automático de llaves SSH y configuración transparente.                                                                                         |
+| 🔄 **Auto-Update**           | Sistema de actualizaciones automáticas con notificaciones vía Telegram. Configurable con horarios personalizados para evitar conflictos.                                                                              |
+| 📦 **Multi-Distro**          | Compatible con Debian/Ubuntu (apt), Fedora/RHEL (dnf) y Arch Linux (pacman). Detección automática de distribución.                                                                                                    |
 
 ---
 
@@ -125,11 +125,14 @@ dotfiles/
 │   └── manage_secrets.sh   # Gestión interactiva de .env.age
 │
 └── gemini/                 # 🤖 Configuración Antigravity/Gemini
+    ├── README.md           # Guía completa de extensiones MCP y workflows
     ├── GEMINI.md           # Reglas globales de desarrollo para IA
-    ├── settings.json       # Template de configuración para Gemini CLI
+    ├── settings.json       # Configuración de Gemini CLI (extensiones MCP, tokens)
     └── workflows/          # Comandos slash automatizados
         ├── commit.md       # /commit - Conventional Commits
         ├── crear-pr.md     # /crear-pr - Pull Requests
+        ├── crear-readme.md # /crear-readme - Generar README profesional
+        ├── limpiar-ramas.md # /limpiar-ramas - Eliminar ramas fusionadas
         ├── nueva-feature.md # /nueva-feature - Iniciar features
         ├── publicar.md     # /publicar - Push a remoto
         ├── release.md      # /release - Crear releases
@@ -161,7 +164,7 @@ flowchart TD
         I["Paquetes + Tools"]
         J["Git Config + SSH"]
         K["gh + nvm + docker"]
-        L["GEMINI.md + Workflows"]
+        L["GEMINI.md + Workflows + Settings + Extensiones MCP"]
         M["rclone Config"]
     end
 
@@ -195,13 +198,13 @@ flowchart TD
 
 ### Sistema (Individual)
 
-| Opción | Módulo            | Descripción                                                                                                  |
-| :----: | :---------------- | :----------------------------------------------------------------------------------------------------------- |
-|   5    | Update Sistema    | Actualiza el SO (`apt upgrade` / `dnf upgrade` / `pacman -Syu`)                                              |
-|   6    | Paquetes + Tools  | Instala: git, curl, vim, tmux, fzf, ranger, **oh-my-posh** (Theme), **lsd**, **lazydocker**, **ctop**, **gping**                             |
-|   7    | Git Config        | Vincula `.gitconfig` con configuración global optimizada                                                     |
-|   8    | SSH Keys          | Importa llaves SSH públicas desde GitHub (via API)                                                           |
-|   9    | SSH desde Windows | Copia llaves SSH de Windows a WSL (solo aplica en WSL)                                                       |
+| Opción | Módulo            | Descripción                                                                                                      |
+| :----: | :---------------- | :--------------------------------------------------------------------------------------------------------------- |
+|   5    | Update Sistema    | Actualiza el SO (`apt upgrade` / `dnf upgrade` / `pacman -Syu`)                                                  |
+|   6    | Paquetes + Tools  | Instala: git, curl, vim, tmux, fzf, ranger, **oh-my-posh** (Theme), **lsd**, **lazydocker**, **ctop**, **gping** |
+|   7    | Git Config        | Vincula `.gitconfig` con configuración global optimizada                                                         |
+|   8    | SSH Keys          | Importa llaves SSH públicas desde GitHub (via API)                                                               |
+|   9    | SSH desde Windows | Copia llaves SSH de Windows a WSL (solo aplica en WSL)                                                           |
 
 ### Dev Tools (Individual)
 
@@ -214,18 +217,51 @@ flowchart TD
 
 ### Antigravity AI (Individual)
 
-| Opción | Módulo    | Descripción                                                                            |
-| :----: | :-------- | :------------------------------------------------------------------------------------- |
-|   14   | Reglas    | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA        |
-|   15   | Workflows | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/` |
-|   20   | Settings  | Configura `settings.json`, el token de GitHub y **extensiones MCP**                    |
+| Opción | Módulo    | Descripción                                                                                  |
+| :----: | :-------- | :------------------------------------------------------------------------------------------- |
+|   14   | Reglas    | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA              |
+|   15   | Workflows | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/`       |
+|   20   | Settings  | Configura `settings.json`, token de GitHub persistente y **extensiones MCP** automáticamente |
+
+#### 🤖 ¿Qué son las Extensiones MCP?
+
+**MCP (Model Context Protocol)** es un estándar abierto que permite a los asistentes de IA como Gemini interactuar con herramientas externas, bases de datos y servicios. Piensa en ellas como **plugins que amplían las capacidades de tu asistente**.
 
 #### 🛠️ Servidores MCP Incluidos
-La opción **20** instala automáticamente los siguientes servidores MCP para potenciar a Gemini:
-- 🌐 **Chrome DevTools**: Inspección y control del navegador.
-- 🐙 **GitHub**: Gestión de repositorios, issues y PRs.
-- 🐘 **Postgres**: Interacción directa con bases de datos.
-- 🍌 **Nanobanana**: Extensiones de utilidad adicionales.
+
+La opción **20** instala automáticamente los siguientes servidores MCP para Gemini:
+
+| Extensión             | Repositorio                                                                                 | Capacidades                                                            |
+| :-------------------- | :------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
+| 🌐 **Chrome DevTools** | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) | Inspección del navegador, control de pestañas, debugging de JavaScript |
+| 🐙 **GitHub**          | [github/github-mcp-server](https://github.com/github/github-mcp-server)                     | Gestión de repositorios, issues, PRs, búsqueda de código               |
+| 🐘 **Postgres**        | [gemini-cli-extensions/postgres](https://github.com/gemini-cli-extensions/postgres)         | Ejecución de queries SQL, inspección de schemas, gestión de tablas     |
+| 🍌 **Nanobanana**      | [gemini-cli-extensions/nanobanana](https://github.com/gemini-cli-extensions/nanobanana)     | Utilidades de sistema y productividad adicionales                      |
+
+#### 🔐 Configuración del Token de GitHub
+
+El script configura automáticamente el token de GitHub para las extensiones:
+
+1. **Extrae** `GH_TOKEN` desde `.env.age` (encriptado)
+2. **Exporta** la variable `GITHUB_PERSONAL_ACCESS_TOKEN` en `~/.bashrc` para persistencia
+3. **Configura** `settings.json` para usar el token en las extensiones MCP
+
+**Resultado**: Gemini puede interactuar con GitHub sin pedir credenciales manualmente.
+
+#### 📋 Workflows Disponibles
+
+Los workflows se instalan en `~/.gemini/antigravity/global_workflows/` y están disponibles como comandos slash:
+
+| Workflow         | Descripción                            | Ejemplo de Uso                                        |
+| :--------------- | :------------------------------------- | :---------------------------------------------------- |
+| `/commit`        | Crear commits con Conventional Commits | Genera commits con formato `type(scope): description` |
+| `/crear-pr`      | Crear Pull Request en GitHub           | Abre PR con template y descripción detallada          |
+| `/nueva-feature` | Iniciar desarrollo de feature          | Crea rama `feat/*`, configura entorno                 |
+| `/publicar`      | Publicar rama al remoto                | Push con tracking automático                          |
+| `/release`       | Crear release con tag y notas          | Genera tag semántico y release notes                  |
+| `/sync-main`     | Sincronizar con main usando rebase     | Actualiza rama sin merge commits                      |
+| `/crear-readme`  | Generar README.md profesional          | Plantilla premium con badges y estructura             |
+| `/limpiar-ramas` | Eliminar ramas fusionadas              | Limpieza de ramas locales y remotas                   |
 
 > 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal (@herwingx).
 > ¡Siéntete libre de editarlos! Puedes modificar las reglas para adaptarlas a tu estilo o crear nuevos workflows en `~/.gemini/workflows/` para automatizar tus propias tareas.
@@ -247,14 +283,14 @@ Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para prot
 
 ### Variables Soportadas
 
-| Variable             | Descripción                                 | Uso                                  |
-| :------------------- | :------------------------------------------ | :----------------------------------- |
-| `BW_CLIENTID`        | Client ID de API de Bitwarden               | Autenticación automática de `bw` CLI |
-| `BW_CLIENTSECRET`    | Client Secret de API de Bitwarden           | Autenticación automática de `bw` CLI |
-| `GH_TOKEN`           | Personal Access Token de GitHub             | Autenticación de `gh` CLI y Gemini MCP       |
-| `RCLONE_TOKEN_JSON`  | Token OAuth de Google Drive (JSON completo) | Configuración automática de rclone   |
-| `TELEGRAM_BOT_TOKEN` | Token del bot de Telegram                   | Notificaciones de auto-update        |
-| `TELEGRAM_CHAT_ID`   | ID del chat para notificaciones             | Destino de notificaciones Telegram   |
+| Variable             | Descripción                                 | Uso                                                       |
+| :------------------- | :------------------------------------------ | :-------------------------------------------------------- |
+| `BW_CLIENTID`        | Client ID de API de Bitwarden               | Autenticación automática de `bw` CLI                      |
+| `BW_CLIENTSECRET`    | Client Secret de API de Bitwarden           | Autenticación automática de `bw` CLI                      |
+| `GH_TOKEN`           | Personal Access Token de GitHub             | Autenticación de `gh` CLI y **extensiones MCP de Gemini** |
+| `RCLONE_TOKEN_JSON`  | Token OAuth de Google Drive (JSON completo) | Configuración automática de rclone                        |
+| `TELEGRAM_BOT_TOKEN` | Token del bot de Telegram                   | Notificaciones de auto-update                             |
+| `TELEGRAM_CHAT_ID`   | ID del chat para notificaciones             | Destino de notificaciones Telegram                        |
 
 ### Configuración de Bitwarden (Oficial vs Self-Hosted)
 
@@ -538,11 +574,12 @@ gh release create v1.0.0 --generate-notes
 
 ## 📚 Documentación
 
-| Documento                                      | Descripción                                                   |
-| :--------------------------------------------- | :------------------------------------------------------------ |
-| [GEMINI.md](gemini/GEMINI.md)                  | **Protocolo Antigravity**: Reglas globales para asistentes IA |
-| [Workflows](gemini/workflows/)                 | Flujos automatizados: `/commit`, `/release`, `/publicar`      |
-| [manage_secrets.sh](scripts/manage_secrets.sh) | Script para editar/ver secretos encriptados                   |
+| Documento                                      | Descripción                                                               |
+| :--------------------------------------------- | :------------------------------------------------------------------------ |
+| [gemini/README.md](gemini/README.md)           | **Guía completa de Antigravity**: Extensiones MCP, workflows, instalación |
+| [GEMINI.md](gemini/GEMINI.md)                  | **Protocolo Antigravity**: Reglas globales para asistentes IA             |
+| [Workflows](gemini/workflows/)                 | Flujos automatizados: `/commit`, `/release`, `/publicar`                  |
+| [manage_secrets.sh](scripts/manage_secrets.sh) | Script para editar/ver secretos encriptados                               |
 
 ---
 
