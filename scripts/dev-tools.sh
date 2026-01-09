@@ -94,13 +94,19 @@ install_nvm_node() {
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     
-    if command -v node &> /dev/null; then
-        echo -e "${YELLOW}   ! Node.js ya está instalado: $(node --version)${NC}"
+    # Obtener versión LTS remota
+    LTS_VERSION=$(nvm version-remote --lts)
+    CURRENT_VERSION=$(node -v 2>/dev/null)
+    
+    if [ "$CURRENT_VERSION" = "$LTS_VERSION" ]; then
+        echo -e "${YELLOW}   ! Node.js ya está en la última LTS ($current_version)${NC}"
     else
-        echo -e "${CYAN}   Instalando Node.js LTS...${NC}"
+        echo -e "${CYAN}   Actualizando/Instalando Node.js LTS ($LTS_VERSION)...${NC}"
         nvm install --lts
         nvm use --lts
         nvm alias default 'lts/*'
+        # Reinstalar paquetes globales si es necesario
+        nvm reinstall-packages default 2>/dev/null || true
     fi
     
     echo -e "${CYAN}   ✓ NVM y Node.js configurados${NC}"
