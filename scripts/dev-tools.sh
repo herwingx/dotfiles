@@ -157,13 +157,21 @@ install_npm_global_packages() {
     )
     
     for package in "${!NPM_PACKAGES[@]}"; do
-        echo -e "${CYAN}   Asegurando última versión de $package...${NC}"
+        cmd="${NPM_PACKAGES[$package]}"
+        
+        # Verificar si el comando ya existe
+        if command -v "$cmd" &> /dev/null; then
+            echo -e "${YELLOW}   ! $cmd ya está instalado (saltando $package)${NC}"
+            continue
+        fi
+        
+        echo -e "${CYAN}   Instalando $package...${NC}"
         $USE_SUDO npm install -g "$package@latest"
         
         if [ $? -ne 0 ]; then
              echo -e "${RED}   ✗ Error instalando $package${NC}"
         else
-             echo -e "${CYAN}   ✓ $package actualizado/instalado${NC}"
+             echo -e "${CYAN}   ✓ $package instalado${NC}"
         fi
     done
     
