@@ -130,7 +130,8 @@ install_modern_tools() {
         fi
         
         if ! grep -q 'alias cd="z"' "$HOME/.bash_aliases"; then
-            echo 'alias cd="z"' >> "$HOME/.bash_aliases"
+            # Ya no añadimos al archivo vía echo para evitar ensuciar el git
+            echo -e "${CYAN}   ℹ Alias cd=z gestionado en .bash_aliases¹${NC}"
         fi
         
         echo -e "${CYAN}   ✓ zoxide configurado (alias cd=z)${NC}"
@@ -150,8 +151,7 @@ install_modern_tools() {
         elif [ -f /etc/arch-release ]; then
             $SUDO_CMD pacman -S bat --noconfirm
         fi
-        echo 'alias cat="bat"' >> "$HOME/.bash_aliases"
-        echo -e "${CYAN}   ✓ bat instalado (alias cat=bat)${NC}"
+        echo -e "${CYAN}   ✓ bat instalado${NC}"
     else
         echo -e "${YELLOW}   ! bat ya existe${NC}"
     fi
@@ -166,8 +166,7 @@ install_modern_tools() {
         elif [ -f /etc/arch-release ]; then
             $SUDO_CMD pacman -S ripgrep --noconfirm
         fi
-        echo 'alias grep="rg"' >> "$HOME/.bash_aliases"
-        echo -e "${CYAN}   ✓ ripgrep instalado (alias grep=rg)${NC}"
+        echo -e "${CYAN}   ✓ ripgrep instalado${NC}"
     else
         echo -e "${YELLOW}   ! ripgrep ya existe${NC}"
     fi
