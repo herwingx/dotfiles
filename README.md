@@ -168,8 +168,10 @@ dotfiles/
 
 ```mermaid
 flowchart TD
-    subgraph ENTRY["🎛️ Entry Point"]
-        A["📦 install.sh"] --> B["⚙️ common.sh"]
+    subgraph ENTRY["🎛️ Entry Points"]
+        A["� install.sh"] --> B["⚙️ common.sh"]
+        M["🔐 manage_secrets.sh"] --> B
+        U["🗑️ uninstall.sh"] --> B
     end
 
     B --> C{"🎯 Menú Interactivo"}
@@ -181,32 +183,38 @@ flowchart TD
         F["🛠️ dev-tools.sh"]
         G["🤖 antigravity.sh"]
         H["☁️ cloud.sh"]
+        I["🔄 cron-update.sh"]
     end
 
-    C --> D & E & F & G & H
+    C --> D & E & F & G & H & I
 
     subgraph OUTPUTS["✅ Resultados"]
-        I["Paquetes + Tools"]
-        J["Git Config + SSH"]
-        K["gh + nvm + docker"]
-        L["GEMINI.md + Workflows + Settings + Extensiones MCP"]
-        M["rclone Config"]
+        O1["Paquetes + Shell"]
+        O2["Git + SSH"]
+        O3["Docker + Node + gh"]
+        O4["IA + Workflows + MCP"]
+        O5["Rclone + GDrive"]
+        O6["Auto-Updates"]
     end
 
-    D --> I
-    E --> J
-    F --> K
-    G --> L
-    H --> M
+    D --> O1
+    E --> O2
+    F --> O3
+    G --> O4
+    H --> O5
+    I --> O6
 
-    subgraph SECRETS["🔐 Gestión de Secretos"]
-        N["🔒 .env.local.age"] --> O["decrypt_secrets()"]
-        N2["🔒 .env.age"] --> N
-        O --> P["🔓 Variables en Runtime"]
+    subgraph SECRETS["🔐 Dual Vault Architecture"]
+        S1["🏠 .env.local.age<br/>(Prioridad User)"]
+        S2["📦 .env.age<br/>(Backup Repo)"]
+        DEC["🔓 decrypt_secrets()"]
+        
+        S1 --> DEC
+        S2 -.-> S1
     end
 
-    B -.->|"Carga secretos"| N
-    P -.->|"Disponibles para"| MODULES
+    B -.->|"Carga/Crea"| SECRETS
+    DEC -.->|"Variables OK"| MODULES
 ```
 
 ---
@@ -356,39 +364,40 @@ sequenceDiagram
     autonumber
     
     box rgb(40, 44, 52) Orchestration
-        participant Install as 📦 install.sh
+        participant User
+        participant Script
         participant Common as ⚙️ common.sh
     end
     
-    box rgb(30, 60, 50) Security Layer
-        participant Age as 🔐 age decrypt
-        participant Secrets as 🔒 .env.age
+    box rgb(30, 60, 50) Security Layer (Age)
+        participant Local as 🏠 .env.local.age
+        participant Repo as � .env.age
     end
     
-    box rgb(50, 40, 60) Runtime
-        participant Env as 🔓 Variables
-    end
-
-    Install->>Common: source common.sh
-    activate Common
-    
-    Common->>Secrets: Leer archivo encriptado
-    Secrets->>Age: Datos cifrados + passphrase
-    activate Age
-    
-    Age-->>Common: Contenido descifrado
-    deactivate Age
-    
-    Common->>Env: export BW_CLIENTID
-    Common->>Env: export GH_TOKEN
-    Common->>Env: export RCLONE_TOKEN_JSON
-    Common->>Env: export TELEGRAM_*
-    deactivate Common
-    
-    Note over Env: ✅ Variables disponibles<br/>para todos los módulos
+    User->>Script: Ejecuta install/manage
+    Script->>Common: source common.sh
     
     rect rgb(35, 45, 35)
-        Note right of Env: 🛡️ Secretos nunca<br/>expuestos en código
+        Note right of Common: 🕵️ Detección de Bóveda
+    end
+    
+    alt Existe .env.local.age
+        Common->>Local: Usar Bóveda Local (Prioridad)
+    else Solo existe .env.age
+        Common->>Repo: Usar Bóveda Repo (Fallback)
+    else Ninguno
+        Common-->>User: ⚡ Ofrecer "Create New Vault"
+    end
+    
+    Common->>User: 🔑 Solicitar Passphrase
+    User->>Common: Ingresa Passphrase
+    
+    Common->>Local: Decrypt...
+    
+    alt Password Correcto
+        Common->>Script: ✅ Export Variables (Memoria)
+    else Password Incorrecto
+        Common-->>User: ⛔ Access Denied (Retry/Reset)
     end
 ```
 
