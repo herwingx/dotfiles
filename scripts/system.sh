@@ -320,10 +320,9 @@ install_blesh() {
 # Configuración visual ble.sh
 bleopt complete_auto_complete=1
 bleopt complete_menu_style=align-nowrap
-bleopt term_truecolor=0  # Desactivar si ves códigos raros en terminales viejas
 
-# Silenciar mensajes de "updating tput cache" (evita basura visual)
-bleopt info_internal_error=0
+# Ocultar el molesto mensaje [ble: exit 127]
+bleopt exec_exit_status=
 
 # Colores limpios
 if [[ ${BLE_VERSION-} ]]; then
@@ -339,8 +338,8 @@ EOF
         BASHRC="$HOME/.bashrc"
         
         # Definir bloques de código con checks de interactividad estrictos
-        # El SOURCE debe ir al principio
-        BLE_SOURCE_BLOCK='[[ $- == *i* && -f ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach'
+        # El SOURCE debe ir al principio (redirigimos stderr para silenciar caché de tput)
+        BLE_SOURCE_BLOCK='[[ $- == *i* && -f ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null'
         # El ATTACH debe ir al final
         BLE_ATTACH_BLOCK='[[ ${BLE_VERSION-} ]] && ble-attach'
 
