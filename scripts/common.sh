@@ -89,6 +89,7 @@ create_local_secrets() {
     echo -e "${CYAN}Vamos a crear tu propia bóveda de secretos local (.env.local.age).${NC}"
     print_info "Este archivo contendrá TUS claves y será ignorado por Git."
     echo ""
+    echo -e "${GRAY}  [TIP] Press Ctrl+C to cancel operation${NC}"
     
     # Input interactivo con estilo
     echo -e "${BOLD}Ingresa tus credenciales (Deja vacío para omitir):${NC}"
