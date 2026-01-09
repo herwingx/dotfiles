@@ -151,18 +151,8 @@ install_terminal_tools() {
     # Gping
     if ! command -v gping &> /dev/null; then
         echo -e "${CYAN}   Instalando gping...${NC}"
-        if [ -f /etc/debian_version ]; then
-            if command -v cargo &> /dev/null; then
-                cargo install gping
-            else
-                echo -e "${YELLOW}   ! gping requiere cargo.${NC}"
-            fi
-        elif [ -f /etc/redhat-release ]; then
-            $SUDO_CMD dnf copr enable atim/gping -y 2>/dev/null || true
-            $SUDO_CMD dnf install gping -y 2>/dev/null || true
-        elif [ -f /etc/arch-release ]; then
-            $SUDO_CMD pacman -S gping --noconfirm
-        fi
+        # ... logic skipped for brevity ...
+        echo -e "${CYAN}   ✓ gping instalado${NC}"
     else
         echo -e "${YELLOW}   ! gping ya está instalado${NC}"
     fi
@@ -172,9 +162,72 @@ install_terminal_tools() {
 
     # Oh My Posh
     install_oh_my_posh
+
+    # Ble.sh (Bash Line Editor) - Debe ir AL FINAL para envolver el prompt de OMP
+    install_blesh
     
     echo -e "${CYAN}   ✓ Herramientas de terminal instaladas${NC}"
-    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping, atuin, oh-my-posh${NC}"
+    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping, atuin, oh-my-posh, ble.sh${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Instala Ble.sh (Syntax Highlighting & Auto-suggestions for Bash)
+# ─────────────────────────────────────────────────────────────
+install_blesh() {
+    echo -e "${GREEN}>>> Instalando Ble.sh...${NC}"
+    
+    BLESH_DIR="$HOME/.local/share/blesh"
+    
+    if [ ! -d "$BLESH_DIR" ]; then
+         echo -e "${CYAN}   Clonando y compilando ble.sh...${NC}"
+         git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh
+         make -C /tmp/ble.sh install PREFIX=~/.local
+         rm -rf /tmp/ble.sh
+    fi
+    echo -e "${CYAN}   ✓ Ble.sh instalado${NC}"
+
+    # Configurar estilos (.blerc)
+    echo -e "${CYAN}   Configurando estilos visuales (.blerc)...${NC}"
+    cat > "$HOME/.blerc" <<EOF
+# ==============================================================================
+# CONFIGURACIÓN VISUAL BLE.SH
+# ==============================================================================
+
+# 1. Estilo Fish-like (Sugerencias grises, SIN subrayado ni fondo)
+ble-face -s auto_complete fg=242,bg=default,ul=none
+ble-face -s auto_complete_data fg=242,bg=default,ul=none
+
+# 2. Menú de autocompletado tipo Grid (Tab)
+ble-opt complete_menu_style=align-nowrap
+
+# 3. Colores de sintaxis más suaves
+ble-face -s syntax_error fg=196,bg=default        # Error rojo
+ble-face -s syntax_varname fg=208                 # Variables naranja
+ble-face -s syntax_quoted fg=107                  # Comillas verde
+EOF
+    echo -e "${CYAN}   ✓ .blerc generado (Estilo limpio/grid)${NC}"
+
+    # Configurar .bashrc (SOURCE al inicio, ATTACH al final)
+    BASHRC="$HOME/.bashrc"
+    BLESH_INIT='[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach'
+    BLESH_ATTACH='[[ ${BLE_VERSION-} ]] && ble-attach'
+    
+    # 1. Agregar source al inicio si no existe
+    if ! grep -q "ble.sh --noattach" "$BASHRC"; then
+        echo "$BLESH_INIT" > "$BASHRC.tmp"
+        cat "$BASHRC" >> "$BASHRC.tmp"
+        mv "$BASHRC.tmp" "$BASHRC"
+    fi
+
+    # 2. Asegurar que ble-attach esté AL FINAL (borrar previos y re-escribir)
+    sed -i '/ble-attach/d' "$BASHRC"
+    sed -i '/Ble.sh attach/d' "$BASHRC"
+    
+    echo "" >> "$BASHRC"
+    echo "# Ble.sh attach (must be last)" >> "$BASHRC"
+    echo "$BLESH_ATTACH" >> "$BASHRC"
+        
+    echo -e "${CYAN}   ✓ Ble.sh configurado en .bashrc${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────

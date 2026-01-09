@@ -630,6 +630,7 @@ gh release create v1.0.0 --generate-notes
 
 | Herramienta    | Descripción                                    |
 | :------------- | :--------------------------------------------- |
+| **Atuin**      | Historial de shell mágico con sync en la nube  |
 | **lsd**        | Reemplazo moderno de `ls` con iconos y colores |
 | **Oh My Posh** | Motor de temas para prompt personalizado       |
 | **fzf**        | Fuzzy finder para búsqueda interactiva         |
@@ -639,6 +640,46 @@ gh release create v1.0.0 --generate-notes
 | **ctop**       | Top para containers Docker                     |
 | **gping**      | Ping visual con gráficos                       |
 | **btop**       | Monitor de recursos moderno                    |
+| **ble.sh**     | Bash Line Editor (Syntax highlight, completion)|
+
+### 🚀 Configuración de Atuin (Historial)
+
+Para habilitar la sincronización de historial entre tus máquinas:
+
+```bash
+# 1. Registrarse (primera vez)
+atuin register -u <USUARIO> -e <EMAIL>
+
+# 2. Login (si ya tienes cuenta)
+atuin login -u <USUARIO>
+
+# 3. Importar historial existente
+atuin import auto
+
+# 4. Sincronizar
+atuin sync
+```
+> 💡 Usa `Ctrl-R` o `Flecha Arriba` para buscar en tu historial mágico.
+
+> 💡 Usa `Ctrl-R` o `Flecha Arriba` para buscar en tu historial mágico.
+
+---
+
+## 🗑️ Desinstalación Total
+
+Si necesitas limpiar tu sistema, el script `uninstall.sh` revierte los cambios:
+
+```bash
+./uninstall.sh
+```
+
+**¿Qué hace?**
+1.  **Limpia .bashrc**: Elimina configuraciones inyectadas (Oh My Posh, Atuin, Ble.sh).
+2.  **Elimina Symlinks**: Borra `.bash_aliases`, `.gitconfig` y temas.
+3.  **Borra Herramientas**: Elimina carpetas locales de `~/.local/share/blesh`, `~/.atuin`, `~/.gemini`.
+4.  **Restaura Backups**: Si existen backups previos (`.backup`), los devuelve a su lugar.
+
+> ⚠️ **Nota**: No desinstala paquetes del sistema (apt/dnf) instalaros globalmente (como `git`, `docker` o `gh`) para evitar romper dependencias de otros usuarios.
 
 ### Desarrollo
 
