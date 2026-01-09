@@ -141,6 +141,8 @@ gemini extensions remove nombre-extension
 
 Los workflows se instalan en `~/.gemini/antigravity/global_workflows/` y se invocan con comandos slash.
 
+> 🖥️ **Diseño "Terminal-First"**: Todos los workflows están optimizados para funcionar en entornos **Headless** (servidores SSH, WSL sin GUI). Utilizan exclusivamente `gh` CLI en modo texto, evitando abrir navegadores web, lo que garantiza velocidad y compatibilidad total.
+
 ### Tabla de Workflows
 
 | Workflow         | Descripción                            | Ejemplo de Uso                               |
