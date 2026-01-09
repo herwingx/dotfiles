@@ -44,7 +44,29 @@ echo -e "${CYAN}>>> Eliminando herramientas locales...${NC}"
 rm -rf ~/.local/share/blesh
 rm -rf ~/.atuin
 rm -rf ~/.gemini
-echo -e "${GREEN}   ✓ Carpetas locales eliminadas (~/.local/share/blesh, ~/.atuin, ~/.gemini)${NC}"
+rm -f ~/.local/bin/agy
+
+# Revertir parche de Antigravity en WSL (si existe)
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    echo -e "${CYAN}   >>> Revertiendo configuración de Antigravity (WSL)...${NC}"
+    # Detectar usuario (método robusto simplificado para uninstall)
+    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tail -n1 | tr -d '\r')
+    if [ -z "$WIN_USER" ] && [ -f "/mnt/c/Windows/System32/cmd.exe" ]; then
+        WIN_USER=$(/mnt/c/Windows/System32/cmd.exe /c "echo %USERNAME%" 2>/dev/null | tail -n1 | tr -d '\r')
+    fi
+    
+    if [ -n "$WIN_USER" ]; then
+        AGY_PATH="/mnt/c/Users/$WIN_USER/AppData/Local/Programs/Antigravity/bin/antigravity"
+        if [ -f "$AGY_PATH" ]; then
+            if grep -q "WSL_EXT_ID=\"google.antigravity-remote-wsl\"" "$AGY_PATH"; then
+                sed -i 's/WSL_EXT_ID="google.antigravity-remote-wsl"/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/' "$AGY_PATH"
+                echo -e "${GREEN}      ✓ Parche de Windows revertido al original${NC}"
+            fi
+        fi
+    fi
+fi
+
+echo -e "${GREEN}   ✓ Carpetas locales y configuraciones eliminadas${NC}"
 
 # 4. Restaurar Backups (si existen)
 echo -e "${CYAN}>>> Restaurando backups...${NC}"
