@@ -131,37 +131,37 @@ El proyecto sigue una arquitectura **modular** donde cada script tiene una respo
 
 ```
 dotfiles/
-├── install.sh              # 🎛️ Orquestador principal (menú interactivo)
+├── install.sh              # 🚀 Orquestador principal (menú interactivo)
+├── uninstall.sh            # 🗑️ Script de limpieza total
 ├── README.md               # 📖 Documentación del proyecto
-├── .env.age                # 🔐 Secrets encriptados con Age
-├── .env.local.age          # 🔐 Secrets locales (usuario)
+├── .env.age                # 🔐 Secrets encriptados del repo (backup)
+├── .env.local.age          # 🏠 Secrets locales del usuario (prioridad)
 │
 ├── config/                 # 📁 Archivos de configuración (dotfiles puros)
 │   ├── .bash_aliases       # Aliases de terminal (gs, ga, ll, etc.)
-│   └── .gitconfig          # Configuración global de Git
+│   ├── .gitconfig          # Configuración global de Git
+│   └── herwingx.omp.json   # 🎨 Tema visual de Oh My Posh
 │
 ├── scripts/                # 🔧 Módulos de instalación
-│   ├── common.sh           # Variables globales, colores, decrypt_secrets()
-│   ├── system.sh           # Actualización sistema, paquetes, herramientas terminal
+│   ├── common.sh           # Variables globales, helpers UI y Crypto
+│   ├── system.sh           # Actualización sistema, paquetes base
 │   ├── git.sh              # Configuración Git y SSH keys
 │   ├── dev-tools.sh        # GitHub CLI, NVM, Docker
-│   ├── antigravity.sh      # Reglas y workflows de IA
-│   ├── cloud.sh            # Configuración rclone (Google Drive)
-│   └── cron-update.sh      # Script de actualización automática
+│   ├── antigravity.sh      # Reglas IA y workflows
+│   ├── cloud.sh            # Configuración rclone
+│   ├── cron-update.sh      # Auto-Update
+│   └── manage_secrets.sh   # 🔐 Gestor interactivo de bóvedas
 │
 └── gemini/                 # 🤖 Configuración Antigravity/Gemini
-    ├── README.md           # Guía completa de extensiones MCP y workflows
-    ├── GEMINI.md           # Reglas globales de desarrollo para IA
-    ├── settings.json       # Configuración de Gemini CLI (extensiones MCP, tokens)
-    └── workflows/          # Comandos slash automatizados
-        ├── commit.md       # /commit - Conventional Commits
-        ├── crear-pr.md     # /crear-pr - Pull Requests
-        ├── crear-readme.md # /crear-readme - Generar README profesional
-        ├── limpiar-ramas.md # /limpiar-ramas - Eliminar ramas fusionadas
-        ├── nueva-feature.md # /nueva-feature - Iniciar features
-        ├── publicar.md     # /publicar - Push a remoto
-        ├── release.md      # /release - Crear releases
-        └── sync-main.md    # /sync-main - Rebase con main
+    ├── README.md           # Docs de extensiones MCP
+    ├── GEMINI.md           # Reglas globales de desarrollo
+    ├── settings.json       # Configuración CLI (MCPs, tokens)
+    └── workflows/          # ⚡ Comandos slash automatizados
+        ├── commit.md       # /commit      -> Conventional Commits
+        ├── release.md      # /release     -> GitHub Release
+        ├── publicar.md     # /publicar    -> Push to Remote
+        ├── crear-pr.md     # /crear-pr    -> PR Template
+        └── ...
 ```
 
 ### Diagrama de Flujo
