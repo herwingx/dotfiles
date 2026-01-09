@@ -128,14 +128,21 @@ install_gemini_settings() {
 # Instala extensiones MCP para Gemini CLI.
 # ─────────────────────────────────────────────────────────────
 install_gemini_extensions() {
+    # Asegurar que nvm/npm estén cargados si se instalaron en esta sesión
+    if [ -z "$(command -v gemini)" ]; then
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    fi
+
     if ! command -v gemini &> /dev/null; then
         echo -e "${YELLOW}   ! Gemini CLI no detectado. Saltando instalación de extensiones.${NC}"
         echo -e "${YELLOW}     (El script dev-tools.sh debería haberlo instalado)${NC}"
         return
     fi
     
-    GEMINI_VERSION=$(gemini --version 2>/dev/null)
-    echo -e "${GREEN}>>> Instalando extensiones MCP en Gemini ($GEMINI_VERSION)...${NC}"
+    # Usar timeout para evitar bloqueos en la detección de versión
+    GEMINI_VERSION=$(timeout 10s gemini --version 2>/dev/null || echo "undetected")
+    echo -e "${GREEN}>>> Procesando extensiones MCP en Gemini ($GEMINI_VERSION)...${NC}"
     
     declare -a extensions=(
         "https://github.com/ChromeDevTools/chrome-devtools-mcp"
