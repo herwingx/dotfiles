@@ -119,6 +119,7 @@ show_menu() {
     echo -ne "  "; p_opt "0" "ABORT / EXIT"; echo ""
     echo ""
     
+    echo -e "${GRAY}  [TIP] Press Ctrl+C to force quit at any time${NC}"
     echo -ne "${NEON_GREEN}wrapper@install${NC}:${BLUE}~${NC}$ "
     read choice
     
