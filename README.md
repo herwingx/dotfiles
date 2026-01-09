@@ -42,6 +42,7 @@
 | 🖥️ **Soporte WSL**           | Integración nativa con Windows Subsystem for Linux, incluyendo copiado automático de llaves SSH y configuración transparente.                                                                                         |
 | 🔄 **Auto-Update**           | Sistema de actualizaciones automáticas con notificaciones vía Telegram. Configurable con horarios personalizados para evitar conflictos.                                                                              |
 | 📦 **Multi-Distro**          | Compatible con Debian/Ubuntu (apt), Fedora/RHEL (dnf) y Arch Linux (pacman). Detección automática de distribución.                                                                                                    |
+| 🔒 **Transparencia Total** | **Auditable**: Cada script es modular y legible. No hay "cajas negras"; puedes ver exactamente qué paquetes y configs se aplican antes de ejecutar.                                                                    |
 
 ---
 
@@ -201,7 +202,7 @@ flowchart TD
 | Opción | Módulo            | Descripción                                                                                                      |
 | :----: | :---------------- | :--------------------------------------------------------------------------------------------------------------- |
 |   5    | Update Sistema    | Actualiza el SO (`apt upgrade` / `dnf upgrade` / `pacman -Syu`)                                                  |
-|   6    | Paquetes + Tools  | Instala: git, curl, vim, tmux, fzf, ranger, **oh-my-posh** (Theme), **lsd**, **lazydocker**, **ctop**, **gping** |
+|   6    | Paquetes + Tools  | Instala: git, curl, vim, tmux, fzf, ranger, **oh-my-posh**, **lsd**, **lazydocker**, **ctop**, **gping** y herramientas de compilación (`make`, `gcc`, `gawk`). |
 |   7    | Git Config        | Vincula `.gitconfig` con configuración global optimizada                                                         |
 |   8    | SSH Keys          | Importa llaves SSH públicas desde GitHub (via API)                                                               |
 |   9    | SSH desde Windows | Copia llaves SSH de Windows a WSL (solo aplica en WSL)                                                           |
@@ -214,6 +215,20 @@ flowchart TD
 |   11   | NVM + Node.js | Instala Node Version Manager y la última versión LTS de Node.js        |
 |   12   | npm Packages  | Instala globalmente: `@anthropics/claude-code`, `@bitwarden/cli`       |
 |   13   | Docker        | Instala Docker CE + Docker Compose con configuración de grupo `docker` |
+
+### 🛡️ Transparencia: ¿Qué estamos instalando?
+
+Para generar confianza, aquí detallamos el propósito de las librerías base que instalamos:
+
+| Librería / Tool          | Propósito                                                                               |
+| :----------------------- | :-------------------------------------------------------------------------------------- |
+| 🛠️ **Build Essentials** | `make`, `gcc`, `g++`, `build-essential`. Necesarios para compilar `ble.sh` y otros bins. |
+| 📋 **GNU AWK (gawk)**    | Requerido específicamente por `ble.sh` para el procesamiento avanzado de texto en Bash. |
+| 📦 **Modern Unix Tools** | `lsd`, `bat`, `zoxide`, `delta`. Mejoran la visualización y navegación de archivos.     |
+| 🐳 **Docker Suite**      | Docker Engine y Compose para containerización local.                                    |
+| 🔒 **Age / Secrets**     | Encriptación de nivel bancario para tus tokens y llaves privadas.                       |
+
+> 💡 **Auditoría**: Puedes revisar los scripts en `scripts/*.sh` para ver cada comando `apt install` o `curl` ejecutado. No instalamos nada que no sea estándar o de código abierto.
 
 ### Antigravity AI (Individual)
 
@@ -640,7 +655,8 @@ gh release create v1.0.0 --generate-notes
 | **ctop**       | Top para containers Docker                     |
 | **gping**      | Ping visual con gráficos                       |
 | **btop**       | Monitor de recursos moderno                    |
-| **ble.sh**     | Bash Line Editor (Syntax highlight, completion)|
+| **ble.sh**     | Bash Line Editor (Syntax highlight, completion) |
+| **build-tools**| Make, GCC, Gawk (Necesarios para `ble.sh`)     |
 
 ### 🚀 Configuración de Atuin (Historial)
 
