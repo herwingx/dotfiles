@@ -161,10 +161,34 @@ install_npm_global_packages() {
         
         # Verificar si el comando ya existe
         if command -v "$cmd" &> /dev/null; then
-            echo -e "${YELLOW}   ! $cmd ya está instalado (saltando $package)${NC}"
-            continue
+            # Obtener versión instalada
+            INSTALLED_VERSION=$(npm list -g "$package" 2>/dev/null | grep "$package@" | sed 's/.*@//' | cut -d' ' -f1)
+            
+            # Obtener última versión disponible en npm
+            LATEST_VERSION=$(npm view "$package" version 2>/dev/null)
+            
+            if [ -n "$INSTALLED_VERSION" ] && [ -n "$LATEST_VERSION" ]; then
+                if [ "$INSTALLED_VERSION" = "$LATEST_VERSION" ]; then
+                    echo -e "${YELLOW}   ! $cmd ya está en la última versión ($INSTALLED_VERSION)${NC}"
+                    continue
+                else
+                    echo -e "${CYAN}   Actualizando $package: $INSTALLED_VERSION → $LATEST_VERSION${NC}"
+                    $USE_SUDO npm install -g "$package@latest"
+                    
+                    if [ $? -ne 0 ]; then
+                        echo -e "${RED}   ✗ Error actualizando $package${NC}"
+                    else
+                        echo -e "${CYAN}   ✓ $package actualizado${NC}"
+                    fi
+                    continue
+                fi
+            else
+                echo -e "${YELLOW}   ! $cmd instalado pero no se pudo verificar versión${NC}"
+                continue
+            fi
         fi
         
+        # Si no está instalado, instalarlo
         echo -e "${CYAN}   Instalando $package...${NC}"
         $USE_SUDO npm install -g "$package@latest"
         
