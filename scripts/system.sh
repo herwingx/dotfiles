@@ -363,8 +363,9 @@ _safe_bleopt() {
     fi
 }
 
-# DESACTIVAR modo multilínea (Enter siempre ejecuta, evita conflictos con IDE)
-bleopt edit_aindent=0
+# DESACTIVAR modo multilínea - Enter siempre ejecuta el comando
+ble-bind -f 'C-m' 'accept-line'
+ble-bind -f 'RET' 'accept-line'
 
 # DESACTIVAR sugerencias inline (evita duplicación con TAB)
 _safe_bleopt complete_auto_complete 0
