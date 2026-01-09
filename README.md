@@ -136,7 +136,6 @@ dotfiles/
 ├── README.md               # 📖 Documentación del proyecto
 ├── .env.age                # 🔐 Secrets encriptados del repo (backup)
 ├── .env.example            # 📄 Plantilla de variables de entorno
-├── .env.local.age          # 🏠 Secrets locales (generado por usuario)
 │
 ├── config/                 # 📁 Archivos de configuración (dotfiles puros)
 │   ├── .bash_aliases       # Aliases de terminal (gs, ga, ll, etc.)
