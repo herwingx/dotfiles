@@ -54,7 +54,7 @@ source ~/.bashrc
 nvm install --lts
 
 # 4. Si quieres Gemini CLI + extensiones MCP:
-npm install -g @google/generative-ai-cli
+npm install -g @google/gemini-cli
 # Luego ejecuta opción 20 (Settings)
 ```
 
