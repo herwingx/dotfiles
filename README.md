@@ -163,9 +163,11 @@ dotfiles/
     └── workflows/          # ⚡ Comandos slash automatizados
         ├── commit.md       # /commit       (Conventional Commits)
         ├── crear-pr.md     # /crear-pr     (Pull Request Template)
+        ├── crear-readme.md # /crear-readme (Docs Generator)
         ├── release.md      # /release      (GitHub Release)
+        ├── publicar.md     # /publicar     (Push Automático)
         ├── sync-main.md    # /sync-main    (Rebase)
-        └── ...
+        └── limpiar-ramas.md # /limpiar-ramas (Cleanup)
 ```
 
 ### Diagrama de Flujo
