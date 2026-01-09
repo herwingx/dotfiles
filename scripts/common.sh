@@ -1,23 +1,19 @@
-#!/bin/bash
-# ==========================================
-# COMMON - Variables globales y utilidades
-# ==========================================
-# Diseño Premium UX/UI para Dotfiles
-# ==========================================
-
-# --- PALETA DE COLORES PREMIUM ---
+# --- PALETA DE COLORES HACKER (MATRIX/CYBERPUNK) ---
 BOLD='\033[1m'
 DIM='\033[2m'
 UNDERLINE='\033[4m'
 
+# Colores Base
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
+NEON_GREEN='\033[1;32m' # Main Accent
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m' # Standard Blue
 CYAN='\033[0;36m'
-WHITE='\033[0;37m'
-NC='\033[0m' # No Color
+NEON_CYAN='\033[1;36m' # Secondary Accent
+WHITE='\033[1;37m'
+GRAY='\033[1;30m'     # Subtle details
+NC='\033[0m'          # No Color
 
 # --- DIRECTORIO BASE ---
 if [ -z "$DOTFILES_DIR" ]; then
@@ -25,33 +21,32 @@ if [ -z "$DOTFILES_DIR" ]; then
     DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
 fi
 
-# --- HELPERS UI ---
+# --- HELPERS UI TÉCNICOS ---
 print_header() {
     echo ""
-    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}${PURPLE}  $1${NC}"
-    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
-    echo ""
+    echo -e "${GRAY}===============================================================${NC}"
+    echo -e "${NEON_GREEN}[+] SYSTEM_TASK :: ${WHITE}${1^^}${NC}" # Uppercase for tech look
+    echo -e "${GRAY}===============================================================${NC}"
 }
 
 print_step() {
-    echo -e "${BLUE}➜ ${BOLD}$1${NC}"
+    echo -e "${NEON_CYAN}  >> ${NC}$1"
 }
 
 print_success() {
-    echo -e "${GREEN}  ✓ $1${NC}"
+    echo -e "${NEON_GREEN}  [OK] ${NC}$1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}  ⚠️  $1${NC}"
+    echo -e "${YELLOW}  [!] WARNING: ${NC}$1"
 }
 
 print_error() {
-    echo -e "${RED}  ✗ $1${NC}"
+    echo -e "${RED}  [ERROR] ${NC}$1"
 }
 
 print_info() {
-    echo -e "${DIM}     $1${NC}"
+    echo -e "${GRAY}      # $1${NC}"
 }
 
 # --- DETECCIÓN DE ENTORNO ---
