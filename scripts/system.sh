@@ -45,7 +45,7 @@ install_packages() {
     PACKAGES=(
         "git" "curl" "wget" "htop" "btop" "vim" "unzip" "tree" 
         "net-tools" "neofetch" "tmux" "fzf" "ranger" "mc" "rclone"
-        "make" "gawk" "gcc"
+        "make" "gawk" "gcc" "xz-utils" "micro" "tldr"
     )
     
     if [ -f /etc/debian_version ]; then
@@ -73,6 +73,12 @@ install_packages() {
     fi
     
     echo -e "${CYAN}   ✓ Paquetes base instalados${NC}"
+
+    # Actualizar base de datos de tldr (si se instaló)
+    if command -v tldr &> /dev/null; then
+        echo -e "${CYAN}   Actualizando base de datos tldr...${NC}"
+        tldr --update &>/dev/null || true
+    fi
     
     install_modern_tools
     install_bash_aliases
