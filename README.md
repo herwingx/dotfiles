@@ -135,11 +135,13 @@ dotfiles/
 ├── uninstall.sh            # 🗑️ Script de limpieza total
 ├── README.md               # 📖 Documentación del proyecto
 ├── .env.age                # 🔐 Secrets encriptados del repo (backup)
-├── .env.local.age          # 🏠 Secrets locales del usuario (prioridad)
+├── .env.example            # 📄 Plantilla de variables de entorno
+├── .env.local.age          # 🏠 Secrets locales (generado por usuario)
 │
 ├── config/                 # 📁 Archivos de configuración (dotfiles puros)
 │   ├── .bash_aliases       # Aliases de terminal (gs, ga, ll, etc.)
 │   ├── .gitconfig          # Configuración global de Git
+│   ├── .tmux.conf          # Configuración de Terminal Multiplexer
 │   └── herwingx.omp.json   # 🎨 Tema visual de Oh My Posh
 │
 ├── scripts/                # 🔧 Módulos de instalación
@@ -152,15 +154,18 @@ dotfiles/
 │   ├── cron-update.sh      # Auto-Update
 │   └── manage_secrets.sh   # 🔐 Gestor interactivo de bóvedas
 │
+├── docs/                   # 📚 Documentación adicional
+│   └── WSL.md              # Guía específica para Windows Subsystem for Linux
+│
 └── gemini/                 # 🤖 Configuración Antigravity/Gemini
     ├── README.md           # Docs de extensiones MCP
     ├── GEMINI.md           # Reglas globales de desarrollo
     ├── settings.json       # Configuración CLI (MCPs, tokens)
     └── workflows/          # ⚡ Comandos slash automatizados
-        ├── commit.md       # /commit      -> Conventional Commits
-        ├── release.md      # /release     -> GitHub Release
-        ├── publicar.md     # /publicar    -> Push to Remote
-        ├── crear-pr.md     # /crear-pr    -> PR Template
+        ├── commit.md       # /commit       (Conventional Commits)
+        ├── crear-pr.md     # /crear-pr     (Pull Request Template)
+        ├── release.md      # /release      (GitHub Release)
+        ├── sync-main.md    # /sync-main    (Rebase)
         └── ...
 ```
 
