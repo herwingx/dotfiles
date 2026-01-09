@@ -59,9 +59,21 @@ decrypt_secrets() {
         fi
         
         if [ -z "$SECRETS_LOADED" ]; then
-            echo -e "${CYAN}   Descifrando secrets...${NC}"
-            DECRYPTED=$(age --decrypt "$DOTFILES_DIR/.env.age" 2>/dev/null)
-            if [ $? -eq 0 ]; then
+            echo -e "${CYAN}   🔐 Archivo de secretos (.env.age) detectado.${NC}"
+            
+            # Usar archivo temporal seguro para permitir interacción con age (stdin/stderr)
+            TEMP_ENV=$(mktemp)
+            chmod 600 "$TEMP_ENV"
+            
+            echo -e "${YELLOW}   Introduce la frase de paso para desbloquear los secretos:${NC}"
+            # Ejecutamos age de forma directa para que pueda pedir password en la terminal
+            age --decrypt -o "$TEMP_ENV" "$DOTFILES_DIR/.env.age"
+            
+            EXIT_CODE=$?
+            
+            if [ $EXIT_CODE -eq 0 ]; then
+                DECRYPTED=$(cat "$TEMP_ENV")
+                
                 # Extraer variables soportando valores con '='
                 export BW_CLIENTID=$(echo "$DECRYPTED" | grep "^BW_CLIENTID=" | cut -d'=' -f2-)
                 export BW_CLIENTSECRET=$(echo "$DECRYPTED" | grep "^BW_CLIENTSECRET=" | cut -d'=' -f2-)
@@ -97,11 +109,22 @@ EOF
                 fi
 
                 export SECRETS_LOADED=1
-                echo -e "${CYAN}   ✓ Secrets cargados${NC}"
+                echo -e "${CYAN}   ✓ Secrets cargados exitosamente${NC}"
+                rm -f "$TEMP_ENV"
                 return 0
             else
-                echo -e "${RED}   ✗ Error descifrando (passphrase incorrecta?)${NC}"
-                return 1
+                rm -f "$TEMP_ENV"
+                echo -e "${RED}   ✗ No se pudo desbloquear (Password incorrecto o cancelado).${NC}"
+                echo -e "${YELLOW}   ¿Deseas continuar la instalación en 'Modo Invitado' (sin secretos)?${NC}"
+                read -p "   [S/n]: " GUEST_MODE
+                GUEST_MODE=${GUEST_MODE:-S}
+                
+                if [[ "$GUEST_MODE" =~ ^[Ss]$ ]]; then
+                     echo -e "${YELLOW}   ⚠️  Continuando sin cargar secretos (GH_TOKEN, Bitwarden, etc. estarán vacíos).${NC}"
+                     return 0 # Retornamos éxito para no romper el script de instalación
+                else
+                     return 1 # Fallo real, aborta instalación
+                fi
             fi
         fi
     else
