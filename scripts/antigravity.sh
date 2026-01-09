@@ -122,7 +122,13 @@ install_gemini_extensions() {
 
     for ext in "${extensions[@]}"; do
         echo -e "${CYAN}   Instalando: $ext...${NC}"
-        gemini extensions install "$ext" --consent || echo -e "${RED}   ✗ Error instalando $ext (posiblemente ya instalada)${NC}"
+        # Usar timeout para evitar bloqueos eternos
+        # Usar 'yes' para aceptar prompts automáticos si los hay
+        if timeout 60s bash -c "yes | gemini extensions install \"$ext\"" &>/dev/null; then
+             echo -e "${CYAN}   ✓ Instalada: $ext${NC}"
+        else
+             echo -e "${RED}   ✗ Error o Timeout instalando $ext (puedes intentarlo manualmente: gemini extensions install $ext)${NC}"
+        fi
     done
     
     echo -e "${CYAN}   ✓ Extensiones procesadas${NC}"
