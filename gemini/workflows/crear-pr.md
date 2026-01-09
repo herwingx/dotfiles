@@ -12,7 +12,7 @@ description: Crear Pull Request usando GitHub CLI
     *   Usa el título del último commit o pide uno nuevo.
     *   Ejecuta:
         ```bash
-        gh pr create --fill --web
+        gh pr create --fill
         ```
-    *   `--fill`: Autocompleta con info de los commits.
-    *   `--web`: Abre el navegador para detalles finales.
+    *   `--fill`: Autocompleta título y body con la info de los commits.
+    *   (Sin `--web` para compatibilidad con servidores headless).
