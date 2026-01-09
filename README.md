@@ -217,10 +217,10 @@ flowchart TD
 
 | Opción | Descripción                                                       | Modo | Ideal para                    |
 | :----: | :---------------------------------------------------------------- | :--- | :---------------------------- |
-|   1    | **TODO**: Sistema + Dev Tools + Antigravity + Cloud + Auto-Update | 🤖 **Automático** (instala todo sin preguntar) | Máquina nueva de desarrollo   |
-|   2    | **Sistema**: Update + Paquetes + Tools + Aliases + Git + SSH      | 💬 Interactivo | Servidores o entornos ligeros |
-|   3    | **Dev Tools**: GitHub CLI + NVM/Node.js + Docker                  | 💬 Interactivo | Entornos de desarrollo        |
-|   4    | **Antigravity**: Reglas GEMINI.md + Workflows IA                  | 💬 Interactivo | Solo configuración de IA      |
+|   1    | **Instalar TODO**: Full Stack + IA + Cloud + Auto-Update          | 🤖 **Automático** (instala todo sin preguntar) | Máquina nueva de desarrollo   |
+|   2    | **Solo Sistema**: Update + Paquetes + Tools + Aliases + Git + SSH | 💬 Interactivo | Servidores o entornos ligeros |
+|   3    | **Solo Dev Tools**: GitHub CLI + NVM/Node.js + Docker             | 💬 Interactivo | Entornos de desarrollo        |
+|   4    | **Solo Antigravity AI**: Reglas GEMINI.md + Workflows IA          | 💬 Interactivo | Solo configuración de IA      |
 
 > 💡 **Modo Automático vs Interactivo**:
 > - **Opción 1 (TODO)**: Instala automáticamente todas las herramientas, incluido Gemini CLI si tienes Node.js
@@ -228,24 +228,24 @@ flowchart TD
 
 > 🐧 **WSL**: Si estás en Windows Subsystem for Linux, lee la [Guía completa de WSL](docs/WSL.md) para evitar conflictos con binarios de Windows.
 
-### Sistema (Individual)
+### 📦 Módulos de Sistema
 
 | Opción | Módulo            | Descripción                                                                                                      |
 | :----: | :---------------- | :--------------------------------------------------------------------------------------------------------------- |
-|   5    | Update Sistema    | Actualiza el SO (`apt upgrade` / `dnf upgrade` / `pacman -Syu`)                                                  |
-|   6    | Paquetes + Tools  | Instala: git, curl, vim, **micro**, **tldr**, tmux, fzf, ranger, **oh-my-posh**, **lsd**, **lazydocker**, **ctop**, **gping** y herramientas de compilación (`make`, `gcc`, `gawk`). |
-|   7    | Git Config        | Vincula `.gitconfig` con configuración global optimizada                                                         |
-|   8    | SSH Keys          | Importa llaves SSH públicas desde GitHub (via API)                                                               |
-|   9    | SSH desde Windows | Copia llaves SSH de Windows a WSL (solo aplica en WSL)                                                           |
+|   5    | Actualizar Sistema| Ejecuta `apt upgrade` / `dnf upgrade` / `pacman -Syu`                                                            |
+|   6    | Paquetes Base     | Instala: git, curl, vim, **micro**, **tldr**, tmux, fzf, ranger, **oh-my-posh**, **lsd**, **lazydocker**, **ctop**, **gping** y herramientas de compilación. |
+|   7    | Configurar Git    | Vincula `.gitconfig` con configuración global optimizada                                                         |
+|   8    | Importar Keys SSH | Importa llaves SSH públicas desde GitHub (via API)                                                               |
+|   9    | Sincronizar SSH   | Copia llaves SSH desde Windows a WSL (solo aplica en WSL)                                                        |
 
-### Dev Tools (Individual)
+### 🛠️ Herramientas Dev
 
 | Opción | Módulo        | Descripción                                                            |
 | :----: | :------------ | :--------------------------------------------------------------------- |
 |   10   | GitHub CLI    | Instala `gh` y configura autenticación automática via Bitwarden        |
 |   11   | NVM + Node.js | Instala Node Version Manager y la última versión LTS de Node.js        |
-|   12   | npm Packages  | Instala globalmente: `@anthropics/claude-code`, `@bitwarden/cli`       |
-|   13   | Docker        | Instala Docker CE + Docker Compose con configuración de grupo `docker` |
+|   12   | Globales NPM  | Instala globalmente: `@anthropics/claude-code`, `@bitwarden/cli`       |
+|   13   | Docker Engine | Instala Docker CE + Docker Compose con configuración de grupo `docker` |
 
 ### 🛡️ Transparencia: ¿Qué estamos instalando?
 
@@ -263,90 +263,23 @@ Para generar confianza, aquí detallamos el propósito de las librerías base qu
 
 > 💡 **Auditoría**: Puedes revisar los scripts en `scripts/*.sh` para ver cada comando `apt install` o `curl` ejecutado. No instalamos nada que no sea estándar o de código abierto.
 
-### Antigravity AI (Individual)
+### ☁️ Cloud & Integración IA
 
-| Opción | Módulo    | Descripción                                                                                  |
-| :----: | :-------- | :------------------------------------------------------------------------------------------- |
-|   14   | Reglas    | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA              |
-|   15   | Workflows | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/`       |
-|   20   | Settings  | Configura `settings.json`, token de GitHub persistente y **extensiones MCP** automáticamente. Si Gemini CLI no existe, ofrece instalarlo. |
+| Opción | Módulo              | Descripción                                                                                  |
+| :----: | :------------------ | :------------------------------------------------------------------------------------------- |
+|   14   | Reglas IA           | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA              |
+|   15   | Comandos Slash      | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/`       |
+|   16   | **Decrypt Secrets** | Desencripta `.env.age` o `.env.local.age` y carga variables en sesión                        |
+|   17   | **New Vault**       | **Crea una nueva bóveda local** y archiva la original (Ideal para Forks)                     |
+|   18   | Configurar Rclone   | Configura rclone para Google Drive usando token desde secrets                                |
 
-#### 🤖 ¿Qué son las Extensiones MCP?
+### 🔄 Mantenimiento
 
-**MCP (Model Context Protocol)** es un estándar abierto que permite a los asistentes de IA como Gemini interactuar con herramientas externas, bases de datos y servicios. Piensa en ellas como **plugins que amplían las capacidades de tu asistente**.
-
-#### 🛠️ Servidores MCP Incluidos
-
-La opción **20** instala automáticamente los siguientes servidores MCP para Gemini:
-
-| Extensión             | Repositorio                                                                                 | Capacidades                                                            |
-| :-------------------- | :------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
-| 🌐 **Chrome DevTools** | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) | Inspección del navegador, control de pestañas, debugging de JavaScript |
-| 🐙 **GitHub**          | [github/github-mcp-server](https://github.com/github/github-mcp-server)                     | Gestión de repositorios, issues, PRs, búsqueda de código               |
-| 🐘 **Postgres**        | [gemini-cli-extensions/postgres](https://github.com/gemini-cli-extensions/postgres)         | Ejecución de queries SQL, inspección de schemas, gestión de tablas     |
-| 🍌 **Nanobanana**      | [gemini-cli-extensions/nanobanana](https://github.com/gemini-cli-extensions/nanobanana)     | Utilidades de sistema y productividad adicionales                      |
-
-#### 🔐 Configuración del Token de GitHub
-
-El script configura automáticamente el token de GitHub para las extensiones:
-
-1. **Extrae** `GH_TOKEN` desde `.env.age` (encriptado)
-2. **Exporta** la variable `GITHUB_PERSONAL_ACCESS_TOKEN` en `~/.bashrc` para persistencia
-3. **Configura** `settings.json` para usar el token en las extensiones MCP
-
-**Resultado**: Gemini puede interactuar con GitHub sin pedir credenciales manualmente.
-
-#### 📋 Workflows Disponibles
-
-Los workflows se instalan en `~/.gemini/antigravity/global_workflows/` y están disponibles como comandos slash:
-
-| Workflow         | Descripción                            | Ejemplo de Uso                                        |
-| :--------------- | :------------------------------------- | :---------------------------------------------------- |
-| `/commit`        | Crear commits con Conventional Commits | Genera commits con formato `type(scope): description` |
-| `/crear-pr`      | Crear Pull Request en GitHub           | Abre PR con template y descripción detallada          |
-| `/nueva-feature` | Iniciar desarrollo de feature          | Crea rama `feat/*`, configura entorno                 |
-| `/publicar`      | Publicar rama al remoto                | Push con tracking automático                          |
-| `/release`       | Crear release con tag y notas          | Genera tag semántico y release notes                  |
-| `/sync-main`     | Sincronizar con main usando rebase     | Actualiza rama sin merge commits                      |
-| `/crear-readme`  | Generar README.md profesional          | Plantilla premium con badges y estructura             |
-| `/limpiar-ramas` | Eliminar ramas fusionadas              | Limpieza de ramas locales y remotas                   |
-
-> 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal.
-> ¡Siéntete libre de editarlos! Puedes modificar las reglas para adaptarlas a tu estilo o crear nuevos workflows en `~/.gemini/workflows/` para automatizar tus propias tareas.
-
-## 🎨 Guía de Personalización
-
-Este repositorio está diseñado para ser **agnóstico y personalizable**. Aquí tienes cómo adaptar cada componente a tu gusto:
-
-### 1. Asistente IA (Antigravity)
-- **Reglas (`GEMINI.md`)**: Define cómo quieres que se comporte tu IA. Puedes cambiar "Ingeniero Senior" por "Tutor de Python", "Experto en C++", etc.
-  - 📍 Ubicación: `~/.gemini/GEMINI.md`
-- **Workflows**: Los archivos `.md` en `workflows/` son scripts que la IA puede leer.
-  - 📝 **Crear nuevo**: Añade `mi-workflow.md` en `~/.gemini/workflows/` con instrucciones paso a paso.
-  - 📍 Ubicación: `~/.gemini/workflows/`
-
-### 2. Estética de Terminal (Oh My Posh)
-El tema visual está definido en un archivo JSON. Puedes cambiar colores, iconos y segmentos.
-- 📍 Archivo: `config/herwingx.omp.json`
-- 📚 Docs: [Documentación oficial de Oh My Posh](https://ohmyposh.dev/docs/configuration/overview)
-
-### 3. Git (.gitconfig)
-Los alias de Git se manejan centralizadamente en `.gitconfig` para mantener limpia la configuración del shell.
-- 📍 Archivo: `config/.gitconfig`
-- ✨ **Tip**: Usa `git c "mensaje"` en lugar de `git commit -m "mensaje"`.
-
-### 4. Variables de Entorno (.env.example)
-Usa `.env.example` como plantilla para tus secretos. El sistema soporta encriptación automática con `scripts/manage_secrets.sh` para mayor seguridad.
-
-
-### Cloud & Mantenimiento
-
-| Opción | Módulo        | Descripción                                                             |
-| :----: | :------------ | :---------------------------------------------------------------------- |
-|   16   | rclone        | Configura rclone para Google Drive usando token desde `.env.age`        |
-|   17   | Auto-Update   | Instala cronjob de actualización automática con notificaciones Telegram |
-|   18   | Update Manual | Ejecuta manualmente el script de actualización (para testing)           |
-|   19   | Desinstalar   | Elimina el cronjob de auto-update                                       |
+| Opción | Módulo              | Descripción                                                             |
+| :----: | :------------------ | :---------------------------------------------------------------------- |
+|   19   | Activar Auto-Update | Instala cronjob de actualización automática con notificaciones Telegram |
+|   20   | Update Manual       | Ejecuta manualmente el script de actualización (para testing)           |
+|   21   | Desactivar Auto-Up  | Elimina el cronjob de auto-update                                       |
 
 ---
 
