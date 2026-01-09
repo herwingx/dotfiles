@@ -106,7 +106,8 @@ show_menu() {
 
     echo -e "${NEON_CYAN}  // CLOUD_OPS${NC}"
     echo -ne "  "; p_opt "14" "AI Rules"; p_opt "15" "AI Workflows"; echo ""
-    echo -ne "  "; p_opt "20" "Secrets Config"; p_opt "16" "Rclone Sync"; echo ""
+    echo -ne "  "; p_opt "20" "Load Secrets"; p_opt "21" "Create New Vault"; echo ""
+    echo -ne "  "; p_opt "16" "Rclone Sync"; echo ""
     echo ""
 
     echo -e "${NEON_CYAN}  // MAINTENANCE${NC}"
@@ -138,6 +139,7 @@ show_menu() {
         14) install_antigravity_rules || handle_error $? "AI_RULES" ;;
         15) install_antigravity_workflows || handle_error $? "AI_WORKFLOWS" ;;
         20) install_gemini_settings || handle_error $? "SECRETS_CONFIG" ;;
+        21) reset_secrets_interactive || handle_error $? "NEW_VAULT_CREATION" ;;
         16) configure_rclone || handle_error $? "RCLONE_CONFIG" ;;
         17) install_auto_update || handle_error $? "AUTO_UPDATE_ENABLE" ;;
         18) run_manual_update || handle_error $? "MANUAL_UPDATE" ;;
