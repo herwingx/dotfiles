@@ -372,6 +372,10 @@ _safe_bleopt complete_menu_style desc-raw
 # Ocultar el mensaje de estado de salida [ble: exit XXX]
 _safe_bleopt exec_exit_status ""
 _safe_bleopt print_exit_status 0
+bleopt exec_elapsed_mark=
+
+# Keybinding multilínea: Alt+Enter ejecuta (evita conflicto con IDE)
+bind -m multiline 'M-RET: accept-line'
 
 # Colores limpios (syntax highlighting sigue activo)
 if [[ ${BLE_VERSION-} ]]; then
