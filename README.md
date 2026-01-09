@@ -306,6 +306,15 @@ Usa `.env.example` como plantilla para tus secretos. El sistema soporta encripta
 
 Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para proteger variables sensibles. Los secretos se encriptan con passphrase y se desencriptan solo en runtime.
 
+### ¿Por qué Encriptar? (Importante)
+
+La encriptación con **Age** te permite **subir tus secretos al repositorio de GitHub** sin riesgo.
+
+*   ✅ **Si ENCRIPTAS (`.env.age`)**: Puedes hacer commit y push de tus secretos. Al instalar tus dotfiles en otra computadora, el instalador desencriptará todo automáticamente y tu entorno estará listo en minutos.
+*   ❌ **Si NO ENCRIPTAS**: No puedes subir tu `.env` (sería un riesgo de seguridad grave). Tendrías que configurar manualmente tus tokens y claves cada vez que instales tu entorno en uina máquina nueva.
+
+> 🔒 **Regla de Oro**: Si quieres automatización y portabilidad (la filosofía de los dotfiles), **usa la encriptación**.
+
 ### Variables Soportadas
 
 | Variable             | Descripción                                 | Uso                                                       |
