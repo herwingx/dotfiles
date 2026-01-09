@@ -19,6 +19,9 @@ source "$DOTFILES_DIR/scripts/cloud.sh"
 # --- FUNCIONES DE INSTALACIÓN AGRUPADAS ---
 
 install_all() {
+    # Modo automático: instalar TODO sin preguntar
+    export AUTO_INSTALL=true
+    
     update_system
     install_packages
     configure_rclone

@@ -144,9 +144,16 @@ install_gemini_extensions() {
         
         # Verificar si npm está disponible en WSL
         if command -v npm &> /dev/null; then
-            echo -e "${CYAN}   ¿Instalar Gemini CLI dentro de WSL ahora? (recomendado)${NC}"
-            read -p "   [S/n]: " INSTALL_GEMINI
-            INSTALL_GEMINI=${INSTALL_GEMINI:-S}
+            INSTALL_GEMINI="S"
+            
+            # Preguntar solo si NO es modo automático
+            if [ "$AUTO_INSTALL" != "true" ]; then
+                echo -e "${CYAN}   ¿Instalar Gemini CLI dentro de WSL ahora? (recomendado)${NC}"
+                read -p "   [S/n]: " INSTALL_GEMINI
+                INSTALL_GEMINI=${INSTALL_GEMINI:-S}
+            else
+                echo -e "${CYAN}   [Modo automático] Instalando Gemini CLI en WSL...${NC}"
+            fi
             
             if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
                 echo -e "${CYAN}   Instalando Gemini CLI en WSL...${NC}"
@@ -179,9 +186,16 @@ install_gemini_extensions() {
         
         # Ofrecer instalación si npm está disponible
         if command -v npm &> /dev/null; then
-            echo -e "${CYAN}   ¿Instalar Gemini CLI ahora?${NC}"
-            read -p "   [S/n]: " INSTALL_GEMINI
-            INSTALL_GEMINI=${INSTALL_GEMINI:-S}
+            INSTALL_GEMINI="S"
+            
+            # Preguntar solo si NO es modo automático
+            if [ "$AUTO_INSTALL" != "true" ]; then
+                echo -e "${CYAN}   ¿Instalar Gemini CLI ahora?${NC}"
+                read -p "   [S/n]: " INSTALL_GEMINI
+                INSTALL_GEMINI=${INSTALL_GEMINI:-S}
+            else
+                echo -e "${CYAN}   [Modo automático] Instalando Gemini CLI...${NC}"
+            fi
             
             if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
                 echo -e "${CYAN}   Instalando Gemini CLI...${NC}"
