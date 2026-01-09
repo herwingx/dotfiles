@@ -317,12 +317,22 @@ install_blesh() {
     # Añadimos opciones para silenciar mensajes técnicos y mejorar compatibilidad
     echo -e "${CYAN}   Configurando .blerc (Estabilidad y Silencio)...${NC}"
     cat > "$HOME/.blerc" <<'EOF'
-# Configuración visual ble.sh
-bleopt complete_auto_complete=1
-bleopt complete_menu_style=align-nowrap
+# Función para establecer opciones de forma segura (sin errores si no existen)
+_safe_bleopt() {
+    local opt=$1 val=$2
+    if bleopt "$opt" >/dev/null 2>&1; then
+        bleopt "$opt=$val"
+    fi
+}
 
-# Ocultar el molesto mensaje [ble: exit 127]
-bleopt exec_exit_status=
+# Configuración visual
+_safe_bleopt complete_auto_complete 1
+_safe_bleopt complete_menu_style align-nowrap
+
+# Ocultar el mensaje de estado de salida [ble: exit XXX]
+# Probamos nombres comunes según la versión
+_safe_bleopt exec_exit_status ""
+_safe_bleopt print_exit_status 0
 
 # Colores limpios
 if [[ ${BLE_VERSION-} ]]; then
