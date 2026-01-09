@@ -73,31 +73,55 @@ chmod +x install.sh
 ./install.sh
 ```
 
-### 3. Menú Interactivo
+### 3. Menú Interactivo High-Tech
 
-Verás un menú visual con todas las opciones disponibles:
+El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para control total:
 
+```text
+  ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
+  ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██╔╝██║     ██╔════╝██╔════╝
+  ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
+  ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
+  ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
+  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
+                            v2.0_PREMIUM_BUILD // SYSTEM_READY
+
+  // DEPLOYMENT_PROTOCOLS
+  +------------------------------------------------------------+
+  [1 ] FULL_STACK_DEPLOY (All Modules)
+  +------------------------------------------------------------+
+  [2 ] SYSTEM_ONLY                       [3 ] DEV_TOOLS
+  [4 ] ANTIGRAVITY_AI
+  +------------------------------------------------------------+
+
+  // SYSTEM_MODULES
+  [5 ] System Upgrade                    [6 ] Base Packages
+  [7 ] Git Config                        [8 ] SSH Keys
+  [9 ] WSL Sync
+
+  // DEV_ENV
+  [10] GitHub CLI                        [11] Node.js (LTS)
+  [12] NPM Globals                       [13] Docker Engine
+
+  // CLOUD_OPS
+  [14] AI Rules                          [15] AI Workflows
+  [20] Load Secrets                      [21] Create New Vault
+  [16] Rclone Sync
+
+  // MAINTENANCE
+  [17] Enable Auto-Up                    [18] Manual Update
+  [19] Disable Auto-Up
+
+  +------------------------------------------------------------+
+  [0 ] ABORT / EXIT
+
+  [TIP] Press Ctrl+C to force quit at any time
+  wrapper@install:~$ 
 ```
-    ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
-    ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝
-    ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
-    ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
-    ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
-    ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
 
-                    🚀 LINUX ENVIRONMENT INSTALLER 🚀
-
-  ┌──────────────────────────────────────────────────────────────┐
-  │  INSTALACIÓN RÁPIDA                                          │
-  ├──────────────────────────────────────────────────────────────┤
-  │   1) ⚡ Instalar TODO (sistema + dev + IA + cloud)           │
-  │   2) 🖥️  Solo Sistema (packages + tools + git + ssh)         │
-  │   3) 🛠️  Solo Dev Tools (gh, nvm, docker)                    │
-  │   4) 🤖 Solo Antigravity (reglas IA + workflows)             │
-  └──────────────────────────────────────────────────────────────┘
-```
-
-> 📘 **Recomendación**: Para una máquina nueva, selecciona la opción **1** para instalación completa.
+> 📘 **Recomendación**: Para una máquina nueva personal, selecciona la opción **[1]** "FULL_STACK_DEPLOY".
+>
+> 🔱 **Para Forks/Colaboradores**: Usad la opción **[21] Create New Vault** para generar vuestra propia bóveda de secretos `.env.local.age` y limpiar la configuración del autor original.
 
 ---
 
@@ -326,17 +350,25 @@ Usa `.env.example` como plantilla para tus secretos. El sistema soporta encripta
 ---
 
 ## 🔐 Gestión de Secretos (.env.age)
-
+ 
 Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para proteger variables sensibles. Los secretos se encriptan con passphrase y se desencriptan solo en runtime.
-
+ 
+### Arquitectura de Bóvedas (Prioridad)
+ 
+El sistema maneja dos niveles de secretos para facilitar la colaboración:
+ 
+1.  🥇 **`.env.local.age` (Prioridad Alta)**: Tu bóveda personal. Si existe, el sistema la usa y **ignora** la del repositorio. Este archivo está en `.gitignore` para que nunca se suba por error.
+2.  🥈 **`.env.age` (Fallback)**: La bóveda distribuida con el repositorio (útil para backup personal del autor).
+ 
+> 🔱 **Forks Safe**: Si haces fork de este proyecto, simplemente crea tu propia bóveda local (Opción 21). El sistema la priorizará automáticamente y te ofrecerá archivar la original.
+ 
 ### ¿Por qué Encriptar? (Importante)
-
-La encriptación con **Age** te permite **subir tus secretos al repositorio de GitHub** sin riesgo.
-
-*   ✅ **Si ENCRIPTAS (`.env.age`)**: Puedes hacer commit y push de tus secretos. Al instalar tus dotfiles en otra computadora, el instalador desencriptará todo automáticamente y tu entorno estará listo en minutos.
-*   ❌ **Si NO ENCRIPTAS**: No puedes subir tu `.env` (sería un riesgo de seguridad grave). Tendrías que configurar manualmente tus tokens y claves cada vez que instales tu entorno en una máquina nueva.
-
-> 🔒 **Regla de Oro**: Si quieres automatización y portabilidad (la filosofía de los dotfiles), **usa la encriptación**.
+ 
+La encriptación con **Age** te permite:
+ 
+*   ✅ **Backup Seguro**: Puedes hacer commit de `.env.age` si lo deseas (usando una passphrase fuerte).
+*   ✅ **Portabilidad**: Al instalar tus dotfiles en otra máquina, desencriptas y listo.
+*   ✅ **Fork Friendly**: Los colaboradores no ven tus secretos, y pueden crear los suyos propios en `.env.local.age`.
 
 ### Variables Soportadas
 
