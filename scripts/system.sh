@@ -392,6 +392,7 @@ install_antigravity_fix() {
     else
         echo -e "${RED}   ✗ No se pudo detectar el usuario de Windows automáticamente${NC}"
     fi
+}
 
 
 # ─────────────────────────────────────────────────────────────
