@@ -86,6 +86,10 @@ install_gemini_settings() {
         
         # Añadir nueva entrada
         echo "export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\"" >> ~/.bashrc
+        
+        # Exportar también en la sesión actual para que las extensiones lo usen
+        export GITHUB_PERSONAL_ACCESS_TOKEN="$GH_TOKEN"
+        
         echo -e "${CYAN}   ✓ Token configurado en ~/.bashrc${NC}"
     else
         echo -e "${YELLOW}   ! No se detectó GH_TOKEN. Recuerda configurarlo manualmente o vía Bitwarden.${NC}"
