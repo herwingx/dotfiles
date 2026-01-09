@@ -478,6 +478,35 @@ Para usar tus llaves locales dentro de servidores remotos o VMs (sin copiarlas a
    # ¡Si ves tu llave local aquí, el forwarding funciona! 🎉
    ```
 
+### 6. Ejemplo de Archivo de Configuración (`~/.ssh/config`)
+Si no tienes este archivo, créalo. Aquí tienes una plantilla robusta:
+
+```ssh
+# ~/.ssh/config
+
+# --- GLOBAL ---
+# Aplica a todos los hosts
+Host *
+    ForwardAgent yes
+    AddKeysToAgent yes
+    # Evita timeouts en conexiones inactivas
+    ServerAliveInterval 60
+    ServerAliveCountMax 120
+
+# --- GITHUB ---
+# Asegura que siempre se use el usuario 'git'
+Host github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+
+# --- SERVIDORES DE TRABAJO (Ejemplo) ---
+# Host alias
+Host mi-servidor
+    HostName 192.168.1.50
+    User ubuntu
+    IdentityFile ~/.ssh/id_ed25519
+```
+
 ---
 
 ## 🔧 Aliases Incluidos
