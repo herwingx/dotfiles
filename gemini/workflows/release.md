@@ -16,4 +16,7 @@ description: Crear Release y Tag en GitHub
     *   `--generate-notes`: Crea changelog automático basado en PRs.
 
 3.  **Confirmar**
-    *   Muestra URL del release.
+    *   Verifica el release creado:
+        ```bash
+        gh release view vX.Y.Z
+        ```

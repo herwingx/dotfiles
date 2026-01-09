@@ -19,7 +19,8 @@ description: Publicar rama actual al remoto
         ```
 
 2.  **Ver en GitHub**
+    *   Muestra la URL de la rama:
     // turbo
     ```bash
-    gh browse -b $(git branch --show-current)
+    gh browse -b $(git branch --show-current) --no-browser
     ```
