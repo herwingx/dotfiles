@@ -467,6 +467,8 @@ if [[ ${BLE_VERSION-} ]]; then
     ble-face -s command_file fg=cyan
     # Autocompletado sutil (transparente, sin subrayado)
     ble-face -s auto_complete fg=242,bg=default,ul=none
+    # Selección al insertar con TAB (quitamos el fondo blanco)
+    ble-face -s region_insert fg=default,bg=237
 fi
 EOF
 
