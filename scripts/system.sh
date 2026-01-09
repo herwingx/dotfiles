@@ -366,22 +366,24 @@ install_blesh() {
 
     # Configurar estilos (.blerc)
     echo -e "${CYAN}   Configurando estilos visuales (.blerc)...${NC}"
-    cat > "$HOME/.blerc" <<EOF
+    cat > "$HOME/.blerc" <<'EOF'
 # ==============================================================================
 # CONFIGURACIÓN VISUAL BLE.SH
 # ==============================================================================
+# IMPORTANTE: Este archivo se carga DESPUÉS de que ble.sh esté inicializado
+# Los comandos ble-face y bleopt solo están disponibles en ese momento
 
 # 1. Estilo Fish-like (Sugerencias grises, SIN subrayado ni fondo)
-ble-face -s auto_complete fg=242,bg=default,ul=none
-ble-face -s auto_complete_data fg=242,bg=default,ul=none
+bleopt complete_auto_complete=1
+bleopt complete_menu_style=align-nowrap
 
-# 2. Menú de autocompletado tipo Grid (Tab)
-ble-opt complete_menu_style=align-nowrap
-
-# 3. Colores de sintaxis más suaves
-ble-face -s syntax_error fg=196,bg=default        # Error rojo
-ble-face -s syntax_varname fg=208                 # Variables naranja
-ble-face -s syntax_quoted fg=107                  # Comillas verde
+# 2. Configurar colores (se ejecutan cuando ble.sh ya está cargado)
+if [[ ${BLE_VERSION-} ]]; then
+    ble-face -s auto_complete fg=242,bg=default,ul=none
+    ble-face -s syntax_error fg=196,bg=default
+    ble-face -s syntax_varname fg=208
+    ble-face -s syntax_quoted fg=107
+fi
 EOF
     echo -e "${CYAN}   ✓ .blerc generado (Estilo limpio/grid)${NC}"
 
