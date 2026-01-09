@@ -2,135 +2,174 @@
 # ==========================================
 # COMMON - Variables globales y utilidades
 # ==========================================
-# Este módulo contiene las configuraciones base que todos
-# los demás módulos necesitan: colores, detección de permisos
-# y la función de descifrado de secrets.
+# Diseño Premium UX/UI para Dotfiles
 # ==========================================
 
-# --- COLORES ---
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-RED='\033[0;31m'
+# --- PALETA DE COLORES PREMIUM ---
 BOLD='\033[1m'
+DIM='\033[2m'
+UNDERLINE='\033[4m'
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[0;37m'
 NC='\033[0m' # No Color
 
 # --- DIRECTORIO BASE ---
-# Si DOTFILES_DIR no está definido, calcularlo desde la ubicación de este script
 if [ -z "$DOTFILES_DIR" ]; then
     SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
     DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
 fi
 
-# ─────────────────────────────────────────────────────────────
-# Detecta si el script corre como root (LXC) o usuario (VM).
-# Configura SUDO_CMD vacío para root, "sudo" para usuario.
-# ─────────────────────────────────────────────────────────────
+# --- HELPERS UI ---
+print_header() {
+    echo ""
+    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}${PURPLE}  $1${NC}"
+    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+}
+
+print_step() {
+    echo -e "${BLUE}➜ ${BOLD}$1${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}  ✓ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}  ⚠️  $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}  ✗ $1${NC}"
+}
+
+print_info() {
+    echo -e "${DIM}     $1${NC}"
+}
+
+# --- DETECCIÓN DE ENTORNO ---
 if [ "$(id -u)" -eq 0 ]; then
-    echo -e "${YELLOW}>>> Ejecutando como ROOT (Modo LXC detectado)${NC}"
     SUDO_CMD=""
 else
-    echo -e "${YELLOW}>>> Ejecutando como USUARIO (Modo VM detectado)${NC}"
     SUDO_CMD="sudo"
 fi
 
-# ─────────────────────────────────────────────────────────────
-# Descifra el archivo .env.age y exporta las credenciales.
-# 
-# Variables exportadas:
-#   - BW_CLIENTID, BW_CLIENTSECRET: API keys de Bitwarden
-#   - GH_TOKEN: Token de GitHub
-#   - Configura rclone si RCLONE_TOKEN_JSON está presente
-#
-# @returns 0 si descifrado exitoso, 1 si error
-# ─────────────────────────────────────────────────────────────
+# --- GESTIÓN DE SECRETOS ---
+
 # Función auxiliar para guiar la creación de secretos locales
 create_local_secrets() {
-    echo -e "${CYAN}=== Configuración de Secretos Propios ===${NC}"
-    echo -e "${YELLOW}Vamos a crear un archivo encriptado local (.env.local.age) para tus credenciales.${NC}"
-    echo -e "${YELLOW}Este archivo será ignorado por git y no afectará al repositorio.${NC}"
+    print_header "🔐 Configuración de Secretos Personales"
+    
+    echo -e "${CYAN}Vamos a crear tu propia bóveda de secretos local (.env.local.age).${NC}"
+    print_info "Este archivo contendrá TUS claves y será ignorado por Git."
     echo ""
     
-    read -p "GitHub Token (GH_TOKEN): " NEW_GH_TOKEN
-    # Se podrían pedir más variables aquí (Bitwarden, Telegram, etc.)
+    # Input interactivo con estilo
+    echo -e "${BOLD}Ingresa tus credenciales (Deja vacío para omitir):${NC}"
+    read -p "   GitHub Token (GH_TOKEN): " NEW_GH_TOKEN
     
     if [ -n "$NEW_GH_TOKEN" ]; then
         # Crear contenido temporal
         TEMP_ENV=$(mktemp)
         echo "GH_TOKEN=$NEW_GH_TOKEN" > "$TEMP_ENV"
         
-        echo -e "${CYAN}Encriptando con age (te pedirá una nueva passphrase)...${NC}"
-        age --encrypt -p -o "$DOTFILES_DIR/.env.local.age" "$TEMP_ENV"
+        echo ""
+        print_step "Encriptando archivo seguro..."
+        echo -e "${YELLOW}  > A continuación, age te pedirá una${BOLD} NUEVA passphrase${NC}${YELLOW} para proteger este archivo.${NC}"
         
-        if [ $? -eq 0 ]; then
-             echo -e "${GREEN}✓ Secretos locales guardados en .env.local.age${NC}"
-             # Asegurar que esté en gitignore si no lo estaba
+        # Encriptar
+        age --encrypt -p -o "$DOTFILES_DIR/.env.local.age" "$TEMP_ENV"
+        RET_CODE=$?
+        rm -f "$TEMP_ENV"
+        
+        if [ $RET_CODE -eq 0 ]; then
+             print_success "Bóveda local creada: .env.local.age"
+             
+             # Asegurar gitignore
              if ! grep -q ".env.local.age" "$DOTFILES_DIR/.gitignore" 2>/dev/null; then
                  echo ".env.local.age" >> "$DOTFILES_DIR/.gitignore"
              fi
-             rm -f "$TEMP_ENV"
              
-             # Recargar recursivamente para aplicar los nuevos secretos
+             # Limpieza UX: Ocultar el archivo del repo original para evitar confusión
+             if [ -f "$DOTFILES_DIR/.env.age" ]; then
+                 mv "$DOTFILES_DIR/.env.age" "$DOTFILES_DIR/.env.age.dist"
+                 print_info "El archivo original .env.age ha sido archivado como .env.age.dist"
+                 print_info "para que solo veas tu propia configuración."
+             fi
+             
+             # Recargar recursivamente
              decrypt_secrets
              return $?
         else
-             echo -e "${RED}✗ Error al encriptar.${NC}"
-             rm -f "$TEMP_ENV"
+             print_error "Error al encriptar. Inténtalo de nuevo."
              return 1
         fi
     else
-        echo -e "${YELLOW}Cancelado (Token vacío).${NC}"
+        print_warning "No ingresaste token. Cancelando creación de secretos."
         return 1
     fi
 }
 
 decrypt_secrets() {
-    # 1. PRIORIDAD: Archivo local propio (.env.local.age)
+    # 1. PRIORIDAD: Archivo local propio
     if [ -f "$DOTFILES_DIR/.env.local.age" ]; then
         TARGET_FILE="$DOTFILES_DIR/.env.local.age"
-        MSG_TYPE="Locales (.env.local.age)"
-    # 2. FALLBACK: Archivo del repositorio (.env.age)
+        MSG_TYPE="Tu Bóveda Local 🏠 (.env.local.age)"
+    # 2. FALLBACK: Archivo del repositorio
     elif [ -f "$DOTFILES_DIR/.env.age" ]; then
         TARGET_FILE="$DOTFILES_DIR/.env.age"
-        MSG_TYPE="Repositorio (.env.age)"
+        MSG_TYPE="Bóveda del Repositorio 📦 (.env.age)"
     else
-        # No existe ninguno, ofrecer crear
-        echo -e "${YELLOW}   ! No se encontraron archivos de secretos.${NC}"
-        echo -e "${CYAN}   ¿Quieres configurar tus propias credenciales ahora?${NC}"
-        echo "   1) Sí, configurar GH_TOKEN y crear .env.local.age"
-        echo "   2) No, continuar en modo invitado"
-        read -p "   Opción [1-2]: " OPT
+        # No existe ninguno, flujo de bienvenida
+        echo ""
+        echo -e "${PURPLE}┌───────────────────────────────────────────────────┐${NC}"
+        echo -e "${PURPLE}│${NC}  ${BOLD}👋 Bienvenido a la Instalación de Dotfiles${NC}       ${PURPLE}│${NC}"
+        echo -e "${PURPLE}└───────────────────────────────────────────────────┘${NC}"
+        echo -e "${CYAN}No detectamos configuración de secretos.${NC}"
+        echo ""
+        echo -e "${BOLD}¿Qué deseas hacer?${NC}"
+        echo -e "  ${GREEN}1)${NC} Configurar mis claves (Recomendado) ✨"
+        echo -e "  ${DIM}2) Continuar en modo invitado (Sin funcionalidades Cloud)${NC}"
+        echo ""
+        read -p "  Selección [1-2]: " OPT
         case $OPT in
             1) create_local_secrets; return $? ;;
-            *) return 0 ;; # Modo invitado implícito
+            *) return 0 ;;
         esac
     fi
 
     if [ -z "$SECRETS_LOADED" ]; then
-        echo -e "${CYAN}   🔐 Detectados secretos: $MSG_TYPE${NC}"
+        echo -e "${BLUE}🔐 Desbloqueando: ${BOLD}$MSG_TYPE${NC}"
         
         TEMP_ENV=$(mktemp)
         chmod 600 "$TEMP_ENV"
         
-        echo -e "${YELLOW}   Introduce la passphrase para desbloquear:${NC}"
+        # Ejecutamos age
+        echo -e "${YELLOW}  🔑 Passphrase:${NC}"
         age --decrypt -o "$TEMP_ENV" "$TARGET_FILE"
         EXIT_CODE=$?
         
         if [ $EXIT_CODE -eq 0 ]; then
             DECRYPTED=$(cat "$TEMP_ENV")
-            # Extraer variables
+            
+            # Parsing de variables
             export BW_CLIENTID=$(echo "$DECRYPTED" | grep "^BW_CLIENTID=" | cut -d'=' -f2-)
             export BW_CLIENTSECRET=$(echo "$DECRYPTED" | grep "^BW_CLIENTSECRET=" | cut -d'=' -f2-)
             export GH_TOKEN=$(echo "$DECRYPTED" | grep "^GH_TOKEN=" | cut -d'=' -f2-)
             export TELEGRAM_BOT_TOKEN=$(echo "$DECRYPTED" | grep "^TELEGRAM_BOT_TOKEN=" | cut -d'=' -f2-)
             export TELEGRAM_CHAT_ID=$(echo "$DECRYPTED" | grep "^TELEGRAM_CHAT_ID=" | cut -d'=' -f2-)
-            export RCLONE_TOKEN_JSON=$(echo "$DECRYPTED" | grep "^RCLONE_TOKEN_JSON=" | cut -d'=' -f2-)
+            RCLONE_TOKEN_JSON=$(echo "$DECRYPTED" | grep "^RCLONE_TOKEN_JSON=" | cut -d'=' -f2-)
             
-            # Configurar rclone si hay token
+            # Configurar rclone
             if [ -n "$RCLONE_TOKEN_JSON" ]; then
-                echo -e "${CYAN}   Configurando rclone (generando desde token)...${NC}"
                 mkdir -p "$HOME/.config/rclone"
-                
                 cat > "$HOME/.config/rclone/rclone.conf" <<EOF
 [gdrive]
 type = drive
@@ -139,56 +178,41 @@ token = $RCLONE_TOKEN_JSON
 team_drive =
 EOF
                 chmod 600 "$HOME/.config/rclone/rclone.conf"
-                
-                echo -e "${CYAN}   Verificando conexión rclone...${NC}"
-                if rclone listremotes &>/dev/null; then
-                    echo -e "${CYAN}   Remotos disponibles: $(rclone listremotes)${NC}"
-                    if rclone lsd gdrive: --max-depth 1 &>/dev/null; then 
-                            echo -e "${CYAN}   ✓ Conexión a gdrive exitosa${NC}"
-                    else
-                            echo -e "${YELLOW}   ! Configuración creada pero fallo al conectar (token expirado?)${NC}"
-                    fi
-                fi
             fi
 
             export SECRETS_LOADED=1
-            echo -e "${CYAN}   ✓ Secrets cargados exitosamente${NC}"
+            print_success "Acceso concedido. Secretos cargados."
             rm -f "$TEMP_ENV"
             return 0
         else
             rm -f "$TEMP_ENV"
-            echo -e "${RED}   ✗ Passphrase incorrecta o cancelada.${NC}"
+            echo ""
+            print_error "Acceso denegado (Contraseña incorrecta)."
             
-            # MENÚ DE RECUPERACIÓN
-            echo -e "${YELLOW}   ¿Qué deseas hacer?${NC}"
-            echo "   1) Reintentar (me equivoqué de contraseña)"
-            echo "   2) Ignorar este archivo y crear MIS PROPIOS secretos (.env.local.age)"
-            echo "   3) Continuar en MODO INVITADO (sin secretos)"
-            echo "   4) Abortar instalación"
+            echo -e "${BOLD}Opciones de Recuperación:${NC}"
+            echo -e "  ${CYAN}1)${NC} Reintentar 🔄"
+            echo -e "  ${CYAN}2)${NC} Crear NUEVA bóveda local (Ignorar esta) ✨"
+            echo -e "  ${CYAN}3)${NC} Modo Invitado (Sin secretos) 👤"
+            echo -e "  ${RED}4)${NC} Salir 🚪"
             
-            read -p "   Opción [1-4]: " OPTION
+            read -p "  Elige una opción [1-4]: " OPTION
             case $OPTION in
                 1) decrypt_secrets; return $? ;;
                 2) create_local_secrets; return $? ;;
-                3) echo -e "${YELLOW}   ⚠️  Modo Invitado activo.${NC}"; return 0 ;;
-                *) echo -e "${RED}   ⛔ Cancelado por usuario.${NC}"; exit 1 ;;
+                3) print_warning "Modo Invitado activo."; return 0 ;;
+                *) print_error "Instalación abortada."; exit 1 ;;
             esac
         fi
     fi
 }
 
-# ─────────────────────────────────────────────────────────────
-# Recarga la terminal automáticamente para aplicar aliases.
-# Usa exec bash para reemplazar el shell actual con uno nuevo.
-# ─────────────────────────────────────────────────────────────
 reload_shell() {
-    echo ""
-    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${CYAN}   ✓ Instalación completa. Recargando terminal...${NC}"
-    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    print_header "Instalación Finalizada con Éxito"
+    echo -e "${GREEN}  Recargando tu terminal para aplicar cambios... 🚀${NC}"
     echo ""
     exec bash
 }
+
 
 # Alias para compatibilidad con código existente
 show_reload_message() {
