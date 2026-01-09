@@ -167,11 +167,36 @@ install_terminal_tools() {
         echo -e "${YELLOW}   ! gping ya está instalado${NC}"
     fi
 
+    # Atuin
+    install_atuin
+
     # Oh My Posh
     install_oh_my_posh
     
     echo -e "${CYAN}   ✓ Herramientas de terminal instaladas${NC}"
-    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping, oh-my-posh${NC}"
+    echo -e "${CYAN}   Disponibles: lsd, lazydocker, ctop, gping, atuin, oh-my-posh${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Instala Atuin (Historial de Shell Mágico)
+# ─────────────────────────────────────────────────────────────
+install_atuin() {
+    echo -e "${GREEN}>>> Instalando Atuin...${NC}"
+    
+    if ! command -v atuin &> /dev/null; then
+        echo -e "${CYAN}   Descargando e instalando Atuin...${NC}"
+        curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh | bash
+        echo -e "${CYAN}   ✓ Atuin instalado${NC}"
+    else
+        echo -e "${YELLOW}   ! Atuin ya está instalado${NC}"
+    fi
+
+    # Configurar .bashrc
+    BASHRC="$HOME/.bashrc"
+    if ! grep -q "atuin init bash" "$BASHRC"; then
+        echo 'eval "$(atuin init bash)"' >> "$BASHRC"
+        echo -e "${CYAN}   ✓ Atuin init agregado a .bashrc${NC}"
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────
