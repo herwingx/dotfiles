@@ -103,11 +103,37 @@ install_modern_tools() {
     # 1. Zoxide (Smarter cd)
     if ! command -v zoxide &> /dev/null; then
         echo -e "${CYAN}   Instalando zoxide...${NC}"
-        curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+        
+        # Intentar primero por gestor de paquetes (más fiable en LXC)
+        if [ -f /etc/debian_version ]; then
+            $SUDO_CMD apt-get install -y zoxide 2>/dev/null
+        elif [ -f /etc/redhat-release ]; then
+            $SUDO_CMD dnf install -y zoxide 2>/dev/null
+        elif [ -f /etc/arch-release ]; then
+            $SUDO_CMD pacman -S zoxide --noconfirm 2>/dev/null
+        fi
+
+        # Si aún no existe (versión vieja de distro), usar el script oficial
+        if ! command -v zoxide &> /dev/null; then
+            echo -e "${YELLOW}   ! No disponible en repo. Usando script de instalación...${NC}"
+            curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+        fi
+
+        # Asegurar PATH para ~/.local/bin (donde instala el script fallback)
+        if ! grep -q ".local/bin" "$HOME/.bashrc"; then
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+        fi
+
         # Configurar en .bashrc
-        echo 'eval "$(zoxide init bash)"' >> "$HOME/.bashrc"
-        echo 'alias cd="z"' >> "$HOME/.bash_aliases"
-        echo -e "${CYAN}   ✓ zoxide instalado (alias cd=z)${NC}"
+        if ! grep -q "zoxide init bash" "$HOME/.bashrc"; then
+            echo 'eval "$(zoxide init bash)"' >> "$HOME/.bashrc"
+        fi
+        
+        if ! grep -q 'alias cd="z"' "$HOME/.bash_aliases"; then
+            echo 'alias cd="z"' >> "$HOME/.bash_aliases"
+        fi
+        
+        echo -e "${CYAN}   ✓ zoxide configurado (alias cd=z)${NC}"
     else
         echo -e "${YELLOW}   ! zoxide ya existe${NC}"
     fi
