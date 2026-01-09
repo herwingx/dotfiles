@@ -142,6 +142,13 @@ install_gemini_extensions() {
         rm -f "$LOG_FILE"
     done
     
+    echo -e "${CYAN}   Verificando actualizaciones de extensiones...${NC}"
+    if gemini extensions update --all &>/dev/null; then
+        echo -e "${CYAN}   ✓ Todas las extensiones están actualizadas${NC}"
+    else
+        echo -e "${YELLOW}   ! Hubo un problema actualizando extensiones (no crítico)${NC}"
+    fi
+
     echo -e "${CYAN}   ✓ Extensiones procesadas${NC}"
 }
 
