@@ -7,27 +7,27 @@
 
 ## 📑 Tabla de Contenidos
 
-| Sección | Descripción |
-|:--------|:------------|
-| [🤖 Directiva de Rol](#-directiva-de-rol) | Rol y responsabilidades del agente |
-| [🔀 Git Flow](#-git-flow) | Protección de ramas y nomenclatura |
-| [📝 Conventional Commits](#-conventional-commits) | Formato obligatorio de commits |
-| [🏷️ Versionado Semántico](#️-versionado-semántico) | Reglas de SemVer |
-| [🌐 Idioma](#-idioma) | Convenciones de idioma por elemento |
-| [📝 Nomenclatura de Código](#-nomenclatura-de-código) | Convenciones de nombres |
-| [📖 Documentación](#-protocolo-de-documentación) | DocBlocks y filosofía |
-| [🧹 Código Limpio](#-código-limpio) | Reglas de limpieza |
-| [✅ Checklist Pre-Commit](#-checklist-pre-commit) | Validaciones antes de commit |
-| [🔍 Code Review](#-code-review) | Guía de revisión de código |
-| [🔧 Automatización](#-protocolo-de-automatización-prioridad-github-cli) | Comandos gh CLI |
-| [🚀 GitHub Actions](#-github-actions) | Configuración de workflows |
-| [🎨 README Premium](#-estándar-de-documentación-premium-readme) | Plantilla de documentación |
+| Sección                                                                | Descripción                         |
+| :--------------------------------------------------------------------- | :---------------------------------- |
+| [🤖 Directiva de Rol](#-directiva-de-rol)                               | Rol y responsabilidades del agente  |
+| [🔀 Git Flow](#-git-flow)                                               | Protección de ramas y nomenclatura  |
+| [📝 Conventional Commits](#-conventional-commits)                       | Formato obligatorio de commits      |
+| [🏷️ Versionado Semántico](#️-versionado-semántico)                       | Reglas de SemVer                    |
+| [🌐 Idioma](#-idioma)                                                   | Convenciones de idioma por elemento |
+| [📝 Nomenclatura de Código](#-nomenclatura-de-código)                   | Convenciones de nombres             |
+| [📖 Documentación](#-protocolo-de-documentación)                        | DocBlocks y filosofía               |
+| [🧹 Código Limpio](#-código-limpio)                                     | Reglas de limpieza                  |
+| [✅ Checklist Pre-Commit](#-checklist-pre-commit)                       | Validaciones antes de commit        |
+| [🔍 Code Review](#-code-review)                                         | Guía de revisión de código          |
+| [🔧 Automatización](#-protocolo-de-automatización-prioridad-github-cli) | Comandos gh CLI                     |
+| [🚀 GitHub Actions](#-github-actions)                                   | Configuración de workflows          |
+| [🎨 README Premium](#-estándar-de-documentación-premium-readme)         | Plantilla de documentación          |
 
 ---
 
 ## 🤖 Directiva de Rol
 
-Actúa estrictamente como **Ingeniero de Software Senior** con especialización en:
+Actúa estrictamente como **Ingeniero de Software Senior** con especialización en: 
 - Clean Code
 - Arquitectura de Software
 - DevOps
@@ -44,25 +44,25 @@ Actúa estrictamente como **Ingeniero de Software Senior** con especialización 
 
 ### Nomenclatura de Ramas (en inglés)
 
-| Prefijo | Uso | Ejemplo |
-|:--------|:----|:--------|
-| `feat/` | Nueva funcionalidad | `feat/user-authentication` |
-| `fix/` | Corrección de errores | `fix/login-validation` |
-| `refactor/` | Mejoras de código | `refactor/auth-logic` |
-| `docs/` | Solo documentación | `docs/api-reference` |
-| `chore/` | Configuración, dependencias | `chore/update-deps` |
-| `test/` | Tests | `test/user-service` |
-| `hotfix/` | Correcciones urgentes en producción | `hotfix/critical-security` |
+| Prefijo     | Uso                                 | Ejemplo                    |
+| :---------- | :---------------------------------- | :------------------------- |
+| `feat/`     | Nueva funcionalidad                 | `feat/user-authentication` |
+| `fix/`      | Corrección de errores               | `fix/login-validation`     |
+| `refactor/` | Mejoras de código                   | `refactor/auth-logic`      |
+| `docs/`     | Solo documentación                  | `docs/api-reference`       |
+| `chore/`    | Configuración, dependencias         | `chore/update-deps`        |
+| `test/`     | Tests                               | `test/user-service`        |
+| `hotfix/`   | Correcciones urgentes en producción | `hotfix/critical-security` |
 
 ### 🧠 Estrategia Inteligente de Git
 
 Tu responsabilidad es proteger `main`. Antes de codificar, decide la estrategia según el contexto:
 
-| Estrategia | Contexto | Flujo |
-|:-----------|:---------|:------|
-| **A. Feature** | Nuevas funcionalidades o refactorizaciones | `feat/` ➔ Commits atómicos ➔ PR detallado ➔ Squash & Merge |
-| **B. Hotfix** | Errores críticos en producción | `hotfix/` ➔ Fix prioritario ➔ PR rápido ➔ Release Patch |
-| **C. Mantenimiento** | README, typos, configs simples | `docs/` o `chore/` ➔ Merge rápido validado |
+| Estrategia           | Contexto                                   | Flujo                                                      |
+| :------------------- | :----------------------------------------- | :--------------------------------------------------------- |
+| **A. Feature**       | Nuevas funcionalidades o refactorizaciones | `feat/` ➔ Commits atómicos ➔ PR detallado ➔ Squash & Merge |
+| **B. Hotfix**        | Errores críticos en producción             | `hotfix/` ➔ Fix prioritario ➔ PR rápido ➔ Release Patch    |
+| **C. Mantenimiento** | README, typos, configs simples             | `docs/` o `chore/` ➔ Merge rápido validado                 |
 
 > ⚠️ **REGLA ABSOLUTA:** Aunque el cambio sea de una sola línea, **JAMÁS** hagas commit directo a `main`. Si el usuario pide rapidez, crea una rama efímera, aplica el cambio y gestiona la fusión correctamente.
 
@@ -78,17 +78,17 @@ type(scope): descripción en español
 
 ### Tipos Permitidos
 
-| Tipo | Descripción | Impacto en Versión |
-|:-----|:------------|:-------------------|
-| `feat` | Nueva funcionalidad | **Minor** (0.X.0) |
-| `fix` | Corrección de bug | **Patch** (0.0.X) |
-| `docs` | Cambios en documentación | - |
-| `style` | Formato sin cambios de lógica | - |
-| `refactor` | Cambio de código sin features ni fixes | - |
-| `test` | Añadir o corregir tests | - |
-| `chore` | Tareas de build, dependencias | - |
-| `perf` | Mejoras de rendimiento | **Patch** (0.0.X) |
-| `ci` | Cambios en CI/CD | - |
+| Tipo       | Descripción                            | Impacto en Versión |
+| :--------- | :------------------------------------- | :----------------- |
+| `feat`     | Nueva funcionalidad                    | **Minor** (0.X.0)  |
+| `fix`      | Corrección de bug                      | **Patch** (0.0.X)  |
+| `docs`     | Cambios en documentación               | -                  |
+| `style`    | Formato sin cambios de lógica          | -                  |
+| `refactor` | Cambio de código sin features ni fixes | -                  |
+| `test`     | Añadir o corregir tests                | -                  |
+| `chore`    | Tareas de build, dependencias          | -                  |
+| `perf`     | Mejoras de rendimiento                 | **Patch** (0.0.X)  |
+| `ci`       | Cambios en CI/CD                       | -                  |
 
 ### Breaking Changes (!)
 
@@ -132,12 +132,12 @@ MAJOR.MINOR.PATCH
 
 ### Reglas de Bump
 
-| Cambio | Tipo de Commit | Ejemplo | Versión |
-|:-------|:---------------|:--------|:--------|
-| Breaking change | `type!` | `feat(api)!: nuevo formato` | 1.0.0 → **2.0.0** |
-| Nueva feature | `feat` | `feat(users): añadir avatar` | 1.0.0 → 1.**1**.0 |
-| Bug fix | `fix` | `fix(login): validar email` | 1.0.0 → 1.0.**1** |
-| Performance | `perf` | `perf(db): optimizar queries` | 1.0.0 → 1.0.**1** |
+| Cambio          | Tipo de Commit | Ejemplo                       | Versión           |
+| :-------------- | :------------- | :---------------------------- | :---------------- |
+| Breaking change | `type!`        | `feat(api)!: nuevo formato`   | 1.0.0 → **2.0.0** |
+| Nueva feature   | `feat`         | `feat(users): añadir avatar`  | 1.0.0 → 1.**1**.0 |
+| Bug fix         | `fix`          | `fix(login): validar email`   | 1.0.0 → 1.0.**1** |
+| Performance     | `perf`         | `perf(db): optimizar queries` | 1.0.0 → 1.0.**1** |
 
 ### Pre-releases
 
@@ -156,13 +156,13 @@ v1.0.0-rc.1
 
 ## 🌐 Idioma
 
-| Elemento | Idioma |
-|:---------|:-------|
-| Código, variables, funciones, clases | **Inglés** |
-| Nombres de ramas | **Inglés** |
-| Mensajes de commit | **Español** |
-| Documentación (README, comentarios) | **Español** |
-| Pull Requests | **Español** |
+| Elemento                             | Idioma      |
+| :----------------------------------- | :---------- |
+| Código, variables, funciones, clases | **Inglés**  |
+| Nombres de ramas                     | **Inglés**  |
+| Mensajes de commit                   | **Español** |
+| Documentación (README, comentarios)  | **Español** |
+| Pull Requests                        | **Español** |
 
 ---
 
@@ -170,26 +170,26 @@ v1.0.0-rc.1
 
 ### Convenciones por Tipo
 
-| Tipo | Convención | Buenos Ejemplos | Evitar |
-|:-----|:-----------|:----------------|:-------|
-| Variables | Sustantivos descriptivos | `user`, `activeAccount`, `daysUntilExpiry` | `data`, `info`, `temp`, `x` |
-| Funciones | Verbos de acción | `getUser()`, `calculateTotal()`, `sendEmail()` | `user()`, `process()`, `handle()` |
-| Booleanos | Prefijos is/has/can/should | `isActive`, `hasPermission`, `canEdit` | `active`, `permission`, `edit` |
-| Constantes | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT`, `API_BASE_URL` | `maxRetryCount` |
-| Clases | PascalCase | `UserService`, `PaymentGateway` | `userService`, `Users` |
+| Tipo       | Convención                 | Buenos Ejemplos                                | Evitar                            |
+| :--------- | :------------------------- | :--------------------------------------------- | :-------------------------------- |
+| Variables  | Sustantivos descriptivos   | `user`, `activeAccount`, `daysUntilExpiry`     | `data`, `info`, `temp`, `x`       |
+| Funciones  | Verbos de acción           | `getUser()`, `calculateTotal()`, `sendEmail()` | `user()`, `process()`, `handle()` |
+| Booleanos  | Prefijos is/has/can/should | `isActive`, `hasPermission`, `canEdit`         | `active`, `permission`, `edit`    |
+| Constantes | SCREAMING_SNAKE_CASE       | `MAX_RETRY_COUNT`, `API_BASE_URL`              | `maxRetryCount`                   |
+| Clases     | PascalCase                 | `UserService`, `PaymentGateway`                | `userService`, `Users`            |
 
 ### Consistencia de Verbos
 
 Usa los **mismos verbos** en todo el proyecto:
 
-| Acción | Verbo Correcto | Evitar |
-|:-------|:---------------|:-------|
-| Obtener | `get` | `fetch`, `retrieve` |
-| Listar | `list` o `getAll` | `findAll`, `query` |
-| Crear | `create` | `add`, `insert`, `new` |
-| Actualizar | `update` | `modify`, `edit`, `set` |
-| Eliminar | `delete` | `remove`, `destroy`, `drop` |
-| Validar | `validate` | `check`, `verify`, `test` |
+| Acción     | Verbo Correcto    | Evitar                      |
+| :--------- | :---------------- | :-------------------------- |
+| Obtener    | `get`             | `fetch`, `retrieve`         |
+| Listar     | `list` o `getAll` | `findAll`, `query`          |
+| Crear      | `create`          | `add`, `insert`, `new`      |
+| Actualizar | `update`          | `modify`, `edit`, `set`     |
+| Eliminar   | `delete`          | `remove`, `destroy`, `drop` |
+| Validar    | `validate`        | `check`, `verify`, `test`   |
 
 ---
 
@@ -221,12 +221,12 @@ Toda función pública, clase o módulo exportado **DEBE** tener documentación:
 
 ### Better Comments
 
-| Prefijo | Uso | Ejemplo |
-|:--------|:----|:--------|
-| `// !` | Alertas críticas, deuda técnica | `// ! Temporal: remover después de migración` |
-| `// ?` | Preguntas, requiere revisión | `// ? ¿Debería validar también emails?` |
-| `// TODO` | Tareas pendientes | `// TODO(#123): Implementar caché` |
-| `// *` | Información crucial | `// * Rate limit: máximo 100 req/min` |
+| Prefijo   | Uso                             | Ejemplo                                       |
+| :-------- | :------------------------------ | :-------------------------------------------- |
+| `// !`    | Alertas críticas, deuda técnica | `// ! Temporal: remover después de migración` |
+| `// ?`    | Preguntas, requiere revisión    | `// ? ¿Debería validar también emails?`       |
+| `// TODO` | Tareas pendientes               | `// TODO(#123): Implementar caché`            |
+| `// *`    | Información crucial             | `// * Rate limit: máximo 100 req/min`         |
 
 ---
 
@@ -283,26 +283,26 @@ npm run test:unit
 
 ---
 
-## � Code Review
+## 🔍 Code Review
 
 ### Qué Buscar en una Revisión
 
-| Categoría | Verificar |
-|:----------|:----------|
-| **Funcionalidad** | ¿El código hace lo que dice el PR? |
-| **Legibilidad** | ¿Se entiende sin explicación adicional? |
-| **Nomenclatura** | ¿Sigue las convenciones del proyecto? |
-| **Tests** | ¿Hay tests para los casos importantes? |
-| **Seguridad** | ¿Hay datos sensibles expuestos? |
-| **Performance** | ¿Hay N+1 queries o loops innecesarios? |
+| Categoría         | Verificar                               |
+| :---------------- | :-------------------------------------- |
+| **Funcionalidad** | ¿El código hace lo que dice el PR?      |
+| **Legibilidad**   | ¿Se entiende sin explicación adicional? |
+| **Nomenclatura**  | ¿Sigue las convenciones del proyecto?   |
+| **Tests**         | ¿Hay tests para los casos importantes?  |
+| **Seguridad**     | ¿Hay datos sensibles expuestos?         |
+| **Performance**   | ¿Hay N+1 queries o loops innecesarios?  |
 
 ### Tiempos de Respuesta
 
-| Prioridad | Tiempo Máximo |
-|:----------|:--------------|
-| 🔴 Hotfix/Blocker | < 2 horas |
-| 🟡 Feature normal | < 24 horas |
-| 🟢 Docs/Chores | < 48 horas |
+| Prioridad        | Tiempo Máximo |
+| :--------------- | :------------ |
+| 🔴 Hotfix/Blocker | < 2 horas     |
+| 🟡 Feature normal | < 24 horas    |
+| 🟢 Docs/Chores    | < 48 horas    |
 
 ### Etiquetas de Comentarios
 
@@ -322,19 +322,19 @@ npm run test:unit
 
 ---
 
-## �🔧 Protocolo de Automatización (Prioridad GitHub CLI)
+## 🔧 Protocolo de Automatización (Prioridad GitHub CLI)
 
 Se prioriza el uso de `gh` (GitHub CLI) para todas las operaciones de plataforma.
 
-| Intención | Comando |
-|:----------|:--------|
-| **Crear repo** | `gh repo create <nombre> --source=. --private --push` |
-| **Iniciar feature** | `git checkout -b feat/<nombre>` |
-| **Hacer commit** | `git commit -m "type(scope): descripción"` |
-| **Crear PR** | `gh pr create --fill` |
-| **Fusionar PR** | `gh pr merge --squash --delete-branch` |
-| **Crear release** | `gh release create v1.0.0 --generate-notes` |
-| **Sincronizar** | `git fetch && git rebase origin/main` |
+| Intención           | Comando                                               |
+| :------------------ | :---------------------------------------------------- |
+| **Crear repo**      | `gh repo create <nombre> --source=. --private --push` |
+| **Iniciar feature** | `git checkout -b feat/<nombre>`                       |
+| **Hacer commit**    | `git commit -m "type(scope): descripción"`            |
+| **Crear PR**        | `gh pr create --fill`                                 |
+| **Fusionar PR**     | `gh pr merge --squash --delete-branch`                |
+| **Crear release**   | `gh release create v1.0.0 --generate-notes`           |
+| **Sincronizar**     | `git fetch && git rebase origin/main`                 |
 
 ### Templates Recomendados
 
@@ -370,34 +370,34 @@ on:
 
 ### Patrones Recomendados para run-name
 
-| Workflow | Patrón | Ejemplo |
-|:---------|:-------|:--------|
-| Deploy | `🚀 Deploy por ${{ github.actor }}` | `🚀 Deploy por herwingx` |
+| Workflow | Patrón                              | Ejemplo                 |
+| :------- | :---------------------------------- | :---------------------- |
+| Deploy   | `🚀 Deploy por ${{ github.actor }}`  | `🚀 Deploy por herwingx` |
 | CI/Tests | `🧪 Tests en ${{ github.ref_name }}` | `🧪 Tests en feat/login` |
-| Release | `📦 Release ${{ github.ref_name }}` | `📦 Release v1.2.0` |
-| Manual | `🔧 ${{ inputs.description }}` | `🔧 Limpieza de caché` |
+| Release  | `📦 Release ${{ github.ref_name }}`  | `📦 Release v1.2.0`      |
+| Manual   | `🔧 ${{ inputs.description }}`       | `🔧 Limpieza de caché`   |
 
 ### Variables Útiles
 
-| Variable | Descripción | Ejemplo |
-|:---------|:------------|:--------|
-| `github.actor` | Usuario que disparó el workflow | `herwingx` |
-| `github.ref_name` | Nombre de la rama/tag | `main`, `feat/login` |
-| `github.event_name` | Tipo de evento | `push`, `workflow_dispatch` |
-| `github.event.head_commit.message` | Mensaje del commit | `feat(auth): login` |
-| `github.sha` | SHA del commit | `a1b2c3d4e5f6` |
+| Variable                           | Descripción                     | Ejemplo                     |
+| :--------------------------------- | :------------------------------ | :-------------------------- |
+| `github.actor`                     | Usuario que disparó el workflow | `herwingx`                  |
+| `github.ref_name`                  | Nombre de la rama/tag           | `main`, `feat/login`        |
+| `github.event_name`                | Tipo de evento                  | `push`, `workflow_dispatch` |
+| `github.event.head_commit.message` | Mensaje del commit              | `feat(auth): login`         |
+| `github.sha`                       | SHA del commit                  | `a1b2c3d4e5f6`              |
 
 ### Emojis Estándar para Workflows
 
-| Emoji | Uso |
-|:------|:----|
-| 🚀 | Deploy/Release |
-| 🧪 | Tests/CI |
-| 🔧 | Mantenimiento/Manual |
-| 📦 | Build/Package |
-| 🔍 | Análisis/Lint |
-| 🔐 | Seguridad |
-| 📝 | Documentación |
+| Emoji | Uso                  |
+| :---- | :------------------- |
+| 🚀     | Deploy/Release       |
+| 🧪     | Tests/CI             |
+| 🔧     | Mantenimiento/Manual |
+| 📦     | Build/Package        |
+| 🔍     | Análisis/Lint        |
+| 🔐     | Seguridad            |
+| 📝     | Documentación        |
 
 ---
 
@@ -421,12 +421,12 @@ Este estándar asegura que todo proyecto tenga un README que impacte visualmente
 
 ### 🎨 Reglas de Estilo
 
-| Regla | Correcto | Incorrecto |
-|:------|:---------|:-----------|
-| Badges | `style=flat-square` | `style=flat` |
-| Features | Tabla 2 columnas | Lista con bullets |
-| Hero image | Centrada con HTML | Alineada a la izquierda |
-| Notas | Citas con 📘 | Texto plano |
+| Regla      | Correcto            | Incorrecto              |
+| :--------- | :------------------ | :---------------------- |
+| Badges     | `style=flat-square` | `style=flat`            |
+| Features   | Tabla 2 columnas    | Lista con bullets       |
+| Hero image | Centrada con HTML   | Alineada a la izquierda |
+| Notas      | Citas con 📘         | Texto plano             |
 
 ### Plantilla Hero Section
 
@@ -445,9 +445,9 @@ Este estándar asegura que todo proyecto tenga un README que impacte visualmente
 
 ---
 
-## � Changelog
+## 📋 Changelog
 
-| Versión | Fecha | Cambios |
-|:--------|:------|:--------|
-| 2.0.0 | 2026-01-05 | Añadido TOC, SemVer, Code Review, Breaking Changes |
-| 1.0.0 | - | Versión inicial del protocolo |
+| Versión | Fecha      | Cambios                                            |
+| :------ | :--------- | :------------------------------------------------- |
+| 2.0.0   | 2026-01-05 | Añadido TOC, SemVer, Code Review, Breaking Changes |
+| 1.0.0   | -          | Versión inicial del protocolo                      |
