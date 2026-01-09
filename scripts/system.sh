@@ -464,6 +464,8 @@ if [[ ${BLE_VERSION-} ]]; then
     ble-face -s syntax_quoted fg=107
     ble-face -s command_builtin fg=green
     ble-face -s command_file fg=cyan
+    # Autocompletado sutil (transparente, sin subrayado)
+    ble-face -s auto_complete fg=242,bg=default,ul=none
 fi
 EOF
 

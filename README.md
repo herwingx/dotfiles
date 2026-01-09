@@ -471,7 +471,21 @@ El instalador configura por defecto el ID incorrecto para la extensión remota.
    ```bash
    WSL_EXT_ID="google.antigravity-remote-wsl"
    ```
+   ```
 5. Guarda el archivo. Ahora `agy .` funcionará correctamente abriendo el entorno remoto de WSL.
+
+#### ⚠️ Solución Avanzada (Si sigue fallando)
+
+Si al ejecutar `agy .` recibes un error tipo **"No such file or directory"** apuntando a `wslCode.sh`, significa que tienes el ID nuevo pero te falta la carpeta con el nombre correcto.
+
+**Solución definitiva para experiencia nativa:**
+
+1. En Windows, ve a: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\resources\app\extensions\`
+2. Busca la carpeta `ms-vscode-remote.remote-wsl`.
+3. **Haz una copia** de esa carpeta y pégala ahí mismo.
+4. **Renombra la copia** a: `antigravity-remote-wsl`.
+
+Esto engaña al IDE para que cargue la extensión correctamente usando el ID de Google, dándote acceso completo a la terminal de Linux y velocidad nativa.
 
 ---
 
