@@ -197,6 +197,13 @@ install_atuin() {
         echo 'eval "$(atuin init bash)"' >> "$BASHRC"
         echo -e "${CYAN}   ✓ Atuin init agregado a .bashrc${NC}"
     fi
+
+    # Instrucciones post-instalación
+    echo -e "${YELLOW}   ⚠️  Paso final (requiere interacción manual):${NC}"
+    echo -e "${YELLOW}   Ejecuta estos comandos para sincronizar tu historial:${NC}"
+    echo -e "${CYAN}     1. atuin register -u <usuario> -e <email>${NC}"
+    echo -e "${CYAN}     2. atuin import auto${NC}"
+    echo -e "${CYAN}     3. atuin sync${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────
