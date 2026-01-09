@@ -344,8 +344,10 @@ bw config server https://bitwarden.com
 
 | Opción | Acción     | Descripción                                              |
 | :----: | :--------- | :------------------------------------------------------- |
-|   1    | **Editar** | Desencripta → Abre en nano → Re-encripta al guardar      |
+|   1    | **Editar** | Crea/Desencripta → Edita → Encripta (pide password)      |
 |   2    | **Ver**    | Muestra el contenido desencriptado en consola (temporal) |
+
+> 💡 **Creación Inicial**: Si aún no tienes un archivo `.env.age`, selecciona la opción **1**. El script creará uno nuevo, abrirá el editor y te pedirá una passphrase para encriptarlo al guardar.
 
 > ⚠️ **Seguridad**: El archivo `.env.age` está en el repositorio pero encriptado. Nunca subas `.env` en texto plano.
 
