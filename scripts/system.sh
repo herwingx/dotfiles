@@ -374,8 +374,8 @@ _safe_bleopt exec_exit_status ""
 _safe_bleopt print_exit_status 0
 bleopt exec_elapsed_mark=
 
-# Keybinding multilínea: Alt+Enter ejecuta (evita conflicto con IDE)
-bind -m multiline 'M-RET: accept-line'
+# Keybinding: Alt+Enter ejecuta comando (evita conflicto con Ctrl+J del IDE)
+ble-bind -f M-RET accept-line
 
 # Colores limpios (syntax highlighting sigue activo)
 if [[ ${BLE_VERSION-} ]]; then
