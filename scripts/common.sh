@@ -123,7 +123,8 @@ EOF
                      echo -e "${YELLOW}   ⚠️  Continuando sin cargar secretos (GH_TOKEN, Bitwarden, etc. estarán vacíos).${NC}"
                      return 0 # Retornamos éxito para no romper el script de instalación
                 else
-                     return 1 # Fallo real, aborta instalación
+                     echo -e "${RED}   ⛔ Abortando instalación completa.${NC}"
+                     exit 1 # Abortar todo el script inmediatamente
                 fi
             fi
         fi
