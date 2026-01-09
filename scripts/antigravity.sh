@@ -134,15 +134,23 @@ install_gemini_extensions() {
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     fi
 
-    # 2. Obtener la ruta absoluta del binario para evitar ambigüedades en subshells
+    # 2. Obtener la ruta absoluta del binario
     GEMINI_BIN=$(command -v gemini)
 
+    # 3. En WSL, IGNORAR binarios de Windows (/mnt/c, /mnt/d, etc.)
+    if [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" == /mnt/* ]]; then
+        echo -e "${YELLOW}   ! Gemini detectado en Windows ($GEMINI_BIN).${NC}"
+        echo -e "${YELLOW}   ! WSL no puede ejecutar extensiones MCP desde binarios de Windows.${NC}"
+        echo -e "${YELLOW}   ! Instala Gemini CLI dentro de WSL: npm install -g @google/generative-ai-cli${NC}"
+        return
+    fi
+
     if [ -z "$GEMINI_BIN" ]; then
-        echo -e "${YELLOW}   ! Gemini CLI no encontrado en PATH ni NVM. Saltando extensiones.${NC}"
+        echo -e "${YELLOW}   ! Gemini CLI no encontrado en PATH de Linux. Saltando extensiones.${NC}"
         return
     fi
     
-    # 3. Verificar versión con un timeout más generoso para WSL
+    # 4. Verificar versión con un timeout más generoso para WSL
     echo -e "${CYAN}   Detectando versión de Gemini en $GEMINI_BIN...${NC}"
     GEMINI_VERSION=$(timeout 20s "$GEMINI_BIN" --version 2>/dev/null || echo "undetected")
     echo -e "${GREEN}>>> Procesando extensiones MCP en Gemini ($GEMINI_VERSION)...${NC}"
