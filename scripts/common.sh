@@ -147,18 +147,20 @@ decrypt_secrets() {
         TARGET_FILE="$DOTFILES_DIR/.env.age"
         MSG_TYPE="Bóveda del Repositorio 📦 (.env.age)"
     else
-        # No existe ninguno, flujo de bienvenida
+        # No existe ninguno detected
+        print_header "SECRETS VAULT SETUP"
+        echo -e "${NEON_CYAN}  >> No existing secrets vault detected.${NC}"
+        echo -e "${GRAY}     You can create a secure vault now or proceed as guest.${NC}"
         echo ""
-        echo -e "${PURPLE}┌───────────────────────────────────────────────────┐${NC}"
-        echo -e "${PURPLE}│${NC}  ${BOLD}👋 Bienvenido a la Instalación de Dotfiles${NC}       ${PURPLE}│${NC}"
-        echo -e "${PURPLE}└───────────────────────────────────────────────────┘${NC}"
-        echo -e "${CYAN}No detectamos configuración de secretos.${NC}"
+        
+        echo -e "${NEON_CYAN}  // OPTIONS${NC}"
+        echo -e "${GRAY}  +--------------------------------------------+${NC}"
+        echo -e "  ${WHITE}[1]${NC} Configure My Secrets ${GRAY}(Recommended)${NC}"
+        echo -e "  ${WHITE}[2]${NC} Guest Mode ${GRAY}(No Cloud Integrations)${NC}"
         echo ""
-        echo -e "${BOLD}¿Qué deseas hacer?${NC}"
-        echo -e "  ${GREEN}1)${NC} Configurar mis claves (Recomendado) ✨"
-        echo -e "  ${DIM}2) Continuar en modo invitado (Sin funcionalidades Cloud)${NC}"
-        echo ""
-        read -p "  Selección [1-2]: " OPT
+        
+        echo -ne "${NEON_GREEN}  >> Select Option [1-2]: ${NC}"
+        read OPT
         case $OPT in
             1) create_local_secrets; return $? ;;
             *) return 0 ;;
@@ -166,7 +168,7 @@ decrypt_secrets() {
     fi
 
     if [ -z "$SECRETS_LOADED" ]; then
-        echo -e "${BLUE}🔐 Desbloqueando: ${BOLD}$MSG_TYPE${NC}"
+        print_header "UNLOCKING SECRETS VAULT :: $MSG_TYPE"
         
         TEMP_ENV=$(mktemp)
         chmod 600 "$TEMP_ENV"
@@ -207,20 +209,23 @@ EOF
         else
             rm -f "$TEMP_ENV"
             echo ""
-            print_error "Acceso denegado (Contraseña incorrecta)."
+            print_error "ACCESS DENIED :: Incorrect Passphrase"
             
-            echo -e "${BOLD}Opciones de Recuperación:${NC}"
-            echo -e "  ${CYAN}1)${NC} Reintentar 🔄"
-            echo -e "  ${CYAN}2)${NC} Crear NUEVA bóveda local (Ignorar esta) ✨"
-            echo -e "  ${CYAN}3)${NC} Modo Invitado (Sin secretos) 👤"
-            echo -e "  ${RED}4)${NC} Salir 🚪"
+            echo -e "${NEON_CYAN}  // RECOVERY OPTIONS${NC}"
+            echo -e "${GRAY}  +--------------------------------------------+${NC}"
+            echo -e "  ${WHITE}[1]${NC} Retry Passphrase ${GRAY}(Try again)${NC}"
+            echo -e "  ${WHITE}[2]${NC} Create NEW Local Vault ${GRAY}(Reset/Ignore)${NC}"
+            echo -e "  ${WHITE}[3]${NC} Guest Mode ${GRAY}(No secrets)${NC}"
+            echo -e "  ${WHITE}[4]${NC} Abort / Exit"
+            echo ""
+            echo -ne "${NEON_GREEN}  >> Select Option [1-4]: ${NC}"
             
-            read -p "  Elige una opción [1-4]: " OPTION
+            read OPTION
             case $OPTION in
                 1) decrypt_secrets; return $? ;;
                 2) create_local_secrets; return $? ;;
-                3) print_warning "Modo Invitado activo."; return 0 ;;
-                *) print_error "Instalación abortada."; exit 1 ;;
+                3) print_warning "Guest Mode Active."; return 0 ;;
+                *) print_error "Aborted by User."; exit 1 ;;
             esac
         fi
     fi
