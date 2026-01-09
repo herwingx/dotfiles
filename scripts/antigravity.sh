@@ -81,16 +81,39 @@ install_gemini_settings() {
     if [ -n "$GH_TOKEN" ]; then
         echo -e "${CYAN}   Token detectado. Configurando persistencia en ~/.bashrc...${NC}"
         
-        # Eliminar entrada anterior si existe para evitar duplicados
-        sed -i '/export GITHUB_PERSONAL_ACCESS_TOKEN=/d' ~/.bashrc
+        BASHRC="$HOME/.bashrc"
         
-        # Añadir nueva entrada
-        echo "export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\"" >> ~/.bashrc
+        # Eliminar entrada anterior si existe para evitar duplicados
+        sed -i '/export GITHUB_PERSONAL_ACCESS_TOKEN=/d' "$BASHRC"
+        sed -i '/# GitHub Token para Gemini CLI/d' "$BASHRC"
+        
+        # Verificar si existe ble-attach (debe ser la última línea)
+        if grep -q "ble-attach" "$BASHRC"; then
+            # Insertar el token ANTES del bloque de ble-attach
+            # 1. Eliminar temporalmente el bloque de ble-attach
+            sed -i '/# Ble.sh attach (must be last)/d' "$BASHRC"
+            sed -i '/ble-attach/d' "$BASHRC"
+            
+            # 2. Agregar el token
+            echo "" >> "$BASHRC"
+            echo "# GitHub Token para Gemini CLI" >> "$BASHRC"
+            echo "export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\"" >> "$BASHRC"
+            
+            # 3. Re-agregar ble-attach al final
+            echo "" >> "$BASHRC"
+            echo "# Ble.sh attach (must be last)" >> "$BASHRC"
+            echo '[[ ${BLE_VERSION-} ]] && ble-attach' >> "$BASHRC"
+        else
+            # Si no hay ble-attach, agregar normalmente al final
+            echo "" >> "$BASHRC"
+            echo "# GitHub Token para Gemini CLI" >> "$BASHRC"
+            echo "export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\"" >> "$BASHRC"
+        fi
         
         # Exportar también en la sesión actual para que las extensiones lo usen
         export GITHUB_PERSONAL_ACCESS_TOKEN="$GH_TOKEN"
         
-        echo -e "${CYAN}   ✓ Token configurado en ~/.bashrc${NC}"
+        echo -e "${CYAN}   ✓ Token configurado en ~/.bashrc (antes de ble-attach)${NC}"
     else
         echo -e "${YELLOW}   ! No se detectó GH_TOKEN. Recuerda configurarlo manualmente o vía Bitwarden.${NC}"
     fi
