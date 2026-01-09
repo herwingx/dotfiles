@@ -426,7 +426,55 @@ sequenceDiagram
     end
 ```
 
+
 ---
+
+## 🐞 Solución de Problemas: Antigravity en WSL
+
+Los usuarios de **Windows Subsystem for Linux (WSL)** pueden encontrar problemas al usar el comando `agy` (la CLI de Antigravity) debido a bugs en el instalador de Windows (versiones 2025/2026).
+
+### El Problema
+
+Por defecto, ejecutar `agy .` en WSL puede abrir el IDE tratando los archivos como una "carpeta de red" (`\\wsl.localhost\...`) en lugar de conectarse al entorno remoto WSL (`WSL: Distro`). Esto pierde características como terminal integrada de Linux y extensiones de Linux.
+
+### ✅ Solución Automática
+
+Este repositorio **detecta y repara este problema automáticamente** al instalar las herramientas (Opción 1 o 6 del instalador). El script:
+1. Crea un enlace simbólico (`agy`) en Linux que apunta al ejecutable de Windows.
+2. **Detecta y parchea** el archivo lanzador de Windows para corregir el ID de la extensión remota.
+
+### 🛠️ Solución Manual
+
+Si la automatización falla o prefieres hacerlo tú mismo, sigue estos pasos:
+
+#### 1. Crear enlace simbólico
+Ejecuta en tu terminal WSL (reemplazando `TU_USUARIO` por tu usuario de Windows):
+
+```bash
+# Crear directorio local si no existe
+mkdir -p ~/.local/bin
+
+# Crear enlace al ejecutable de Windows
+ln -s "/mnt/c/Users/TU_USUARIO/AppData/Local/Programs/Antigravity/bin/antigravity" ~/.local/bin/agy
+```
+
+#### 2. Corregir el Bug del Lanzador (Importante)
+El instalador configura por defecto el ID incorrecto para la extensión remota.
+
+1. Ve a Windows y navega a: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\bin`
+2. Abre el archivo llamado `antigravity` (sin extensión) con un editor de texto (Notepad).
+3. Busca la línea:
+   ```bash
+   WSL_EXT_ID="ms-vscode-remote.remote-wsl"
+   ```
+4. **Cámbiala por:**
+   ```bash
+   WSL_EXT_ID="google.antigravity-remote-wsl"
+   ```
+5. Guarda el archivo. Ahora `agy .` funcionará correctamente abriendo el entorno remoto de WSL.
+
+---
+
 
 ## 🔑 Guía Maestra de SSH y WSL
 
