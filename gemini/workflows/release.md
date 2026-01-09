@@ -29,36 +29,18 @@ git tag --sort=-version:refname | head -5
 | Nueva funcionalidad | MINOR | v1.0.0 → v1.1.0 |
 | Corrección de bug | PATCH | v1.0.0 → v1.0.1 |
 
-4. Crear tag anotado
+4. Crear Release y Tag automáticamente
 ```bash
-git tag -a vX.Y.Z -m "Release vX.Y.Z: Descripción breve"
-```
-> Reemplazar X.Y.Z con la versión correspondiente
-
-5. Subir tag a GitHub
-```bash
-git push origin vX.Y.Z
-```
-
-6. Crear Release en GitHub con notas automáticas
-```bash
+# Crea el tag y el release en un solo paso
 gh release create vX.Y.Z --generate-notes
 ```
+> Reemplazar X.Y.Z con la versión. Esto creará el tag automáticamente si no existe.
 
 ## Alternativa: Release con Notas Personalizadas
 ```bash
-gh release create vX.Y.Z --notes "## Novedades
-
-### ✨ Nuevas Funcionalidades
-- Feature 1
-- Feature 2
-
-### 🐛 Correcciones
-- Fix 1
-- Fix 2
-
-### 📝 Otros Cambios
-- Mejora X"
+gh release create vX.Y.Z --notes "## 🚀 Novedades
+- Feature A
+- Fix B"
 ```
 
 ## Condición de Retorno

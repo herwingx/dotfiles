@@ -40,7 +40,12 @@ git push --force-with-lease
 git push
 ```
 
+5. Ver resultado en GitHub
+```bash
+# Abre la rama en el navegador
+gh browse -b $(git branch --show-current)
+```
+
 ## Condición de Retorno
 Retornar cuando el push esté completo.
-Mostrar la URL de la rama en GitHub si está disponible.
 Sugerir crear Pull Request si el desarrollo está listo.
