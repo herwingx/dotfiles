@@ -150,7 +150,7 @@ install_gemini_extensions() {
             
             if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
                 echo -e "${CYAN}   Instalando Gemini CLI en WSL...${NC}"
-                npm install -g @google/generative-ai-cli
+                npm install -g @google/gemini-cli
                 
                 # Recargar NVM para detectar el nuevo binario
                 export NVM_DIR="$HOME/.nvm"
@@ -185,7 +185,7 @@ install_gemini_extensions() {
             
             if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
                 echo -e "${CYAN}   Instalando Gemini CLI...${NC}"
-                npm install -g @google/generative-ai-cli
+                npm install -g @google/gemini-cli
                 
                 # Recargar NVM
                 export NVM_DIR="$HOME/.nvm"
