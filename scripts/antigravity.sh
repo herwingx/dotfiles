@@ -137,8 +137,13 @@ install_gemini_extensions() {
     # 2. Obtener la ruta absoluta del binario
     GEMINI_BIN=$(command -v gemini)
 
-    # 3. En WSL, IGNORAR binarios de Windows (/mnt/c, /mnt/d, etc.)
-    if [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" == /mnt/* ]]; then
+    # 3. SI EXISTE EN LINUX: Continuar directo a extensiones
+    if [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" != /mnt/* ]]; then
+        echo -e "${GREEN}   ✓ Gemini CLI detectado en $GEMINI_BIN${NC}"
+        # Continuar directo a la instalación de extensiones (línea 230+)
+        
+    # 4. SI EXISTE SOLO EN WINDOWS: Ofrecer instalar versión Linux
+    elif [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" == /mnt/* ]]; then
         echo -e "${YELLOW}   ! Gemini detectado en Windows ($GEMINI_BIN).${NC}"
         echo -e "${YELLOW}   ! WSL no puede ejecutar extensiones MCP desde binarios de Windows.${NC}"
         
@@ -156,7 +161,6 @@ install_gemini_extensions() {
             fi
             
             if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
-                echo -e "${CYAN}   Instalando Gemini CLI en WSL...${NC}"
                 npm install -g @google/gemini-cli
                 
                 # Recargar NVM para detectar el nuevo binario
@@ -179,26 +183,26 @@ install_gemini_extensions() {
             echo -e "${RED}   ! npm no encontrado. Instala Node.js primero (opción 11)${NC}"
             return
         fi
-    fi
-
-    if [ -z "$GEMINI_BIN" ]; then
-        echo -e "${YELLOW}   ! Gemini CLI no encontrado en PATH de Linux.${NC}"
         
-        # Ofrecer instalación si npm está disponible
+    # 5. SI NO EXISTE: Ofrecer instalación solo si viene de opción 20 (Settings)
+    else
+        echo -e "${YELLOW}   ! Gemini CLI no encontrado.${NC}"
+        
+        # Si viene de "install_all" (opción 1), dev-tools.sh ya lo instaló o lo hará
+        # Solo ofrecer instalación manual si viene de opción 20 (Settings individual)
+        if [ "$AUTO_INSTALL" = "true" ]; then
+            echo -e "${YELLOW}   Gemini CLI se instalará con Dev Tools (opción 3)${NC}"
+            echo -e "${YELLOW}   Saltando extensiones por ahora. Ejecuta opción 20 después.${NC}"
+            return
+        fi
+        
+        # Ofrecer instalación si npm está disponible y es opción 20
         if command -v npm &> /dev/null; then
-            INSTALL_GEMINI="S"
-            
-            # Preguntar solo si NO es modo automático
-            if [ "$AUTO_INSTALL" != "true" ]; then
-                echo -e "${CYAN}   ¿Instalar Gemini CLI ahora?${NC}"
-                read -p "   [S/n]: " INSTALL_GEMINI
-                INSTALL_GEMINI=${INSTALL_GEMINI:-S}
-            else
-                echo -e "${CYAN}   [Modo automático] Instalando Gemini CLI...${NC}"
-            fi
+            echo -e "${CYAN}   ¿Instalar Gemini CLI ahora?${NC}"
+            read -p "   [S/n]: " INSTALL_GEMINI
+            INSTALL_GEMINI=${INSTALL_GEMINI:-S}
             
             if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
-                echo -e "${CYAN}   Instalando Gemini CLI...${NC}"
                 npm install -g @google/gemini-cli
                 
                 # Recargar NVM
@@ -218,7 +222,7 @@ install_gemini_extensions() {
                 return
             fi
         else
-            echo -e "${YELLOW}   Instala Node.js primero (opción 11) y luego vuelve a ejecutar esta opción${NC}"
+            echo -e "${YELLOW}   Instala Node.js primero (opción 11) y npm packages (opción 12)${NC}"
             return
         fi
     fi
