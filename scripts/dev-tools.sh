@@ -147,6 +147,7 @@ install_npm_global_packages() {
     declare -A NPM_PACKAGES=(
         ["@bitwarden/cli"]="bw"
         ["@anthropic-ai/claude-code"]="claude"
+        ["@google/gemini-cli"]="gemini"
     )
     
     for package in "${!NPM_PACKAGES[@]}"; do

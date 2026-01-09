@@ -107,11 +107,12 @@ install_gemini_settings() {
 install_gemini_extensions() {
     if ! command -v gemini &> /dev/null; then
         echo -e "${YELLOW}   ! Gemini CLI no detectado. Saltando instalación de extensiones.${NC}"
-        echo -e "${YELLOW}     (Asegúrate de tener instalado @google/gemini-cli o equivalente)${NC}"
+        echo -e "${YELLOW}     (El script dev-tools.sh debería haberlo instalado)${NC}"
         return
     fi
-
-    echo -e "${GREEN}>>> Instalando extensiones MCP en Gemini...${NC}"
+    
+    GEMINI_VERSION=$(gemini --version 2>/dev/null)
+    echo -e "${GREEN}>>> Instalando extensiones MCP en Gemini ($GEMINI_VERSION)...${NC}"
     
     declare -a extensions=(
         "https://github.com/ChromeDevTools/chrome-devtools-mcp"
@@ -122,13 +123,23 @@ install_gemini_extensions() {
 
     for ext in "${extensions[@]}"; do
         echo -e "${CYAN}   Instalando: $ext...${NC}"
-        # Usar timeout para evitar bloqueos eternos
-        # Usar 'yes' para aceptar prompts automáticos si los hay
-        if timeout 60s bash -c "yes | gemini extensions install \"$ext\"" &>/dev/null; then
+        LOG_FILE=$(mktemp)
+        
+        # Usar timeout para evitar bloqueos eternos (120s)
+        # Capturamos output en log para mostrarlo si falla
+        if timeout 120s bash -c "yes | gemini extensions install \"$ext\"" > "$LOG_FILE" 2>&1; then
              echo -e "${CYAN}   ✓ Instalada: $ext${NC}"
         else
-             echo -e "${RED}   ✗ Error o Timeout instalando $ext (puedes intentarlo manualmente: gemini extensions install $ext)${NC}"
+             # Comprobar si el error es porque ya está instalada
+             if grep -q "already installed" "$LOG_FILE"; then
+                 echo -e "${YELLOW}   ! La extensión ya estaba registrada (Saltando...)${NC}"
+             else
+                 echo -e "${RED}   ✗ Error instalando $ext${NC}"
+                 echo -e "${YELLOW}     Detalles del error:${NC}"
+                 cat "$LOG_FILE" | sed 's/^/     /'
+             fi
         fi
+        rm -f "$LOG_FILE"
     done
     
     echo -e "${CYAN}   ✓ Extensiones procesadas${NC}"
