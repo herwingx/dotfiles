@@ -339,9 +339,31 @@ install_antigravity_fix() {
 
     echo -e "${GREEN}>>> Configurando Google Antigravity (agy) para WSL...${NC}"
     
-    # 1. Detectar usuario de Windows dinámicamente
-    # cmd.exe devuelve el usuario con retorno de carro (\r), hay que limpiarlo.
-    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+    # 1. Detectar usuario de Windows dinámicamente (Estrategia Robusta)
+    WIN_USER=""
+    
+    # Método A: cmd.exe en el PATH
+    if command -v cmd.exe &> /dev/null; then
+        WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+    fi
+    
+    # Método B: Ruta absoluta de cmd.exe (si PATH falla)
+    if [ -z "$WIN_USER" ] && [ -f "/mnt/c/Windows/System32/cmd.exe" ]; then
+        WIN_USER=$(/mnt/c/Windows/System32/cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+    fi
+    
+    # Método C: Escaneo de /mnt/c/Users (Heurística final)
+    if [ -z "$WIN_USER" ] && [ -d "/mnt/c/Users" ]; then
+        # Buscamos el primer directorio que parezca un usuario real
+        for user_dir in /mnt/c/Users/*; do
+            [ -d "$user_dir" ] || continue
+            dirname=$(basename "$user_dir")
+            case "$dirname" in
+                "Public"|"Default"|"All Users"|"Default User"|"desktop.ini") continue ;;
+                *) WIN_USER="$dirname"; break ;;
+            esac
+        done
+    fi
     
     if [ -n "$WIN_USER" ]; then
         # Ruta estándar de instalación en Windows (accedida desde /mnt/c)
