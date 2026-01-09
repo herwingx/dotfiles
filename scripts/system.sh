@@ -446,8 +446,9 @@ _safe_bleopt() {
 ble-bind -f 'C-m' 'accept-line'
 ble-bind -f 'RET' 'accept-line'
 
-# DESACTIVAR sugerencias inline (evita duplicación con TAB)
-_safe_bleopt complete_auto_complete 0
+# Configuración de autocompletado
+# Reactivamos el autocompletado automático (necesario para que TAB responda ágilmente)
+_safe_bleopt complete_auto_complete 1
 
 # Menú de completado limpio (solo con TAB)
 _safe_bleopt complete_menu_style desc-raw
