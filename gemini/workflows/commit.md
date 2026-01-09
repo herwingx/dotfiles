@@ -1,63 +1,16 @@
 ---
-description: Crear un commit siguiendo Conventional Commits
+description: Crear un commit atómico siguiendo Conventional Commits
 ---
 
-# Hacer Commit
+# /commit
 
-Crea un commit atómico siguiendo la convención de Conventional Commits.
+1.  **Staging**
+    *   Muestra cambios: `git status -sb`
+    *   Si el usuario confirma "todo": `git add .`
+    *   Si no, pregunta qué archivos agregar.
 
-## Pasos
+2.  **Commit**
+    *   Genera un mensaje siguiendo **Conventional Commits**: `type(scope): descripción`
+    *   Ejecuta: `git commit -m "mensaje"`
 
-1. Ver cambios pendientes
-```bash
-git status
-```
-
-2. Ver diferencias para entender qué cambió
-```bash
-git diff --stat
-```
-
-3. Agregar cambios al staging
-```bash
-git add .
-```
-> O agregar archivos específicos si el usuario lo indica
-
-4. Crear commit con mensaje en formato Conventional Commits
-```bash
-git commit -m "type(scope): descripción en español"
-```
-
-## Formato del Mensaje
-
-```
-type(scope): descripción imperativa en español
-```
-
-### Tipos Permitidos
-| Tipo | Cuándo Usar |
-|:-----|:------------|
-| `feat` | Nueva funcionalidad |
-| `fix` | Corrección de bug |
-| `docs` | Solo documentación |
-| `style` | Formato, sin cambios de lógica |
-| `refactor` | Cambio de código sin feat/fix |
-| `test` | Añadir o corregir tests |
-| `chore` | Build, dependencias, config |
-| `perf` | Mejoras de rendimiento |
-| `ci` | Cambios en CI/CD |
-
-### Ejemplos
-- `feat(auth): implementar login con Google OAuth`
-- `fix(navbar): corregir solapamiento en móviles`
-- `refactor(api): simplificar validación de usuarios`
-
-## Validaciones Antes del Commit
-- [ ] No hay `console.log` ni `debugger`
-- [ ] No hay código comentado
-- [ ] El mensaje describe el cambio, no los archivos
-
-## Condición de Retorno
-Retornar cuando el commit esté creado exitosamente.
-Mostrar el hash del commit y recordar publicar cuando esté listo.
+> **Tipos**: `feat` (feature), `fix` (bug), `docs` (doc), `style` (format), `refactor` (code), `test` (tests), `chore` (maint).

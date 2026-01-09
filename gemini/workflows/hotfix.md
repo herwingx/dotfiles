@@ -1,35 +1,12 @@
 ---
-description: Iniciar una rama de Hotfix para correcciones críticas en producción
+description: Iniciar rama de Hotfix desde main
 ---
 
-# Iniciar Hotfix
+# /hotfix
 
-Este workflow ayuda a crear una rama para corregir errores críticos (hotfixes), siguiendo el protocolo de Git Flow.
+1.  **Iniciar**
+    *   Actualiza main: `git checkout main && git pull`
+    *   Crea hotfix: `git checkout -b hotfix/<nombre>`
 
-## Pasos
-
-1.  **Analizar el requerimiento**
-    *   Identifica el bug crítico que se debe corregir.
-    *   Determina un nombre corto y descriptivo para el hotfix (en inglés).
-
-2.  **Sincronizar Main**
-    *   Asegúrate de estar en `main` y actualizado:
-        ```bash
-        git checkout main
-        git pull origin main
-        ```
-    // turbo
-
-3.  **Crear Rama de Hotfix**
-    *   Crea la rama con el prefijo `hotfix/`:
-        ```bash
-        git checkout -b hotfix/<nombre-descriptivo>
-        ```
-        *Ejemplo: `hotfix/login-crash`, `hotfix/security-patch-v1`*
-
-4.  **Confirmación**
-    *   Confirma al usuario que la rama ha sido creada y está lista para trabajar.
-
-## Reglas
-- Las ramas **hotfix** son para errores en producción que no pueden esperar al ciclo normal.
-- Siempre deben nacer de `main`.
+2.  **Regla**
+    *   Hotfixes son exclusivos para errores en **Producción**.
