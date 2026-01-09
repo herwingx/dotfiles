@@ -263,8 +263,33 @@ Los workflows se instalan en `~/.gemini/antigravity/global_workflows/` y están 
 | `/crear-readme`  | Generar README.md profesional          | Plantilla premium con badges y estructura             |
 | `/limpiar-ramas` | Eliminar ramas fusionadas              | Limpieza de ramas locales y remotas                   |
 
-> 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal (@herwingx).
+> 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal.
 > ¡Siéntete libre de editarlos! Puedes modificar las reglas para adaptarlas a tu estilo o crear nuevos workflows en `~/.gemini/workflows/` para automatizar tus propias tareas.
+
+## 🎨 Guía de Personalización
+
+Este repositorio está diseñado para ser **agnóstico y personalizable**. Aquí tienes cómo adaptar cada componente a tu gusto:
+
+### 1. Asistente IA (Antigravity)
+- **Reglas (`GEMINI.md`)**: Define cómo quieres que se comporte tu IA. Puedes cambiar "Ingeniero Senior" por "Tutor de Python", "Experto en C++", etc.
+  - 📍 Ubicación: `~/.gemini/GEMINI.md`
+- **Workflows**: Los archivos `.md` en `workflows/` son scripts que la IA puede leer.
+  - 📝 **Crear nuevo**: Añade `mi-workflow.md` en `~/.gemini/workflows/` con instrucciones paso a paso.
+  - 📍 Ubicación: `~/.gemini/workflows/`
+
+### 2. Estética de Terminal (Oh My Posh)
+El tema visual está definido en un archivo JSON. Puedes cambiar colores, iconos y segmentos.
+- 📍 Archivo: `config/herwingx.omp.json`
+- 📚 Docs: [Documentación oficial de Oh My Posh](https://ohmyposh.dev/docs/configuration/overview)
+
+### 3. Git (.gitconfig)
+Los alias de Git se manejan centralizadamente en `.gitconfig` para mantener limpia la configuración del shell.
+- 📍 Archivo: `config/.gitconfig`
+- ✨ **Tip**: Usa `git c "mensaje"` en lugar de `git commit -m "mensaje"`.
+
+### 4. Variables de Entorno (.env.example)
+Usa `.env.example` como plantilla para tus secretos. El sistema soporta encriptación automática con `scripts/manage_secrets.sh` para mayor seguridad.
+
 
 ### Cloud & Mantenimiento
 
@@ -280,6 +305,15 @@ Los workflows se instalan en `~/.gemini/antigravity/global_workflows/` y están 
 ## 🔐 Gestión de Secretos (.env.age)
 
 Este repositorio utiliza **[Age](https://github.com/FiloSottile/age)** para proteger variables sensibles. Los secretos se encriptan con passphrase y se desencriptan solo en runtime.
+
+### ¿Por qué Encriptar? (Importante)
+
+La encriptación con **Age** te permite **subir tus secretos al repositorio de GitHub** sin riesgo.
+
+*   ✅ **Si ENCRIPTAS (`.env.age`)**: Puedes hacer commit y push de tus secretos. Al instalar tus dotfiles en otra computadora, el instalador desencriptará todo automáticamente y tu entorno estará listo en minutos.
+*   ❌ **Si NO ENCRIPTAS**: No puedes subir tu `.env` (sería un riesgo de seguridad grave). Tendrías que configurar manualmente tus tokens y claves cada vez que instales tu entorno en una máquina nueva.
+
+> 🔒 **Regla de Oro**: Si quieres automatización y portabilidad (la filosofía de los dotfiles), **usa la encriptación**.
 
 ### Variables Soportadas
 
@@ -319,8 +353,10 @@ bw config server https://bitwarden.com
 
 | Opción | Acción     | Descripción                                              |
 | :----: | :--------- | :------------------------------------------------------- |
-|   1    | **Editar** | Desencripta → Abre en nano → Re-encripta al guardar      |
+|   1    | **Editar** | Crea/Desencripta → Edita → Encripta (pide password)      |
 |   2    | **Ver**    | Muestra el contenido desencriptado en consola (temporal) |
+
+> 💡 **Creación Inicial**: Si aún no tienes un archivo `.env.age`, selecciona la opción **1**. El script creará uno nuevo, abrirá el editor y te pedirá una passphrase para encriptarlo al guardar.
 
 > ⚠️ **Seguridad**: El archivo `.env.age` está en el repositorio pero encriptado. Nunca subas `.env` en texto plano.
 
@@ -369,122 +405,118 @@ sequenceDiagram
 
 ---
 
-## 🔑 Configuración WSL
+## 🔑 Guía Maestra de SSH y WSL
 
-Si usas **Windows Subsystem for Linux** y ya tienes llaves SSH configuradas en Windows, puedes migrarlas a WSL fácilmente.
+Esta sección es crítica si usas **Windows con WSL** o necesitas **Agent Forwarding** (usar tus llaves locales dentro de contenedores o servidores remotos).
 
-> 💡 **Recomendado**: Usa la **opción 9** del menú del instalador para copiar automáticamente las llaves SSH de Windows a WSL con los permisos correctos.
+### 1. Generar Llaves en Windows (Si aún no tienes)
+Si es tu primera vez, genera tus llaves desde **PowerShell** en Windows:
 
-### Método Automático (Recomendado)
-
-El instalador detecta si estás en WSL y ofrece copiar tus llaves SSH de Windows:
-
-```bash
-./install.sh  # Selecciona opción 9: "SSH desde Windows"
+```powershell
+# En PowerShell (Windows)
+ssh-keygen -t ed25519 -C "tucorreo@ejemplo.com"
+# Presiona Enter para guardar en la ruta por defecto (C:\Users\TuUsuario\.ssh\id_ed25519)
 ```
 
-**El script automáticamente:**
-- ✅ Copia las llaves de `/mnt/c/Users/<tu_usuario>/.ssh` a `~/.ssh`
-- ✅ Ajusta los permisos correctos (`600` para privadas, `644` para públicas)
-- ✅ Configura el SSH Agent para cargar las llaves al iniciar
+### 2. Agregar Llave Pública a GitHub
+Para que GitHub te reconozca, debes subir tu llave pública:
 
-### Método Manual (Alternativo)
+1. Copia el contenido de la llave pública:
+   - **Windows**: `cat ~/.ssh/id_ed25519.pub | clip` (en Git Bash/PowerShell)
+   - **WSL**: `cat /mnt/c/Users/TU_USUARIO/.ssh/id_ed25519.pub`
+2. Ve a [GitHub Settings > SSH and GPG keys](https://github.com/settings/keys).
+3. Click en **New SSH key**, pega el contenido y guarda.
 
-<details>
-<summary>📋 Ver pasos manuales</summary>
+### 3. Copiar Llaves de Windows a WSL
+WSL es un sistema Linux "separado", por lo que necesita sus propias copias de las llaves (o acceso a ellas).
 
-#### 1. Copiar Llaves SSH desde Windows
-
+**Método Recomendado (Script Automático):**
+Ejecuta el instalador y elige la opción **9**:
 ```bash
-# Desde WSL, copia las llaves de Windows a WSL
-cp -r /mnt/c/Users/TU_USUARIO/.ssh ~/
+./install.sh
+# Opción 9) 🪟 Copiar SSH desde Windows
+```
 
-# Ajustar permisos (OBLIGATORIO - SSH rechaza llaves con permisos incorrectos)
+**Método Manual:**
+```bash
+# 1. Copiar llaves
+cp -r /mnt/c/Users/TU_USUARIO/.ssh/id* ~/.ssh/
+
+# 2. Asignar permisos seguros (CRÍTICO)
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/id_*
 chmod 644 ~/.ssh/*.pub
-chmod 644 ~/.ssh/known_hosts 2>/dev/null
-chmod 644 ~/.ssh/config 2>/dev/null
 ```
 
-#### 2. Verificar Configuración
+### 4. Activar SSH Agent (Para Forwarding)
+El **Agent Forwarding** permite que tus llaves "viajen" contigo a través de conexiones SSH.
 
-```bash
-# Verificar que la llave se carga correctamente
-ssh-add -l
+1. **Asegúrate que el agente corre en tu terminal:**
+   El archivo `.bashrc` incluido configura esto automáticamente, pero puedes verificarlo:
+   ```bash
+   echo $SSH_AUTH_SOCK
+   # Debe mostrar una ruta como: /tmp/ssh-XXXXXX/agent.PID
+   ```
 
-# Si no hay agente corriendo, iniciarlo
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519  # o id_rsa según tu llave
+2. **Cargar tu llave al agente:**
+   ```bash
+   ssh-add ~/.ssh/id_ed25519
+   ```
 
-# Probar conexión con GitHub
-ssh -T git@github.com
-```
+3. **Verificar que la llave está cargada:**
+   ```bash
+   ssh-add -l
+   # Debe listar tu llave: "SHA256:... tucorreo@ejemplo.com"
+   ```
 
-#### 3. Persistencia con SSH Agent
+### 5. Configurar Forwarding (vm-to-host)
+Para usar tus llaves locales dentro de servidores remotos o VMs (sin copiarlas ahí):
 
-Agrega esto a tu `~/.bashrc` para cargar la llave automáticamente:
+1. Edita `~/.ssh/config`:
+   ```ssh
+   Host *
+       ForwardAgent yes
+   ```
 
-```bash
-# SSH Agent Auto-Start
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval "$(ssh-agent -s)" > /dev/null
-    ssh-add ~/.ssh/id_ed25519 2>/dev/null
-fi
-```
+2. **Prueba de Fuego (Test de Forwarding):**
+   Conéctate a tu servidor/VM y desde *allí* verifica si ves tus llaves locales:
+   ```bash
+   # En tu máquina local:
+   ssh usuario@tu-servidor
 
-</details>
+   # YA DENTRO del servidor remoto:
+   ssh-add -l
+   # ¡Si ves tu llave local aquí, el forwarding funciona! 🎉
+   ```
 
----
-
-## ⚡ Bonus: SSH Power User (Red Local)
-
-Si trabajas con Máquinas Virtuales (VMs), LXC o Home Labs, esta configuración en `~/.ssh/config` automatiza tu flujo de trabajo.
-
-> 💡 **Objetivo**: Evitar errores de "Host Key Verification" al recrear VMs y usar tus credenciales de GitHub desde dentro de las VMs sin copiar llaves privadas.
-
-### Configuración Recomendada
-
-Edita o crea tu archivo `~/.ssh/config`:
+### 6. Ejemplo de Archivo de Configuración (`~/.ssh/config`)
+Si no tienes este archivo, créalo. Aquí tienes una plantilla robusta:
 
 ```ssh
-# --- CONFIGURACIÓN GLOBAL (Red Local) ---
-# Aplica a cualquier IP que empiece con 192.168...
-Host 192.168.*
-    # 🚀 CRÍTICO: ForwardAgent
-    # Permite que la VM use la llave SSH de tu máquina local.
-    # Ejemplo: Hacer 'git clone' dentro de la VM usando tu identidad local.
+# ~/.ssh/config
+
+# --- GLOBAL ---
+# Aplica a todos los hosts
+Host *
     ForwardAgent yes
+    AddKeysToAgent yes
+    # Evita timeouts en conexiones inactivas
+    ServerAliveInterval 60
+    ServerAliveCountMax 120
 
-    # 🛡️ Modo Desarrollo / Home Lab
-    # Evita el error "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED"
-    # útil si destruyes y creas VMs frecuentemente con la misma IP.
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
+# --- GITHUB ---
+# Asegura que siempre se use el usuario 'git'
+Host github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
 
-    # 👤 Usuario por defecto
-    # Ajusta esto a tu usuario común en las VMs (ej: ubuntu, root, etc)
-    User tu_usuario_general
-
-# --- EJEMPLOS ESPECÍFICOS ---
-# Sobrescribe la regla global para casos particulares
-
-Host vm-database
-    HostName 192.168.0.140
-    User admin_db
-    Port 2222
-
-Host k8s-master
+# --- SERVIDORES DE TRABAJO (Ejemplo) ---
+# Host alias
+Host mi-servidor
     HostName 192.168.1.50
-    # Si es un LXC o requiere root
-    User root
+    User ubuntu
+    IdentityFile ~/.ssh/id_ed25519
 ```
-
-### ¿Por qué activar `ForwardAgent`?
-
-Es una técnica de seguridad y conveniencia:
-1. **Seguridad**: Tu llave privada **nunca** sale de tu PC principal.
-2. **Conveniencia**: Cuando intentas clonar un repo privado desde la VM, la petición de autenticación "viaja" de regreso a tu PC, usa tu llave local y autoriza la operación.
 
 ---
 

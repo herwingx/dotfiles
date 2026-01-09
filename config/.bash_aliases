@@ -37,16 +37,18 @@ alias ~='cd ~'
 # -----------------------------------------------------------------------------
 # Git shortcuts
 # -----------------------------------------------------------------------------
+# 💡 NOTA: La mayoría de estos alias se han movido a .gitconfig para mayor portabilidad.
+# Usa: git s, git a, git c, git p, etc.
 alias g='git'
-alias gs='git status'
-alias ga='git add'
-alias gc='git commit -m'
-alias gp='git push'
-alias gl='git pull'
-alias gd='git diff'
-alias gb='git branch'
-alias gco='git checkout'
-alias glog='git log --oneline --graph --decorate -10'
+# alias gs='git status'
+# alias ga='git add'
+# alias gc='git commit -m'
+# alias gp='git push'
+# alias gl='git pull'
+# alias gd='git diff'
+# alias gb='git branch'
+# alias gco='git checkout'
+# alias glog='git log --oneline --graph --decorate -10'
 
 # -----------------------------------------------------------------------------
 # Docker shortcuts

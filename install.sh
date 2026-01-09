@@ -32,10 +32,11 @@ install_all() {
 
 # --- ASCII ART ---
 show_banner() {
+    # Gradiente simulado para el banner
     echo -e "${CYAN}"
     cat << 'EOF'
     ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
-    ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝
+    ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██╔╝██║     ██╔════╝██╔════╝
     ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
     ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
     ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
@@ -43,9 +44,24 @@ show_banner() {
 EOF
     echo -e "${NC}"
     echo -e "${YELLOW}    ════════════════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}                    🚀 LINUX ENVIRONMENT INSTALLER 🚀${NC}"
+    echo -e "${BOLD}${GREEN}                 🚀 ULTIMATE LINUX DOTFILES 🚀${NC}"
+    echo -e "${CYAN}                Premium Dev Environment Installer${NC}"
     echo -e "${YELLOW}    ════════════════════════════════════════════════════════════${NC}"
     echo ""
+}
+
+# --- ERROR HANDLING ---
+# Función para manejar errores con sugerencias
+handle_error() {
+    local exit_code=$1
+    local task=$2
+    if [ $exit_code -ne 0 ]; then
+        echo -e "${RED}❌ Error crítico al ejecutar: $task${NC}"
+        echo -e "${YELLOW}💡 Sugerencia: Verifica tu conexión a internet o permisos.${NC}"
+        echo -e "${YELLOW}   Intenta ejecutar 'sudo apt update --fix-missing' si es un error de paquetes.${NC}"
+        # No salimos forzosamente para permitir intentar otros módulos, pero avisamos.
+        read -p "Presiona Enter para continuar (o Ctrl+C para abortar)..."
+    fi
 }
 
 # --- MENÚ INTERACTIVO ---
@@ -96,64 +112,64 @@ show_menu() {
     
     case $choice in
         1)
-            install_all
+            install_all || handle_error $? "Instalación completa"
             ;;
         2)
-            install_system_all
+            install_system_all || handle_error $? "Instalación de sistema"
             ;;
         3)
-            install_dev_tools_all
+            install_dev_tools_all || handle_error $? "Instalación de Dev Tools"
             ;;
         4)
-            install_antigravity_full
+            install_antigravity_full || handle_error $? "Instalación de Antigravity AI"
             ;;
         5)
-            update_system
+            update_system || handle_error $? "Actualización de sistema"
             ;;
         6)
-            install_packages
+            install_packages || handle_error $? "Instalación de paquetes"
             ;;
         7)
-            install_gitconfig
+            install_gitconfig || handle_error $? "Configuración de Git"
             ;;
         8)
-            install_ssh_keys
+            install_ssh_keys || handle_error $? "Configuración de SSH"
             ;;
         9)
-            copy_ssh_from_windows
+            copy_ssh_from_windows || handle_error $? "Copiado de SSH desde Windows"
             ;;
         10)
-            install_gh_cli
+            install_gh_cli || handle_error $? "Instalación de GitHub CLI"
             ;;
         11)
-            install_nvm_node
+            install_nvm_node || handle_error $? "Instalación de Node.js"
             ;;
         12)
-            install_npm_global_packages
+            install_npm_global_packages || handle_error $? "Instalación de paquetes NPM"
             ;;
         13)
-            install_docker
+            install_docker || handle_error $? "Instalación de Docker"
             ;;
         14)
-            install_antigravity_rules
+            install_antigravity_rules || handle_error $? "Instalación de reglas IA"
             ;;
         15)
-            install_antigravity_workflows
+            install_antigravity_workflows || handle_error $? "Instalación de workflows IA"
             ;;
         20)
-            install_gemini_settings
+            install_gemini_settings || handle_error $? "Configuración de Gemini"
             ;;
         16)
-            configure_rclone
+            configure_rclone || handle_error $? "Configuración de rclone"
             ;;
         17)
-            install_auto_update
+            install_auto_update || handle_error $? "Configuración de auto-update"
             ;;
         18)
-            run_manual_update
+            run_manual_update || handle_error $? "Actualización manual"
             ;;
         19)
-            uninstall_auto_update
+            uninstall_auto_update || handle_error $? "Desinstalación de auto-update"
             ;;
         0)
             echo ""
