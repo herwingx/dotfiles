@@ -96,6 +96,44 @@ install_bash_aliases() {
     [ -f "$ALIAS_FILE" ] && [ ! -L "$ALIAS_FILE" ] && mv "$ALIAS_FILE" "$ALIAS_FILE.backup"
     ln -sf "$DOTFILES_DIR/config/.bash_aliases" "$ALIAS_FILE"
     echo -e "${CYAN}   ✓ Aliases configurados${NC}"
+    
+    # Limpiar PATH en WSL (eliminar rutas de Windows)
+    configure_wsl_path
+}
+
+# ─────────────────────────────────────────────────────────────
+# Configura el PATH en WSL para excluir binarios de Windows.
+# Esto evita conflictos como el de Gemini detectando nvm4w.
+# ─────────────────────────────────────────────────────────────
+configure_wsl_path() {
+    # Detectar si estamos en WSL
+    if [ ! -f /proc/version ] || ! grep -qi microsoft /proc/version; then
+        return  # No estamos en WSL, salir
+    fi
+    
+    echo -e "${CYAN}   Detectado WSL. Limpiando PATH de rutas de Windows...${NC}"
+    
+    BASHRC="$HOME/.bashrc"
+    
+    # Verificar si ya existe la configuración
+    if grep -q "# WSL: Limpiar PATH de Windows" "$BASHRC"; then
+        echo -e "${YELLOW}   ! PATH de WSL ya configurado${NC}"
+        return
+    fi
+    
+    # Agregar al .bashrc la limpieza de PATH
+    cat >> "$BASHRC" <<'EOF'
+
+# WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    # Filtrar rutas de /mnt/* del PATH
+    NEW_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v '^/mnt/' | tr '\n' ':' | sed 's/:$//')
+    export PATH="$NEW_PATH"
+fi
+EOF
+    
+    echo -e "${CYAN}   ✓ PATH configurado para ignorar binarios de Windows${NC}"
+    echo -e "${YELLOW}   ⚠️  Recarga tu shell (source ~/.bashrc) para aplicar cambios${NC}"
 }
 
 
