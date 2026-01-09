@@ -86,31 +86,31 @@ El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para co
   ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
                             v2.0_PREMIUM_BUILD // SYSTEM_READY
 
-  // 🚀 ONE-CLICK INSTALL
+  // 🚀 INSTALACIÓN AUTOMÁTICA
   +------------------------------------------------------------+
-  [1 ] Install Everything (Full Setup)
+  [1 ] Instalar TODO (Full Stack + IA + Cloud)
   +------------------------------------------------------------+
-  [2 ] Install System Essentials          [3 ] Install Dev Tools Only
-  [4 ] Install Antigravity AI Only
+  [2 ] Solo Sistema (Esenciales + Shell)  [3 ] Solo Dev Tools (Docker + Node)
+  [4 ] Solo Antigravity AI (Reglas + Flows)
   +------------------------------------------------------------+
 
-  // 📦 SYSTEM & BASE
-  [5 ] Upgrade OS Packages                [6 ] Install Base Utils (vim, fzf...)
-  [7 ] Configure Git & Aliases            [8 ] Import SSH Keys (from GitHub)
-  [9 ] Sync SSH from Windows (WSL)
+  // 📦 MÓDULOS DE SISTEMA
+  [5 ] Actualizar Sistema (OS Upgrade)    [6 ] Paquetes Base (vim, fzf, tmux...)
+  [7 ] Configurar Git y Alias             [8 ] Importar Keys SSH (desde GitHub)
+  [9 ] Sincronizar SSH desde Windows (WSL)
 
-  // 🛠️ DEVELOPER TOOLS
-  [10] Install GitHub CLI (gh)            [11] Install Node.js (LTS)
-  [12] Install NPM Globals                [13] Install Docker Engine
+  // 🛠️ HERRAMIENTAS DEV
+  [10] Instalar GitHub CLI (gh)           [11] Instalar Node.js (LTS)
+  [12] Instalar Globales NPM              [13] Instalar Docker Engine
 
-  // ☁️ CLOUD & AI INTEGRATIONS
-  [14] Install AI Rules (GEMINI.md)      [15] Install AI Slash Commands
-  [16] Decrypt/Load Secrets              [17] Reset/Create My Secrets
-  [18] Configure Rclone (GDrive)
+  // ☁️ CLOUD & INTEGRACIÓN IA
+  [14] Instalar Reglas IA (GEMINI.md)    [15] Instalar Comandos Slash (/commit...)
+  [16] Desencriptar/Cargar Secretos      [17] Crear Nueva Bóveda (Reset Secrets)
+  [18] Configurar Rclone (Google Drive)
 
-  // 🔄 UPDATES & MAINTENANCE
-  [19] Enable Auto-Updates               [20] Run Manual Update
-  [21] Disable Auto-Updates
+  // 🔄 MANTENIMIENTO
+  [19] Activar Auto-Updates              [20] Ejecutar Update Manual
+  [21] Desactivar Auto-Updates
 
   +------------------------------------------------------------+
   [0 ] ABORT / EXIT

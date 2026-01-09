@@ -79,39 +79,39 @@ show_menu() {
         printf "${GRAY}[${WHITE}%-2s${GRAY}]${NC} %-38s" "$1" "$2"
     }
 
-    echo -e "${NEON_GREEN}  // 🚀 ONE-CLICK INSTALL${NC}"
+    echo -e "${NEON_GREEN}  // 🚀 INSTALACIÓN AUTOMÁTICA${NC}"
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     
     # Fila 1: Full
-    echo -ne "  "; p_opt "1" "Install Everything (Full Setup)"; echo ""
+    echo -ne "  "; p_opt "1" "Instalar TODO (Full Stack + IA + Cloud)"; echo ""
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     
     # Fila 2: Groups
-    echo -ne "  "; p_opt "2" "Install System Essentials"; p_opt "3" "Install Dev Tools Only"; echo ""
-    echo -ne "  "; p_opt "4" "Install Antigravity AI Only"; echo ""
+    echo -ne "  "; p_opt "2" "Solo Sistema (Esenciales + Shell)"; p_opt "3" "Solo Dev Tools (Docker + Node)"; echo ""
+    echo -ne "  "; p_opt "4" "Solo Antigravity AI (Reglas + Flows)"; echo ""
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     echo ""
 
-    echo -e "${NEON_CYAN}  // 📦 SYSTEM & BASE${NC}"
-    echo -ne "  "; p_opt "5" "Upgrade OS Packages"; p_opt "6" "Install Base Utils (vim, fzf...)"; echo ""
-    echo -ne "  "; p_opt "7" "Configure Git & Aliases"; p_opt "8" "Import SSH Keys (from GitHub)"; echo ""
-    echo -ne "  "; p_opt "9" "Sync SSH from Windows (WSL)"; echo ""
+    echo -e "${NEON_CYAN}  // 📦 MÓDULOS DE SISTEMA${NC}"
+    echo -ne "  "; p_opt "5" "Actualizar Sistema (OS Upgrade)"; p_opt "6" "Paquetes Base (vim, fzf, tmux...)"; echo ""
+    echo -ne "  "; p_opt "7" "Configurar Git y Alias"; p_opt "8" "Importar Keys SSH (desde GitHub)"; echo ""
+    echo -ne "  "; p_opt "9" "Sincronizar SSH desde Windows (WSL)"; echo ""
     echo ""
 
-    echo -e "${NEON_CYAN}  // 🛠️ DEVELOPER TOOLS${NC}"
-    echo -ne "  "; p_opt "10" "Install GitHub CLI (gh)"; p_opt "11" "Install Node.js (LTS)"; echo ""
-    echo -ne "  "; p_opt "12" "Install NPM Globals"; p_opt "13" "Install Docker Engine"; echo ""
+    echo -e "${NEON_CYAN}  // 🛠️ HERRAMIENTAS DEV${NC}"
+    echo -ne "  "; p_opt "10" "Instalar GitHub CLI (gh)"; p_opt "11" "Instalar Node.js (LTS)"; echo ""
+    echo -ne "  "; p_opt "12" "Instalar Globales NPM"; p_opt "13" "Instalar Docker Engine"; echo ""
     echo ""
 
-    echo -e "${NEON_CYAN}  // ☁️ CLOUD & AI INTEGRATIONS${NC}"
-    echo -ne "  "; p_opt "14" "Install AI Rules (GEMINI.md)"; p_opt "15" "Install AI Slash Commands"; echo ""
-    echo -ne "  "; p_opt "16" "Decrypt/Load Secrets"; p_opt "17" "Reset/Create My Secrets"; echo ""
-    echo -ne "  "; p_opt "18" "Configure Rclone (GDrive)"; echo ""
+    echo -e "${NEON_CYAN}  // ☁️ CLOUD & INTEGRACIÓN IA${NC}"
+    echo -ne "  "; p_opt "14" "Instalar Reglas IA (GEMINI.md)"; p_opt "15" "Instalar Comandos Slash (/commit...)"; echo ""
+    echo -ne "  "; p_opt "16" "Desencriptar/Cargar Secretos"; p_opt "17" "Crear Nueva Bóveda (Reset Secrets)"; echo ""
+    echo -ne "  "; p_opt "18" "Configurar Rclone (Google Drive)"; echo ""
     echo ""
 
-    echo -e "${NEON_CYAN}  // 🔄 UPDATES & MAINTENANCE${NC}"
-    echo -ne "  "; p_opt "19" "Enable Auto-Updates"; p_opt "20" "Run Manual Update"; echo ""
-    echo -ne "  "; p_opt "21" "Disable Auto-Updates"; echo ""
+    echo -e "${NEON_CYAN}  // 🔄 MANTENIMIENTO${NC}"
+    echo -ne "  "; p_opt "19" "Activar Auto-Updates"; p_opt "20" "Ejecutar Update Manual"; echo ""
+    echo -ne "  "; p_opt "21" "Desactivar Auto-Updates"; echo ""
     echo ""
     
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
