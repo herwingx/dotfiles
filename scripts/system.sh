@@ -363,6 +363,9 @@ _safe_bleopt() {
     fi
 }
 
+# DESACTIVAR modo multilínea (Enter siempre ejecuta, evita conflictos con IDE)
+bleopt edit_aindent=0
+
 # DESACTIVAR sugerencias inline (evita duplicación con TAB)
 _safe_bleopt complete_auto_complete 0
 
@@ -373,9 +376,6 @@ _safe_bleopt complete_menu_style desc-raw
 _safe_bleopt exec_exit_status ""
 _safe_bleopt print_exit_status 0
 bleopt exec_elapsed_mark=
-
-# Keybinding: Alt+Enter ejecuta comando (evita conflicto con Ctrl+J del IDE)
-ble-bind -f M-RET accept-line
 
 # Colores limpios (syntax highlighting sigue activo)
 if [[ ${BLE_VERSION-} ]]; then
