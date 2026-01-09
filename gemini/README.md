@@ -21,7 +21,11 @@
 
 ## 🎯 ¿Qué es Antigravity?
 
-**Antigravity** es un framework de configuración para asistentes de IA que combina:
+**Antigravity** es el IDE de codificación agéntica avanzada de Google (**Google Advanced Agentic Coding IDE**), diseñado para trabajar en par con desarrolladores mediante IA.
+
+Este repositorio proporciona un framework de configuración que es compatible tanto con el **IDE Antigravity** como con la **Gemini CLI**, ya que ambas herramientas comparten la misma ruta de instalación y archivos de configuración (`~/.gemini/`).
+
+El framework combina:
 
 1. **Reglas de Desarrollo**: Protocolos estandarizados en `GEMINI.md` (Conventional Commits, Git Flow, Clean Code)
 2. **Workflows Automatizados**: Comandos slash para tareas comunes (`/commit`, `/release`, `/crear-pr`)
