@@ -19,7 +19,6 @@ source "$DOTFILES_DIR/scripts/cloud.sh"
 # --- FUNCIONES DE INSTALACIÓN AGRUPADAS ---
 
 install_all() {
-    # Modo automático: instalar TODO sin preguntar
     export AUTO_INSTALL=true
     
     update_system
@@ -33,126 +32,124 @@ install_all() {
     show_reload_message
 }
 
-# --- ASCII ART PREMIUM ---
+# --- ASCII ART HIGH-TECH ---
 show_banner() {
     clear
-    echo -e "${PURPLE}"
-    # Fuente: ANSI Shadow (simplificada)
+    echo -e "${NEON_GREEN}"
     cat << 'EOF'
-  ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗ 
-  ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██╔╝██║     ██╔════╝ 
-  ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗   
-  ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝   
-  ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗ 
-  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝ 
+ 
+  ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗
+  ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██╔╝██║     ██╔════╝
+  ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  
+  ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  
+  ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗
+  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝
+                            v2.0_PREMIUM_BUILD // SYSTEM_READY
 EOF
     echo -e "${NC}"
-    echo -e "                   ${DIM}v2.0 Premium Edition${NC}"
-    echo -e "${BLUE}═════════════════════════════════════════════════════════${NC}"
-    echo -e "      🚀 ${BOLD}ENVIRONMENT SETUP & AUTOMATION SUITE${NC} 🚀"
-    echo -e "${BLUE}═════════════════════════════════════════════════════════${NC}"
+    echo -e "${GRAY}----------------------------------------------------------------${NC}"
+    echo -e "${WHITE}  SYSTEM :: ${NEON_CYAN}$(uname -n) [$(uname -s)]${NC}"
+    echo -e "${WHITE}  USER   :: ${NEON_CYAN}$(whoami)${NC}"
+    echo -e "${GRAY}----------------------------------------------------------------${NC}"
     echo ""
 }
 
 # --- ERROR HANDLING ---
-# Función para manejar errores con sugerencias
 handle_error() {
     local exit_code=$1
     local task=$2
     if [ $exit_code -ne 0 ]; then
         echo ""
-        print_error "Error crítico al ejecutar: ${BOLD}$task${NC}"
-        echo -e "${YELLOW}  💡 Tips de solución:${NC}"
-        echo -e "     • Verifica tu conexión a internet."
-        echo -e "     • Asegúrate de tener permisos sudo."
-        echo -e "     • Intenta: ${DIM}sudo apt update --fix-missing${NC}"
+        print_error "EXECUTION FAILED :: ${BOLD}$task${NC}"
+        echo -e "${YELLOW}  [DEBUG_INFO]:${NC}"
+        echo -e "   - Check Network Connection"
+        echo -e "   - Verify SUDO privileges"
+        echo -e "   - Try: ${DIM}sudo apt update --fix-missing${NC}"
         echo ""
-        read -p "  Presiona Enter para continuar (o Ctrl+C para salir)..."
+        read -p "  [PRESS ENTER TO CONTINUE OR CTRL+C TO ABORT]..."
     fi
 }
 
-# --- MENÚ INTERACTIVO ---
+# --- MENÚ INTERACTIVO TÉCNICO ---
 show_menu() {
     show_banner
     
-    # helper para imprimir opción bonita
-    # print_opt NUMERO DESCRIPCION
-    print_opt() {
-        echo -e "  ${PURPLE}│${NC}   ${GREEN}$1)${NC} $2"
+    # Grid Layout Helper
+    # $1=Num $2=Desc
+    p_opt() {
+        printf "${GRAY}[${WHITE}%-2s${GRAY}]${NC} %-38s" "$1" "$2"
     }
+
+    echo -e "${NEON_GREEN}  // DEPLOYMENT_PROTOCOLS${NC}"
+    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     
-    echo -e "${PURPLE}  ┌─────────────────────────────────────────────────────────────┐${NC}"
-    echo -e "${PURPLE}  │${NC}  ${BOLD}INSTALACIÓN PREFABS${NC}                                        ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    print_opt "1" "⚡ ${BOLD}Full Stack${NC} (Sistema + Dev + AI + Cloud)             ${PURPLE}│${NC}"
-    print_opt "2" "🖥️  ${BOLD}Solo Sistema${NC} (Bins + Git + SSH)                      ${PURPLE}│${NC}"
-    print_opt "3" "🛠️  ${BOLD}Solo Dev Tools${NC} (NVM + Docker + GH CLI)              ${PURPLE}│${NC}"
-    print_opt "4" "🤖 ${BOLD}Solo Antigravity${NC} (AI Rules + Workflows)             ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    echo -e "${PURPLE}  │${NC}  ${BOLD}MÓDULOS DE SISTEMA${NC}                                         ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    print_opt "5" "📦 System Upgrade (apt/dnf update)                       ${PURPLE}│${NC}"
-    print_opt "6" "🔧 Base Packages (lsd, fzf, bat, tmux, ble.sh)           ${PURPLE}│${NC}"
-    print_opt "7" "⚙️  Git Config (Usuario + Alias)                          ${PURPLE}│${NC}"
-    print_opt "8" "🔑 SSH Keys (Importar desde GitHub)                      ${PURPLE}│${NC}"
-    print_opt "9" "🪟 WSL SSH Sync (Copiar desde Windows)                   ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    echo -e "${PURPLE}  │${NC}  ${BOLD}DEVELOPER TOOLS${NC}                                            ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    print_opt "10" "🐙 GitHub CLI (Login + Extensions)                       ${PURPLE}│${NC}"
-    print_opt "11" "📗 Node.js (NVM + LTS Version)                           ${PURPLE}│${NC}"
-    print_opt "12" "📦 NPM Globals (Dev utils)                               ${PURPLE}│${NC}"
-    print_opt "13" "🐳 Docker Engine & Compose                               ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    echo -e "${PURPLE}  │${NC}  ${BOLD}ANTIGRAVITY & CLOUD${NC}                                        ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    print_opt "14" "📜 Ruleset (GEMINI.md)                                   ${PURPLE}│${NC}"
-    print_opt "15" "🔄 Workflows (AI Slash Commands)                         ${PURPLE}│${NC}"
-    print_opt "20" "🧠 Settings (Gemini Token + Secrets)                     ${PURPLE}│${NC}"
-    print_opt "16" "☁️  Rclone (Gdrive Sync)                                 ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    echo -e "${PURPLE}  │${NC}  ${BOLD}MANTENIMIENTO${NC}                                              ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    print_opt "17" "⏰ Activar Auto-Update (Cron + Telegram Bot)             ${PURPLE}│${NC}"
-    print_opt "18" "🔄 Ejecutar Update Manual                                ${PURPLE}│${NC}"
-    print_opt "19" "🗑️  Desinstalar Auto-Update                              ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  ├─────────────────────────────────────────────────────────────┤${NC}"
-    print_opt "0" "🚪 ${RED}Salir${NC}                                                    ${PURPLE}│${NC}"
-    echo -e "${PURPLE}  └─────────────────────────────────────────────────────────────┘${NC}"
+    # Fila 1: Full
+    echo -ne "  "; p_opt "1" "FULL_STACK_DEPLOY (All Modules)"; echo ""
+    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
+    
+    # Fila 2: Groups
+    echo -ne "  "; p_opt "2" "SYSTEM_ONLY"; p_opt "3" "DEV_TOOLS"; echo ""
+    echo -ne "  "; p_opt "4" "ANTIGRAVITY_AI"; echo ""
+    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
+    echo ""
+
+    echo -e "${NEON_CYAN}  // SYSTEM_MODULES${NC}"
+    echo -ne "  "; p_opt "5" "System Upgrade"; p_opt "6" "Base Packages"; echo ""
+    echo -ne "  "; p_opt "7" "Git Config"; p_opt "8" "SSH Keys"; echo ""
+    echo -ne "  "; p_opt "9" "WSL Sync"; echo ""
+    echo ""
+
+    echo -e "${NEON_CYAN}  // DEV_ENV${NC}"
+    echo -ne "  "; p_opt "10" "GitHub CLI"; p_opt "11" "Node.js (LTS)"; echo ""
+    echo -ne "  "; p_opt "12" "NPM Globals"; p_opt "13" "Docker Engine"; echo ""
+    echo ""
+
+    echo -e "${NEON_CYAN}  // CLOUD_OPS${NC}"
+    echo -ne "  "; p_opt "14" "AI Rules"; p_opt "15" "AI Workflows"; echo ""
+    echo -ne "  "; p_opt "20" "Secrets Config"; p_opt "16" "Rclone Sync"; echo ""
+    echo ""
+
+    echo -e "${NEON_CYAN}  // MAINTENANCE${NC}"
+    echo -ne "  "; p_opt "17" "Enable Auto-Up"; p_opt "18" "Manual Update"; echo ""
+    echo -ne "  "; p_opt "19" "Disable Auto-Up"; echo ""
     echo ""
     
-    echo -ne "${BOLD}  CMD${NC} ${BLUE}➜${NC} "
+    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
+    echo -ne "  "; p_opt "0" "ABORT / EXIT"; echo ""
+    echo ""
+    
+    echo -ne "${NEON_GREEN}wrapper@install${NC}:${BLUE}~${NC}$ "
     read choice
     
     case $choice in
-        1) install_all || handle_error $? "Instalación completa" ;;
-        2) install_system_all || handle_error $? "Instalación de sistema" ;;
-        3) install_dev_tools_all || handle_error $? "Instalación de Dev Tools" ;;
-        4) install_antigravity_full || handle_error $? "Instalación de Antigravity AI" ;;
-        5) update_system || handle_error $? "Actualización de sistema" ;;
-        6) install_packages || handle_error $? "Instalación de paquetes" ;;
-        7) install_gitconfig || handle_error $? "Configuración de Git" ;;
-        8) install_ssh_keys || handle_error $? "Configuración de SSH" ;;
-        9) copy_ssh_from_windows || handle_error $? "Copiado de SSH desde Windows" ;;
-        10) install_gh_cli || handle_error $? "Instalación de GitHub CLI" ;;
-        11) install_nvm_node || handle_error $? "Instalación de Node.js" ;;
-        12) install_npm_global_packages || handle_error $? "Instalación de paquetes NPM" ;;
-        13) install_docker || handle_error $? "Instalación de Docker" ;;
-        14) install_antigravity_rules || handle_error $? "Instalación de reglas IA" ;;
-        15) install_antigravity_workflows || handle_error $? "Instalación de workflows IA" ;;
-        16) configure_rclone || handle_error $? "Configuración de rclone" ;;
-        17) install_auto_update || handle_error $? "Configuración de auto-update" ;;
-        18) run_manual_update || handle_error $? "Actualización manual" ;;
-        19) uninstall_auto_update || handle_error $? "Desinstalación de auto-update" ;;
-        20) install_gemini_settings || handle_error $? "Configuración de Gemini" ;;
+        1) install_all || handle_error $? "FULL_STACK_DEPLOY" ;;
+        2) install_system_all || handle_error $? "SYSTEM_ONLY_DEPLOY" ;;
+        3) install_dev_tools_all || handle_error $? "DEV_TOOLS_DEPLOY" ;;
+        4) install_antigravity_full || handle_error $? "ANTIGRAVITY_DEPLOY" ;;
+        5) update_system || handle_error $? "SYSTEM_UPGRADE" ;;
+        6) install_packages || handle_error $? "BASE_PACKAGES" ;;
+        7) install_gitconfig || handle_error $? "GIT_CONFIG" ;;
+        8) install_ssh_keys || handle_error $? "SSH_CONFIG" ;;
+        9) copy_ssh_from_windows || handle_error $? "WSL_SYNC" ;;
+        10) install_gh_cli || handle_error $? "GH_CLI_DEPLOY" ;;
+        11) install_nvm_node || handle_error $? "NODEJS_DEPLOY" ;;
+        12) install_npm_global_packages || handle_error $? "NPM_GLOBALS" ;;
+        13) install_docker || handle_error $? "DOCKER_DEPLOY" ;;
+        14) install_antigravity_rules || handle_error $? "AI_RULES" ;;
+        15) install_antigravity_workflows || handle_error $? "AI_WORKFLOWS" ;;
+        20) install_gemini_settings || handle_error $? "SECRETS_CONFIG" ;;
+        16) configure_rclone || handle_error $? "RCLONE_CONFIG" ;;
+        17) install_auto_update || handle_error $? "AUTO_UPDATE_ENABLE" ;;
+        18) run_manual_update || handle_error $? "MANUAL_UPDATE" ;;
+        19) uninstall_auto_update || handle_error $? "AUTO_UPDATE_DISABLE" ;;
         0)
             echo ""
-            echo -e "${GREEN}  ✨ ¡Happy Coding! ✨${NC}"
+            echo -e "${NEON_GREEN}  >> SYSTEM SHUTDOWN... GOODBYE.${NC}"
             echo ""
             exit 0
             ;;
         *)
-            echo -e "${RED}  ✗ Opción inválida${NC}"
+            echo -e "${RED}  [ERROR] INVALID COMMAND SENT${NC}"
             sleep 1
             ;;
     esac
@@ -160,17 +157,15 @@ show_menu() {
 
 # --- MAIN ---
 
-# Soporte para ejecución no interactiva (argumento --all)
 if [ "$1" == "--all" ]; then
-    print_header "Iniciando instalación automática..."
+    print_header "INITIATING AUTOMATED DEPLOYMENT..."
     install_all
     exit 0
 fi
 
 while true; do
     show_menu
-    
     echo ""
-    echo -e "${DIM}  Presiona Enter para continuar...${NC}"
+    echo -e "${GRAY}  [PRESS ENTER TO RETURN TO MENU]${NC}"
     read -r
 done
