@@ -382,7 +382,14 @@ install_antigravity_fix() {
                      echo -e "${YELLOW}   ! No se encontraron extensiones en $EXT_DIR. Omitiendo parche.${NC}"
                 fi
             elif grep -q "WSL_EXT_ID=\"google.antigravity-remote-wsl\"" "$AGY_PATH"; then
-                 echo -e "${CYAN}   ✓ Antigravity ya está parcheado${NC}"
+                 # Verificar si la carpeta realmente existe, si no, revertir (Auto-Healing)
+                 if [ ! -d "$EXT_DIR/$NEW_EXT_FOLDER" ] && [ -d "$EXT_DIR/$OLD_EXT_FOLDER" ]; then
+                     echo -e "${RED}   ! Detectado ID parcheado pero sin carpeta de extensión. Revertiendo...${NC}"
+                     sed -i 's/WSL_EXT_ID="google.antigravity-remote-wsl"/WSL_EXT_ID="ms-vscode-remote.remote-wsl"/' "$AGY_PATH"
+                     echo -e "${GREEN}   ✓ Configuración revertida. 'agy' funcionará con la extensión legacy.${NC}"
+                 else
+                     echo -e "${CYAN}   ✓ Antigravity ya está correctamente configurado${NC}"
+                 fi
             fi
 
         else
