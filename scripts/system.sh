@@ -344,12 +344,13 @@ install_antigravity_fix() {
     
     # Método A: cmd.exe en el PATH
     if command -v cmd.exe &> /dev/null; then
-        WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+        # Usamos tail -n1 para tomar solo la última línea (el usuario) y evitar warnings de rutas UNC
+        WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tail -n1 | tr -d '\r')
     fi
     
     # Método B: Ruta absoluta de cmd.exe (si PATH falla)
     if [ -z "$WIN_USER" ] && [ -f "/mnt/c/Windows/System32/cmd.exe" ]; then
-        WIN_USER=$(/mnt/c/Windows/System32/cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+        WIN_USER=$(/mnt/c/Windows/System32/cmd.exe /c "echo %USERNAME%" 2>/dev/null | tail -n1 | tr -d '\r')
     fi
     
     # Método C: Escaneo de /mnt/c/Users (Heurística final)
