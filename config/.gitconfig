@@ -1,6 +1,12 @@
 # =============================================================================
 #                           GIT CONFIG - herwingx
 # =============================================================================
+# 💡 GUÍA DE PERSONALIZACIÓN:
+# Este archivo define el comportamiento global de Git.
+# - [alias]: Atajos para comandos comunes (ej: 'git c' en lugar de 'git commit')
+# - [user]: Tus datos de identidad (se sobrescriben con install.sh)
+# - [core]: Editor y manejo de saltos de línea
+# =============================================================================
 
 [user]
     name = Eduardo Macias
@@ -111,6 +117,39 @@
     
     # Sync con main usando rebase
     sync = "!git fetch origin && git rebase origin/main"
+
+    # -------------------------------------------------------------------------
+    # SHORTCUTS (Migrated from .bash_aliases)
+    # -------------------------------------------------------------------------
+    
+    # Add
+    a = add
+    aa = add .
+    
+    # Commit
+    c = commit -m
+    ca = commit -am
+    
+    # Push/Pull
+    p = push
+    l = pull --rebase
+    
+    # Status
+    # s is already defined above as 'status -sb'
+    
+    # Diff
+    # d is already defined above as 'diff'
+    ds = diff --staged
+    
+    # Branch/Checkout
+    b = branch -v
+    # co is already defined above as 'checkout'
+    sw = switch
+    rs = restore
+    
+    # Log variations
+    # lg/lg10 are defined above
+    glog = log --oneline --graph --decorate -10
     
     # Ver archivos modificados en último commit
     last = show --stat

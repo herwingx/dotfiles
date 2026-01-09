@@ -263,8 +263,33 @@ Los workflows se instalan en `~/.gemini/antigravity/global_workflows/` y están 
 | `/crear-readme`  | Generar README.md profesional          | Plantilla premium con badges y estructura             |
 | `/limpiar-ramas` | Eliminar ramas fusionadas              | Limpieza de ramas locales y remotas                   |
 
-> 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal (@herwingx).
+> 🎨 **Personalización**: Las reglas en `GEMINI.md` y los workflows reflejan mi flujo de trabajo personal.
 > ¡Siéntete libre de editarlos! Puedes modificar las reglas para adaptarlas a tu estilo o crear nuevos workflows en `~/.gemini/workflows/` para automatizar tus propias tareas.
+
+## 🎨 Guía de Personalización
+
+Este repositorio está diseñado para ser **agnóstico y personalizable**. Aquí tienes cómo adaptar cada componente a tu gusto:
+
+### 1. Asistente IA (Antigravity)
+- **Reglas (`GEMINI.md`)**: Define cómo quieres que se comporte tu IA. Puedes cambiar "Ingeniero Senior" por "Tutor de Python", "Experto en C++", etc.
+  - 📍 Ubicación: `~/.gemini/GEMINI.md`
+- **Workflows**: Los archivos `.md` en `workflows/` son scripts que la IA puede leer.
+  - 📝 **Crear nuevo**: Añade `mi-workflow.md` en `~/.gemini/workflows/` con instrucciones paso a paso.
+  - 📍 Ubicación: `~/.gemini/workflows/`
+
+### 2. Estética de Terminal (Oh My Posh)
+El tema visual está definido en un archivo JSON. Puedes cambiar colores, iconos y segmentos.
+- 📍 Archivo: `config/herwingx.omp.json`
+- 📚 Docs: [Documentación oficial de Oh My Posh](https://ohmyposh.dev/docs/configuration/overview)
+
+### 3. Git (.gitconfig)
+Los alias de Git se manejan centralizadamente en `.gitconfig` para mantener limpia la configuración del shell.
+- 📍 Archivo: `config/.gitconfig`
+- ✨ **Tip**: Usa `git c "mensaje"` en lugar de `git commit -m "mensaje"`.
+
+### 4. Variables de Entorno (.env.example)
+Usa `.env.example` como plantilla para tus secretos. El sistema soporta encriptación automática con `scripts/manage_secrets.sh` para mayor seguridad.
+
 
 ### Cloud & Mantenimiento
 
