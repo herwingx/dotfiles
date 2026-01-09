@@ -45,12 +45,13 @@ install_packages() {
     PACKAGES=(
         "git" "curl" "wget" "htop" "btop" "vim" "unzip" "tree" 
         "net-tools" "neofetch" "tmux" "fzf" "ranger" "mc" "rclone"
+        "make" "gawk" "gcc"
     )
     
     if [ -f /etc/debian_version ]; then
         echo -e "${CYAN}   Detectado: Debian/Ubuntu (apt)${NC}"
         $SUDO_CMD apt-get update -y
-        $SUDO_CMD apt-get install -y "${PACKAGES[@]}" dnsutils w3m-img
+        $SUDO_CMD apt-get install -y "${PACKAGES[@]}" build-essential dnsutils w3m-img
     elif [ -f /etc/redhat-release ]; then
         echo -e "${CYAN}   Detectado: Fedora/RHEL (dnf)${NC}"
         $SUDO_CMD dnf install -y "${PACKAGES[@]}" bind-utils w3m-img
@@ -261,10 +262,17 @@ install_blesh() {
     
     BLESH_DIR="$HOME/.local/share/blesh"
     
-    if [ ! -d "$BLESH_DIR" ]; then
+    if [ ! -d "$BLESH_DIR" ] || [ ! -f "$BLESH_DIR/ble.sh" ]; then
          echo -e "${CYAN}   Clonando y compilando ble.sh...${NC}"
+         rm -rf /tmp/ble.sh
          git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh
-         make -C /tmp/ble.sh install PREFIX=~/.local
+         if make -C /tmp/ble.sh install PREFIX=~/.local; then
+             echo -e "${CYAN}   ✓ Ble.sh compitlado e instalado${NC}"
+         else
+             echo -e "${RED}   ✗ Error al compilar ble.sh. Verifica que 'make' y 'gawk' estén instalados.${NC}"
+             rm -rf /tmp/ble.sh
+             return 1
+         fi
          rm -rf /tmp/ble.sh
     fi
     echo -e "${CYAN}   ✓ Ble.sh instalado${NC}"
@@ -292,33 +300,31 @@ fi
 EOF
     echo -e "${CYAN}   ✓ .blerc generado (Estilo limpio/grid)${NC}"
 
-    # Configurar .bashrc (SOURCE al inicio, ATTACH al final)
-    BASHRC="$HOME/.bashrc"
-    BLESH_INIT='[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach'
-    BLESH_ATTACH='[[ ${BLE_VERSION-} ]] && ble-attach'
-    
-    # 1. Agregar source al inicio si no existe
-    if ! grep -q "ble.sh --noattach" "$BASHRC"; then
-        echo "$BLESH_INIT" > "$BASHRC.tmp"
-        cat "$BASHRC" >> "$BASHRC.tmp"
-        mv "$BASHRC.tmp" "$BASHRC"
-    fi
-
-    # 2. Asegurar que ble-attach esté AL FINAL (borrar previos y re-escribir)
-    sed -i '/ble-attach/d' "$BASHRC"
-    sed -i '/Ble.sh attach/d' "$BASHRC"
-    
-    echo "" >> "$BASHRC"
-    echo "# Ble.sh attach (must be last)" >> "$BASHRC"
-    echo "$BLESH_ATTACH" >> "$BASHRC"
+    # Solo configurar .bashrc si el archivo existe
+    if [ -f "$HOME/.local/share/blesh/ble.sh" ]; then
+        # Configurar .bashrc (SOURCE al inicio, ATTACH al final)
+        BASHRC="$HOME/.bashrc"
+        BLESH_INIT='[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach'
+        BLESH_ATTACH='[[ ${BLE_VERSION-} ]] && ble-attach'
         
-    # Tmux Configuration
-    if [ -f "$DOTFILES_DIR/config/.tmux.conf" ]; then
-        ln -sf "$DOTFILES_DIR/config/.tmux.conf" "$HOME/.tmux.conf"
-        echo -e "${CYAN}   ✓ tmux.conf enlazado${NC}"
-    fi
+        # 1. Agregar source al inicio si no existe
+        if ! grep -q "ble.sh --noattach" "$BASHRC"; then
+            echo "$BLESH_INIT" > "$BASHRC.tmp"
+            cat "$BASHRC" >> "$BASHRC.tmp"
+            mv "$BASHRC.tmp" "$BASHRC"
+        fi
 
-    echo -e "${CYAN}   ✓ Ble.sh configurado en .bashrc${NC}"
+        # 2. Asegurar que ble-attach esté AL FINAL (borrar previos y re-escribir)
+        sed -i '/ble-attach/d' "$BASHRC"
+        sed -i '/Ble.sh attach/d' "$BASHRC"
+        
+        echo "" >> "$BASHRC"
+        echo "# Ble.sh attach (must be last)" >> "$BASHRC"
+        echo "$BLESH_ATTACH" >> "$BASHRC"
+        echo -e "${CYAN}   ✓ Ble.sh configurado en .bashrc${NC}"
+    else
+        echo -e "${YELLOW}   ! No se pudo configurar .bashrc: ble.sh no encontrado${NC}"
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────
