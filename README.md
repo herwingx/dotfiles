@@ -190,12 +190,18 @@ flowchart TD
 
 ### Instalación Rápida (Agrupada)
 
-| Opción | Descripción                                                       | Ideal para                    |
-| :----: | :---------------------------------------------------------------- | :---------------------------- |
-|   1    | **TODO**: Sistema + Dev Tools + Antigravity + Cloud + Auto-Update | Máquina nueva de desarrollo   |
-|   2    | **Sistema**: Update + Paquetes + Tools + Aliases + Git + SSH      | Servidores o entornos ligeros |
-|   3    | **Dev Tools**: GitHub CLI + NVM/Node.js + Docker                  | Entornos de desarrollo        |
-|   4    | **Antigravity**: Reglas GEMINI.md + Workflows IA                  | Solo configuración de IA      |
+| Opción | Descripción                                                       | Modo | Ideal para                    |
+| :----: | :---------------------------------------------------------------- | :--- | :---------------------------- |
+|   1    | **TODO**: Sistema + Dev Tools + Antigravity + Cloud + Auto-Update | 🤖 **Automático** (instala todo sin preguntar) | Máquina nueva de desarrollo   |
+|   2    | **Sistema**: Update + Paquetes + Tools + Aliases + Git + SSH      | 💬 Interactivo | Servidores o entornos ligeros |
+|   3    | **Dev Tools**: GitHub CLI + NVM/Node.js + Docker                  | 💬 Interactivo | Entornos de desarrollo        |
+|   4    | **Antigravity**: Reglas GEMINI.md + Workflows IA                  | 💬 Interactivo | Solo configuración de IA      |
+
+> 💡 **Modo Automático vs Interactivo**:
+> - **Opción 1 (TODO)**: Instala automáticamente todas las herramientas, incluido Gemini CLI si tienes Node.js
+> - **Opciones individuales**: Te pregunta antes de instalar paquetes opcionales como Gemini CLI
+
+> 🐧 **WSL**: Si estás en Windows Subsystem for Linux, lee la [Guía completa de WSL](docs/WSL.md) para evitar conflictos con binarios de Windows.
 
 ### Sistema (Individual)
 
@@ -238,7 +244,7 @@ Para generar confianza, aquí detallamos el propósito de las librerías base qu
 | :----: | :-------- | :------------------------------------------------------------------------------------------- |
 |   14   | Reglas    | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA              |
 |   15   | Workflows | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/`       |
-|   20   | Settings  | Configura `settings.json`, token de GitHub persistente y **extensiones MCP** automáticamente |
+|   20   | Settings  | Configura `settings.json`, token de GitHub persistente y **extensiones MCP** automáticamente. Si Gemini CLI no existe, ofrece instalarlo. |
 
 #### 🤖 ¿Qué son las Extensiones MCP?
 
