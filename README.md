@@ -673,13 +673,66 @@ Si necesitas limpiar tu sistema, el script `uninstall.sh` revierte los cambios:
 ./uninstall.sh
 ```
 
-**¿Qué hace?**
-1.  **Limpia .bashrc**: Elimina configuraciones inyectadas (Oh My Posh, Atuin, Ble.sh).
-2.  **Elimina Symlinks**: Borra `.bash_aliases`, `.gitconfig` y temas.
-3.  **Borra Herramientas**: Elimina carpetas locales de `~/.local/share/blesh`, `~/.atuin`, `~/.gemini`.
-4.  **Restaura Backups**: Si existen backups previos (`.backup`), los devuelve a su lugar.
+### ✅ **¿Qué se elimina correctamente?**
 
-> ⚠️ **Nota**: No desinstala paquetes del sistema (apt/dnf) instalaros globalmente (como `git`, `docker` o `gh`) para evitar romper dependencias de otros usuarios.
+| Componente | Ubicación | Acción |
+|:-----------|:----------|:-------|
+| **BLE.sh** | `~/.local/share/blesh` | ✅ Eliminado completamente |
+| **BLE.sh (.bashrc)** | Líneas `ble.sh --noattach` y `ble-attach` | ✅ Eliminadas |
+| **Atuin** | `~/.atuin` | ✅ Eliminado completamente |
+| **Atuin (.bashrc)** | Líneas `atuin init bash` | ✅ Eliminadas |
+| **Oh My Posh (.bashrc)** | Líneas `oh-my-posh init` | ✅ Eliminadas |
+| **Gemini/Antigravity** | `~/.gemini` | ✅ Eliminado completamente |
+| **GitHub Token** | Variable `GITHUB_PERSONAL_ACCESS_TOKEN` | ✅ Eliminada de .bashrc |
+| **Symlinks** | `.bash_aliases`, `.gitconfig`, tema Oh My Posh | ✅ Eliminados |
+
+### ⚠️ **¿Qué NO se elimina? (Herramientas del sistema)**
+
+El script **NO** desinstala paquetes instalados globalmente para evitar romper dependencias de otros usuarios:
+
+| Herramienta | Razón |
+|:------------|:------|
+| `git`, `docker`, `gh`, `tmux`, `fzf` | Paquetes del sistema (apt/dnf/pacman) |
+| `oh-my-posh` binario | Instalado en `/usr/local/bin/` (requiere sudo) |
+| `zoxide` binario | Instalado en `~/.local/bin/` |
+| `lsd`, `bat`, `ripgrep` | Paquetes del sistema |
+| `nvm` y Node.js | Gestor de versiones (puede tener proyectos dependientes) |
+
+> 💡 **Tip**: Si deseas eliminar también los paquetes del sistema, hazlo manualmente con tu gestor de paquetes:
+> ```bash
+> # Debian/Ubuntu
+> sudo apt remove docker-ce gh tmux fzf
+> 
+> # Fedora/RHEL
+> sudo dnf remove docker-ce gh tmux fzf
+> ```
+
+### 🔧 **Orden de Inicialización en .bashrc (Importante)**
+
+Este dotfiles configura tu `.bashrc` con un orden específico para evitar conflictos entre herramientas:
+
+```bash
+# 1. BLE.sh source (DEBE ser la primera línea)
+[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
+
+# 2. Configuraciones del sistema (PATH, aliases, etc.)
+# ...
+
+# 3. Herramientas de shell
+eval "$(atuin init bash)"
+eval "$(zoxide init bash)"
+eval "$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
+
+# 4. Variables de entorno
+export GITHUB_PERSONAL_ACCESS_TOKEN="..."
+
+# 5. BLE.sh attach (DEBE ser la última línea)
+[[ ${BLE_VERSION-} ]] && ble-attach
+```
+
+> ⚠️ **CRÍTICO**: `ble-attach` **DEBE** ser la última línea absoluta del `.bashrc`. Cualquier comando después de `ble-attach` puede causar comportamientos inesperados en el syntax highlighting y autosuggestions.
+
+> 📘 **Referencia**: [Documentación oficial de BLE.sh - Use with other frameworks](https://github.com/akinomyoga/ble.sh#use-with-other-frameworks)
 
 ### Desarrollo
 
