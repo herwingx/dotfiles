@@ -394,122 +394,89 @@ sequenceDiagram
 
 ---
 
-## 🔑 Configuración WSL
+## 🔑 Guía Maestra de SSH y WSL
 
-Si usas **Windows Subsystem for Linux** y ya tienes llaves SSH configuradas en Windows, puedes migrarlas a WSL fácilmente.
+Esta sección es crítica si usas **Windows con WSL** o necesitas **Agent Forwarding** (usar tus llaves locales dentro de contenedores o servidores remotos).
 
-> 💡 **Recomendado**: Usa la **opción 9** del menú del instalador para copiar automáticamente las llaves SSH de Windows a WSL con los permisos correctos.
+### 1. Generar Llaves en Windows (Si aún no tienes)
+Si es tu primera vez, genera tus llaves desde **PowerShell** en Windows:
 
-### Método Automático (Recomendado)
-
-El instalador detecta si estás en WSL y ofrece copiar tus llaves SSH de Windows:
-
-```bash
-./install.sh  # Selecciona opción 9: "SSH desde Windows"
+```powershell
+# En PowerShell (Windows)
+ssh-keygen -t ed25519 -C "tucorreo@ejemplo.com"
+# Presiona Enter para guardar en la ruta por defecto (C:\Users\TuUsuario\.ssh\id_ed25519)
 ```
 
-**El script automáticamente:**
-- ✅ Copia las llaves de `/mnt/c/Users/<tu_usuario>/.ssh` a `~/.ssh`
-- ✅ Ajusta los permisos correctos (`600` para privadas, `644` para públicas)
-- ✅ Configura el SSH Agent para cargar las llaves al iniciar
+### 2. Agregar Llave Pública a GitHub
+Para que GitHub te reconozca, debes subir tu llave pública:
 
-### Método Manual (Alternativo)
+1. Copia el contenido de la llave pública:
+   - **Windows**: `cat ~/.ssh/id_ed25519.pub | clip` (en Git Bash/PowerShell)
+   - **WSL**: `cat /mnt/c/Users/TU_USUARIO/.ssh/id_ed25519.pub`
+2. Ve a [GitHub Settings > SSH and GPG keys](https://github.com/settings/keys).
+3. Click en **New SSH key**, pega el contenido y guarda.
 
-<details>
-<summary>📋 Ver pasos manuales</summary>
+### 3. Copiar Llaves de Windows a WSL
+WSL es un sistema Linux "separado", por lo que necesita sus propias copias de las llaves (o acceso a ellas).
 
-#### 1. Copiar Llaves SSH desde Windows
-
+**Método Recomendado (Script Automático):**
+Ejecuta el instalador y elige la opción **9**:
 ```bash
-# Desde WSL, copia las llaves de Windows a WSL
-cp -r /mnt/c/Users/TU_USUARIO/.ssh ~/
+./install.sh
+# Opción 9) 🪟 Copiar SSH desde Windows
+```
 
-# Ajustar permisos (OBLIGATORIO - SSH rechaza llaves con permisos incorrectos)
+**Método Manual:**
+```bash
+# 1. Copiar llaves
+cp -r /mnt/c/Users/TU_USUARIO/.ssh/id* ~/.ssh/
+
+# 2. Asignar permisos seguros (CRÍTICO)
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/id_*
 chmod 644 ~/.ssh/*.pub
-chmod 644 ~/.ssh/known_hosts 2>/dev/null
-chmod 644 ~/.ssh/config 2>/dev/null
 ```
 
-#### 2. Verificar Configuración
+### 4. Activar SSH Agent (Para Forwarding)
+El **Agent Forwarding** permite que tus llaves "viajen" contigo a través de conexiones SSH.
 
-```bash
-# Verificar que la llave se carga correctamente
-ssh-add -l
+1. **Asegúrate que el agente corre en tu terminal:**
+   El archivo `.bashrc` incluido configura esto automáticamente, pero puedes verificarlo:
+   ```bash
+   echo $SSH_AUTH_SOCK
+   # Debe mostrar una ruta como: /tmp/ssh-XXXXXX/agent.PID
+   ```
 
-# Si no hay agente corriendo, iniciarlo
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519  # o id_rsa según tu llave
+2. **Cargar tu llave al agente:**
+   ```bash
+   ssh-add ~/.ssh/id_ed25519
+   ```
 
-# Probar conexión con GitHub
-ssh -T git@github.com
-```
+3. **Verificar que la llave está cargada:**
+   ```bash
+   ssh-add -l
+   # Debe listar tu llave: "SHA256:... tucorreo@ejemplo.com"
+   ```
 
-#### 3. Persistencia con SSH Agent
+### 5. Configurar Forwarding (vm-to-host)
+Para usar tus llaves locales dentro de servidores remotos o VMs (sin copiarlas ahí):
 
-Agrega esto a tu `~/.bashrc` para cargar la llave automáticamente:
+1. Edita `~/.ssh/config`:
+   ```ssh
+   Host *
+       ForwardAgent yes
+   ```
 
-```bash
-# SSH Agent Auto-Start
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval "$(ssh-agent -s)" > /dev/null
-    ssh-add ~/.ssh/id_ed25519 2>/dev/null
-fi
-```
+2. **Prueba de Fuego (Test de Forwarding):**
+   Conéctate a tu servidor/VM y desde *allí* verifica si ves tus llaves locales:
+   ```bash
+   # En tu máquina local:
+   ssh usuario@tu-servidor
 
-</details>
-
----
-
-## ⚡ Bonus: SSH Power User (Red Local)
-
-Si trabajas con Máquinas Virtuales (VMs), LXC o Home Labs, esta configuración en `~/.ssh/config` automatiza tu flujo de trabajo.
-
-> 💡 **Objetivo**: Evitar errores de "Host Key Verification" al recrear VMs y usar tus credenciales de GitHub desde dentro de las VMs sin copiar llaves privadas.
-
-### Configuración Recomendada
-
-Edita o crea tu archivo `~/.ssh/config`:
-
-```ssh
-# --- CONFIGURACIÓN GLOBAL (Red Local) ---
-# Aplica a cualquier IP que empiece con 192.168...
-Host 192.168.*
-    # 🚀 CRÍTICO: ForwardAgent
-    # Permite que la VM use la llave SSH de tu máquina local.
-    # Ejemplo: Hacer 'git clone' dentro de la VM usando tu identidad local.
-    ForwardAgent yes
-
-    # 🛡️ Modo Desarrollo / Home Lab
-    # Evita el error "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED"
-    # útil si destruyes y creas VMs frecuentemente con la misma IP.
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
-
-    # 👤 Usuario por defecto
-    # Ajusta esto a tu usuario común en las VMs (ej: ubuntu, root, etc)
-    User tu_usuario_general
-
-# --- EJEMPLOS ESPECÍFICOS ---
-# Sobrescribe la regla global para casos particulares
-
-Host vm-database
-    HostName 192.168.0.140
-    User admin_db
-    Port 2222
-
-Host k8s-master
-    HostName 192.168.1.50
-    # Si es un LXC o requiere root
-    User root
-```
-
-### ¿Por qué activar `ForwardAgent`?
-
-Es una técnica de seguridad y conveniencia:
-1. **Seguridad**: Tu llave privada **nunca** sale de tu PC principal.
-2. **Conveniencia**: Cuando intentas clonar un repo privado desde la VM, la petición de autenticación "viaja" de regreso a tu PC, usa tu llave local y autoriza la operación.
+   # YA DENTRO del servidor remoto:
+   ssh-add -l
+   # ¡Si ves tu llave local aquí, el forwarding funciona! 🎉
+   ```
 
 ---
 
