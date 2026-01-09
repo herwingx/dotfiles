@@ -141,13 +141,72 @@ install_gemini_extensions() {
     if [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" == /mnt/* ]]; then
         echo -e "${YELLOW}   ! Gemini detectado en Windows ($GEMINI_BIN).${NC}"
         echo -e "${YELLOW}   ! WSL no puede ejecutar extensiones MCP desde binarios de Windows.${NC}"
-        echo -e "${YELLOW}   ! Instala Gemini CLI dentro de WSL: npm install -g @google/generative-ai-cli${NC}"
-        return
+        
+        # Verificar si npm está disponible en WSL
+        if command -v npm &> /dev/null; then
+            echo -e "${CYAN}   ¿Instalar Gemini CLI dentro de WSL ahora? (recomendado)${NC}"
+            read -p "   [S/n]: " INSTALL_GEMINI
+            INSTALL_GEMINI=${INSTALL_GEMINI:-S}
+            
+            if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
+                echo -e "${CYAN}   Instalando Gemini CLI en WSL...${NC}"
+                npm install -g @google/generative-ai-cli
+                
+                # Recargar NVM para detectar el nuevo binario
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                
+                GEMINI_BIN=$(command -v gemini)
+                
+                if [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" != /mnt/* ]]; then
+                    echo -e "${GREEN}   ✓ Gemini CLI instalado correctamente en $GEMINI_BIN${NC}"
+                else
+                    echo -e "${RED}   ✗ Error: Gemini no se instaló correctamente${NC}"
+                    return
+                fi
+            else
+                echo -e "${YELLOW}   Saltando instalación de extensiones MCP${NC}"
+                return
+            fi
+        else
+            echo -e "${RED}   ! npm no encontrado. Instala Node.js primero (opción 11)${NC}"
+            return
+        fi
     fi
 
     if [ -z "$GEMINI_BIN" ]; then
-        echo -e "${YELLOW}   ! Gemini CLI no encontrado en PATH de Linux. Saltando extensiones.${NC}"
-        return
+        echo -e "${YELLOW}   ! Gemini CLI no encontrado en PATH de Linux.${NC}"
+        
+        # Ofrecer instalación si npm está disponible
+        if command -v npm &> /dev/null; then
+            echo -e "${CYAN}   ¿Instalar Gemini CLI ahora?${NC}"
+            read -p "   [S/n]: " INSTALL_GEMINI
+            INSTALL_GEMINI=${INSTALL_GEMINI:-S}
+            
+            if [[ "$INSTALL_GEMINI" =~ ^[Ss]$ ]]; then
+                echo -e "${CYAN}   Instalando Gemini CLI...${NC}"
+                npm install -g @google/generative-ai-cli
+                
+                # Recargar NVM
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                
+                GEMINI_BIN=$(command -v gemini)
+                
+                if [ -n "$GEMINI_BIN" ]; then
+                    echo -e "${GREEN}   ✓ Gemini CLI instalado correctamente${NC}"
+                else
+                    echo -e "${RED}   ✗ Error instalando Gemini CLI${NC}"
+                    return
+                fi
+            else
+                echo -e "${YELLOW}   Saltando extensiones MCP${NC}"
+                return
+            fi
+        else
+            echo -e "${YELLOW}   Instala Node.js primero (opción 11) y luego vuelve a ejecutar esta opción${NC}"
+            return
+        fi
     fi
     
     # 4. Verificar versión con un timeout más generoso para WSL
