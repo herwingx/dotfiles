@@ -283,39 +283,43 @@ install_modern_tools() {
 # Instala Ble.sh (Syntax Highlighting & Auto-suggestions for Bash)
 # ─────────────────────────────────────────────────────────────
 install_blesh() {
-    echo -e "${GREEN}>>> Instalando Ble.sh...${NC}"
+    echo -e "${GREEN}>>> Instalando Ble.sh (Bash Line Editor)...${NC}"
     
     BLESH_DIR="$HOME/.local/share/blesh"
     
+    # 1. Instalación/Compilación robusta
     if [ ! -d "$BLESH_DIR" ] || [ ! -f "$BLESH_DIR/ble.sh" ]; then
          echo -e "${CYAN}   Clonando y compilando ble.sh...${NC}"
          rm -rf /tmp/ble.sh
-         git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh
+         if ! git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh; then
+             echo -e "${RED}   ✗ Error al clonar ble.sh${NC}"
+             return 1
+         fi
+
+         # Compilar e instalar (usando PREFIX local)
          if make -C /tmp/ble.sh install PREFIX=~/.local; then
-             echo -e "${CYAN}   ✓ Ble.sh compitlado e instalado${NC}"
+             echo -e "${CYAN}   ✓ Ble.sh instalado exitosamente${NC}"
          else
-             echo -e "${RED}   ✗ Error al compilar ble.sh. Verifica que 'make' y 'gawk' estén instalados.${NC}"
+             echo -e "${RED}   ✗ Error al compilar ble.sh. Verifica: make, gcc, gawk.${NC}"
              rm -rf /tmp/ble.sh
              return 1
          fi
          rm -rf /tmp/ble.sh
     fi
-    echo -e "${CYAN}   ✓ Ble.sh instalado${NC}"
 
-    # Configurar estilos (.blerc)
-    echo -e "${CYAN}   Configurando estilos visuales (.blerc)...${NC}"
+    # 2. Configurar estilos y comportamiento (.blerc)
+    # Añadimos opciones para silenciar mensajes técnicos y mejorar compatibilidad
+    echo -e "${CYAN}   Configurando .blerc (Estabilidad y Silencio)...${NC}"
     cat > "$HOME/.blerc" <<'EOF'
-# ==============================================================================
-# CONFIGURACIÓN VISUAL BLE.SH
-# ==============================================================================
-# IMPORTANTE: Este archivo se carga DESPUÉS de que ble.sh esté inicializado
-# Los comandos ble-face y bleopt solo están disponibles en ese momento
-
-# 1. Estilo Fish-like (Sugerencias grises, SIN subrayado ni fondo)
+# Configuración visual ble.sh
 bleopt complete_auto_complete=1
 bleopt complete_menu_style=align-nowrap
+bleopt term_truecolor=0  # Desactivar si ves códigos raros en terminales viejas
 
-# 2. Configurar colores (se ejecutan cuando ble.sh ya está cargado)
+# Silenciar mensajes de "updating tput cache" (evita basura visual)
+bleopt info_internal_error=0
+
+# Colores limpios
 if [[ ${BLE_VERSION-} ]]; then
     ble-face -s auto_complete fg=242,bg=default,ul=none
     ble-face -s syntax_error fg=196,bg=default
@@ -323,32 +327,36 @@ if [[ ${BLE_VERSION-} ]]; then
     ble-face -s syntax_quoted fg=107
 fi
 EOF
-    echo -e "${CYAN}   ✓ .blerc generado (Estilo limpio/grid)${NC}"
 
-    # Solo configurar .bashrc si el archivo existe
-    if [ -f "$HOME/.local/share/blesh/ble.sh" ]; then
-        # Configurar .bashrc (SOURCE al inicio, ATTACH al final)
+    # 3. Configurar .bashrc de forma atómica y segura
+    if [ -f "$BLESH_DIR/ble.sh" ]; then
         BASHRC="$HOME/.bashrc"
-        BLESH_INIT='[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach'
-        BLESH_ATTACH='[[ ${BLE_VERSION-} ]] && ble-attach'
         
-        # 1. Agregar source al inicio si no existe
-        if ! grep -q "ble.sh --noattach" "$BASHRC"; then
-            echo "$BLESH_INIT" > "$BASHRC.tmp"
-            cat "$BASHRC" >> "$BASHRC.tmp"
-            mv "$BASHRC.tmp" "$BASHRC"
-        fi
+        # Definir bloques de código con checks de interactividad estrictos
+        # El SOURCE debe ir al principio
+        BLE_SOURCE_BLOCK='[[ $- == *i* && -f ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach'
+        # El ATTACH debe ir al final
+        BLE_ATTACH_BLOCK='[[ ${BLE_VERSION-} ]] && ble-attach'
 
-        # 2. Asegurar que ble-attach esté AL FINAL (borrar previos y re-escribir)
+        # Limpiar entradas previas para evitar duplicidad o desorden
+        sed -i '/ble.sh/d' "$BASHRC"
         sed -i '/ble-attach/d' "$BASHRC"
         sed -i '/Ble.sh attach/d' "$BASHRC"
-        
+
+        # Inyectar SOURCE al inicio (creamos archivo temporal)
+        {
+            echo "$BLE_SOURCE_BLOCK"
+            cat "$BASHRC"
+        } > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
+
+        # Inyectar ATTACH al final
         echo "" >> "$BASHRC"
-        echo "# Ble.sh attach (must be last)" >> "$BASHRC"
-        echo "$BLESH_ATTACH" >> "$BASHRC"
-        echo -e "${CYAN}   ✓ Ble.sh configurado en .bashrc${NC}"
+        echo "# Ble.sh attach (Debe ser la última línea)" >> "$BASHRC"
+        echo "$BLE_ATTACH_BLOCK" >> "$BASHRC"
+        
+        echo -e "${CYAN}   ✓ .bashrc configurado (Source al inicio, Attach al final)${NC}"
     else
-        echo -e "${YELLOW}   ! No se pudo configurar .bashrc: ble.sh no encontrado${NC}"
+        echo -e "${RED}   ✗ No se encontró ble.sh tras la instalación${NC}"
     fi
 }
 
