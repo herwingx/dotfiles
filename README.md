@@ -426,66 +426,38 @@ sequenceDiagram
     end
 ```
 
+### ✨ Shell Inteligente (Ble.sh)
+
+Se incluye una configuración altamente optimizada de **Ble.sh** para Bash:
+*   **Zero-Lag Enter**: Configurado para ejecución inmediata (sin saltos de línea accidentales).
+*   **UI Transparente**: Autocompletado con estilo "Ghost" (gris sutil) sin fondos blancos intrusivos.
+*   **Tab-Completion**: Restaurado el comportamiento estándar de TAB para menú y completado.
 
 ---
 
-## 🐞 Solución de Problemas: Antigravity en WSL
+## 🐞 Antigravity en WSL: Guía Técnica
 
-Los usuarios de **Windows Subsystem for Linux (WSL)** pueden encontrar problemas al usar el comando `agy` (la CLI de Antigravity) debido a bugs en el instalador de Windows (versiones 2025/2026).
+El instalador incluye una lógica de **Detección y Reparación Inteligente** para la CLI de Antigravity (`agy`) en WSL.
 
-### El Problema
+### 🤖 Comportamiento del Script Automático (`system.sh`)
 
-Por defecto, ejecutar `agy .` en WSL puede abrir el IDE tratando los archivos como una "carpeta de red" (`\\wsl.localhost\...`) en lugar de conectarse al entorno remoto WSL (`WSL: Distro`). Esto pierde características como terminal integrada de Linux y extensiones de Linux.
+1.  **Detección de Entorno**: Identifica si corre en WSL. Si es un servidor Linux estándar, se omite inofensivamente.
+2.  **Búsqueda de Usuario Windows**: Usa 3 estrategias (PATH, ruta absoluta y escaneo heurístico de `/mnt/c/Users`) para encontrar tu usuario de Windows, incluso si has limpiado el PATH.
+3.  **Symlink Automático**: Vincula `~/.local/bin/agy` -> `antigravity.exe` de Windows.
+4.  **Gestión de ID de Extensión (Lo Importante)**:
+    *   **Modo Seguro (Default)**: Si la carpeta de la extensión tiene el nombre antiguo (`ms-vscode-remote...`), el script asegura que el lanzador use el ID `ms-vscode-remote.remote-wsl`. Esto garantiza que `agy .` abra siempre (en modo compatibilidad de red).
+    *   **Auto-Reparación**: Si detecta que el ID está configurado a `google...` pero la carpeta no existe (configuración rota), lo **revierte automáticamente** para arreglar el error "No such file".
+    *   **Modo Nativo**: Solo si detecta manualmente la carpeta `antigravity-remote-wsl`, aplica el parche para usar el ID de Google.
 
-### ✅ Solución Automática
+### ⚡ Cómo activar el "Modo Nativo" (Opcional)
 
-Este repositorio **detecta y repara este problema automáticamente** al instalar las herramientas (Opción 1 o 6 del instalador). El script:
-1. Crea un enlace simbólico (`agy`) en Linux que apunta al ejecutable de Windows.
-2. **Detecta y parchea** el archivo lanzador de Windows para corregir el ID de la extensión remota.
+Por defecto, `agy` abrirá como una carpeta de red (`\\wsl.localhost\...`). Si deseas la integración nativa completa (terminal Linux rápida):
 
-### 🛠️ Solución Manual
-
-Si la automatización falla o prefieres hacerlo tú mismo, sigue estos pasos:
-
-#### 1. Crear enlace simbólico
-Ejecuta en tu terminal WSL (reemplazando `TU_USUARIO` por tu usuario de Windows):
-
-```bash
-# Crear directorio local si no existe
-mkdir -p ~/.local/bin
-
-# Crear enlace al ejecutable de Windows
-ln -s "/mnt/c/Users/TU_USUARIO/AppData/Local/Programs/Antigravity/bin/antigravity" ~/.local/bin/agy
-```
-
-#### 2. Corregir el Bug del Lanzador (Importante)
-El instalador configura por defecto el ID incorrecto para la extensión remota.
-
-1. Ve a Windows y navega a: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\bin`
-2. Abre el archivo llamado `antigravity` (sin extensión) con un editor de texto (Notepad).
-3. Busca la línea:
-   ```bash
-   WSL_EXT_ID="ms-vscode-remote.remote-wsl"
-   ```
-4. **Cámbiala por:**
-   ```bash
-   WSL_EXT_ID="google.antigravity-remote-wsl"
-   ```
-   ```
-5. Guarda el archivo. Ahora `agy .` funcionará correctamente abriendo el entorno remoto de WSL.
-
-#### ⚠️ Solución Avanzada (Si sigue fallando)
-
-Si al ejecutar `agy .` recibes un error tipo **"No such file or directory"** apuntando a `wslCode.sh`, significa que tienes el ID nuevo pero te falta la carpeta con el nombre correcto.
-
-**Solución definitiva para experiencia nativa:**
-
-1. En Windows, ve a: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\resources\app\extensions\`
-2. Busca la carpeta `ms-vscode-remote.remote-wsl`.
-3. **Haz una copia** de esa carpeta y pégala ahí mismo.
-4. **Renombra la copia** a: `antigravity-remote-wsl`.
-
-Esto engaña al IDE para que cargue la extensión correctamente usando el ID de Google, dándote acceso completo a la terminal de Linux y velocidad nativa.
+1.  En Windows, ve a: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\resources\app\extensions\`
+2.  Copia la carpeta `ms-vscode-remote.remote-wsl`.
+3.  Pega y renombra la copia a: `antigravity-remote-wsl`.
+4.  Ejecuta `./install.sh` (Opción 6) nuevamente.
+    *   El script detectará la nueva carpeta y activará el **Modo Nativo** automáticamente.
 
 ---
 
