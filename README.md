@@ -957,11 +957,17 @@ Este proyecto incluye un archivo `.vscode-extensions` con todas las extensiones 
 
 ### 🚀 Instalación Automatizada
 
+Asegúrate de estar en la raíz del repositorio para que los comandos encuentren el archivo `.vscode-extensions`:
+
+```bash
+cd ~/dotfiles
+```
+
 #### Linux / WSL (Bash o Zsh)
 
 ```bash
-# Opción 1: Desde archivo (recomendado)
-xargs -a ~/.vscode-extensions -L1 antigravity --install-extension
+# Opción 1: Desde archivo del repositorio (recomendado)
+xargs -a .vscode-extensions -L1 antigravity --install-extension
 
 # Opción 2: Desde lista activa (copiar extensiones de otra máquina)
 antigravity --list-extensions | grep '\.' | xargs -L1 antigravity --install-extension
@@ -975,11 +981,39 @@ antigravity --list-extensions | grep '\.' | xargs -L1 antigravity --install-exte
 #### Windows (PowerShell)
 
 ```powershell
-# Opción 1: Desde archivo
-Get-Content $HOME\.vscode-extensions | ForEach-Object { antigravity --install-extension $_ }
+# Opción 1: Desde archivo exacto del repositorio
+Get-Content .\.vscode-extensions | ForEach-Object { antigravity --install-extension $_ }
 
-# Opción 2: Desde lista activa
+# Opción 2: Desde lista activa del sistema actual
 antigravity --list-extensions | Where-Object { $_ -match '\.' } | ForEach-Object { antigravity --install-extension $_ }
+```
+
+### 📦 Gestión de Extensiones
+
+Mantén tu entorno sincronizado actualizando la lista de extensiones o creando perfiles personalizados.
+
+#### Actualizar lista del repositorio
+Si instalaste nuevas extensiones manualmente y quieres guardarlas en el repo:
+
+**Linux / WSL:**
+```bash
+antigravity --list-extensions > .vscode-extensions
+```
+
+**Windows:**
+```powershell
+antigravity --list-extensions | Out-File -Encoding UTF8 .vscode-extensions
+```
+
+#### Crear un nuevo perfil
+Si necesitas un set de extensiones diferente (ej. para un proyecto específico), crea un archivo nuevo:
+
+```bash
+# 1. Crear archivo con extensiones actuales
+antigravity --list-extensions > profile-backend.txt
+
+# 2. Instalar desde ese archivo específico
+xargs -a profile-backend.txt -L1 antigravity --install-extension
 ```
 
 ### 💡 Tips Útiles
