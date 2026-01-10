@@ -14,18 +14,52 @@
 
 ---
 
-## 📋 Índice
+## 📑 Índice
 
+- [🎯 ¿Qué es este proyecto?](#-qué-es-este-proyecto)
 - [✨ Características](#-características)
-- [🚀 Inicio Rápido](#-inicio-rápido)
+- [⚡ Prerequisitos OBLIGATORIOS](#-prerequisitos-obligatorios)
+  - [🔑 Generar Llaves SSH](#-paso-1-generar-llaves-ssh)
+  - [📤 Agregar Llave a GitHub](#-paso-2-agregar-llave-pública-a-github)
+  - [⚙️ Configurar SSH Config](#-paso-3-configurar-ssh-config)
+  - [🔐 SSH Agent y Forwarding](#-paso-4-ssh-agent-y-forwarding)
+  - [🪟 Configuración WSL](#-configuración-especial-para-wsl)
+- [🚀 Instalación](#-instalación)
 - [🏗️ Arquitectura](#️-arquitectura)
-- [📦 Módulos Disponibles](#-módulos-disponibles)
+- [📦 ¿Qué instalamos y por qué?](#-qué-instalamos-y-por-qué)
+- [🎨 Módulos Disponibles](#-módulos-disponibles)
 - [🔐 Gestión de Secretos](#-gestión-de-secretos-envage)
-- [🔑 Configuración WSL](#-configuración-wsl)
+- [🐧 Configuración WSL (Antigravity)](#-configuración-wsl)
 - [🔧 Aliases Incluidos](#-aliases-incluidos)
 - [📚 Documentación](#-documentación)
 - [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+  - [🚀 Configuración de Atuin](#-configuración-de-atuin-historial-inteligente)
+- [🧠 Filosofía de Desarrollo](#-filosofía-de-desarrollo)
+- [🔧 Orden de Inicialización en .bashrc](#-orden-de-inicialización-en-bashrc)
+- [🗑️ Desinstalación](#️-desinstalación-total)
+- [🔒 Seguridad](#-seguridad)
+- [❓ FAQ y Troubleshooting](#-faq-y-troubleshooting)
 - [🤝 Contribuir](#-contribuir)
+
+---
+
+## 🎯 ¿Qué es este proyecto?
+
+**Dotfiles** es un sistema de automatización completo para configurar entornos de desarrollo Linux desde cero. Diseñado para:
+
+- 🎓 **Desarrolladores nuevos**: Guía paso a paso desde la generación de SSH hasta el entorno completo
+- 🏢 **Equipos**: Configuración reproducible en múltiples máquinas
+- 🔄 **Migraciones**: Restaura tu entorno en minutos en un servidor nuevo
+
+**¿Qué hace diferente a estos dotfiles?**
+
+| Característica | Beneficio |
+|:---------------|:----------|
+| 🔍 **Transparencia Total** | Cada paquete tiene documentación de por qué se instala |
+| 🎯 **Modular** | Instala solo lo que necesitas (sistema, dev, IA, cloud) |
+| 🔐 **Seguro por Defecto** | Gestión de secretos con Age encryption |
+| 📖 **Documentación Completa** | Guías paso a paso para usuarios sin experiencia previa |
+| 🤖 **IA-Ready** | Integración con Gemini/Antigravity y workflows automatizados |
 
 ---
 
@@ -42,34 +76,367 @@
 | 🖥️ **Soporte WSL**           | Integración nativa con Windows Subsystem for Linux, incluyendo copiado automático de llaves SSH y configuración transparente.                                                                                         |
 | 🔄 **Auto-Update**           | Sistema de actualizaciones automáticas con notificaciones vía Telegram. Configurable con horarios personalizados para evitar conflictos.                                                                              |
 | 📦 **Multi-Distro**          | Compatible con Debian/Ubuntu (apt), Fedora/RHEL (dnf) y Arch Linux (pacman). Detección automática de distribución.                                                                                                    |
-| 🔒 **Transparencia Total** | **Auditable**: Cada script es modular y legible. No hay "cajas negras"; puedes ver exactamente qué paquetes y configs se aplican antes de ejecutar.                                                                    |
 
 ---
 
-## 🚀 Inicio Rápido
+## ⚡ Prerequisitos OBLIGATORIOS
 
-### Requisitos Previos
+> 🎯 **IMPORTANTE**: Si eres un usuario nuevo, **LEE ESTA SECCIÓN COMPLETA** antes de ejecutar el instalador. La configuración SSH es el fundamento de todo el flujo de trabajo moderno con Git y servidores remotos.
+
+### Requisitos del Sistema
 
 | Requisito       | Descripción                                                              |
 | :-------------- | :----------------------------------------------------------------------- |
 | 🐧 **Sistema**   | Linux (Debian, Ubuntu, Fedora, Arch) o WSL                               |
 | 🌐 **Conexión**  | Acceso a Internet para descargar paquetes                                |
-| 🔐 **Bitwarden** | Cuenta de Bitwarden (opcional, para automatización completa de secretos) |
-| 📧 **Telegram**  | Bot de Telegram (opcional, para notificaciones de auto-update)           |
+| 🔐 **Git/GitHub**| Cuenta de GitHub (gratuita) para clonar y contribuir                     |
+| 🔑 **SSH Keys**  | **OBLIGATORIO** - Crearemos esto juntos en los próximos pasos            |
+
+---
+
+## 🔑 Paso 1: Generar Llaves SSH
+
+Las llaves SSH te permiten autenticarte con GitHub y servidores remotos **sin contraseñas**. Son el estándar de la industria.
+
+### 🪟 Opción A: Windows (Nativo)
+
+Si trabajas en Windows (incluso si usarás WSL después), genera tus llaves **primero en Windows**:
+
+#### 1.1. Abrir PowerShell o Git Bash
+
+- Presiona `Win + X` → Selecciona **"Windows PowerShell"** o **"Terminal"**
+- O usa **Git Bash** si ya lo tienes instalado
+
+#### 1.2. Generar la llave
+
+```powershell
+# Comando para generar llave SSH con algoritmo Ed25519 (más seguro y rápido que RSA)
+ssh-keygen -t ed25519 -C "tu_email@ejemplo.com"
+```
+
+**Preguntas que te hará:**
+
+1. **"Enter file in which to save the key"**: 
+   - Presiona `Enter` para usar la ruta por defecto: `C:\Users\TU_USUARIO\.ssh\id_ed25519`
+
+2. **"Enter passphrase"**: 
+   - **RECOMENDADO**: Ingresa una contraseña segura (se pedirá cada vez que uses la llave)
+   - **Opcional**: Presiona `Enter` para sin contraseña (menos seguro, pero más conveniente)
+
+#### 1.3. Verificar que se creó
+
+```powershell
+# Listar archivos creados
+ls ~/.ssh/
+
+# Deberías ver:
+# id_ed25519     ← Llave PRIVADA (NUNCA compartir)
+# id_ed25519.pub ← Llave PÚBLICA (esta sí puedes compartir)
+```
+
+---
+
+### 🐧 Opción B: Linux / WSL
+
+Si estás en Linux puro o ya dentro de WSL:
+
+#### 1.1. Abrir tu terminal
+
+```bash
+# Generar llave SSH
+ssh-keygen -t ed25519 -C "tu_email@ejemplo.com"
+```
+
+#### 1.2. Responder las preguntas
+
+1. **"Enter file in which to save the key"**: 
+   - Presiona `Enter` para usar `/home/TU_USUARIO/.ssh/id_ed25519`
+
+2. **"Enter passphrase"**: 
+   - Ingresa una contraseña o deja vacío
+
+#### 1.3. Verificar
+
+```bash
+ls -la ~/.ssh/
+
+# Deberías ver:
+# id_ed25519     (Permisos: 600)
+# id_ed25519.pub (Permisos: 644)
+```
+
+---
+
+## 📤 Paso 2: Agregar Llave Pública a GitHub
+
+Para que GitHub te reconozca y puedas hacer `git clone`, `git push`, etc., debes subir tu **llave pública**.
+
+### 2.1. Copiar la Llave Pública
+
+**Windows (PowerShell/Git Bash):**
+```powershell
+# Copiar al portapapeles
+cat ~/.ssh/id_ed25519.pub | clip
+
+# O mostrar en pantalla para copiar manualmente
+cat ~/.ssh/id_ed25519.pub
+```
+
+**Linux/WSL:**
+```bash
+# Mostrar en pantalla
+cat ~/.ssh/id_ed25519.pub
+
+# Si tienes xclip instalado (Ubuntu Desktop)
+cat ~/.ssh/id_ed25519.pub | xclip -selection clipboard
+
+# En WSL, copiar a portapapeles de Windows
+cat ~/.ssh/id_ed25519.pub | clip.exe
+```
+
+### 2.2. Agregar a GitHub
+
+1. Ve a: [https://github.com/settings/keys](https://github.com/settings/keys)
+2. Click en **"New SSH key"**
+3. **Title**: Nombre descriptivo (ej: "Laptop Personal", "PC Trabajo WSL")
+4. **Key type**: `Authentication Key`
+5. **Key**: Pega el contenido completo (empieza con `ssh-ed25519 AAAA...`)
+6. Click en **"Add SSH key"**
+
+### 2.3. Probar la Conexión
+
+```bash
+# Verificar que GitHub te reconoce
+ssh -T git@github.com
+
+# Respuesta esperada:
+# Hi TU_USUARIO! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+> ✅ Si ves tu usuario de GitHub en el mensaje, **¡la configuración es correcta!**
+
+---
+
+## ⚙️ Paso 3: Configurar SSH Config
+
+El archivo `~/.ssh/config` te permite definir **atajos** y **configuraciones** para tus conexiones SSH.
+
+### 3.1. Crear/Editar el archivo
+
+**Linux/WSL:**
+```bash
+# Crear carpeta si no existe
+mkdir -p ~/.ssh
+
+# Editar con tu editor favorito
+nano ~/.ssh/config
+# o
+vim ~/.ssh/config
+```
+
+**Windows:**
+```powershell
+# Crear carpeta si no existe
+mkdir -Force ~/.ssh
+
+# Editar (usa notepad o VSCode)
+notepad $HOME\.ssh\config
+```
+
+### 3.2. Configuración Básica Recomendada
+
+Copia y pega esta configuración base:
+
+```ssh
+# ~/.ssh/config
+
+# ========================================
+# CONFIGURACIÓN GLOBAL
+# ========================================
+# Aplica a TODOS los hosts
+Host *
+    # Agregar llaves automáticamente al agente SSH
+    AddKeysToAgent yes
+    
+    # Habilitar SSH Agent Forwarding (usar tus llaves locales en servidores remotos)
+    ForwardAgent yes
+    
+    # Evitar timeouts en conexiones largas inactivas
+    ServerAliveInterval 60
+    ServerAliveCountMax 120
+    
+    # Reutilizar conexiones para acelerar múltiples comandos
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 600
+
+# ========================================
+# GITHUB
+# ========================================
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    # Usar IPv4 preferentemente (evita problemas con IPv6)
+    AddressFamily inet
+
+# ========================================
+# EJEMPLO: Servidor Remoto
+# ========================================
+# Puedes agregar tus propios servidores aquí
+# Host mi-servidor
+#     HostName 192.168.1.100
+#     User usuario
+#     Port 22
+#     IdentityFile ~/.ssh/id_ed25519
+```
+
+### 3.3. Crear carpeta de sockets (para ControlMaster)
+
+```bash
+mkdir -p ~/.ssh/sockets
+```
+
+### 3.4. Asegurar Permisos Correctos
+
+```bash
+# CRÍTICO: SSH rechaza configuraciones con permisos inseguros
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/config
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+```
+
+---
+
+## 🔐 Paso 4: SSH Agent y Forwarding
+
+El **SSH Agent** mantiene tus llaves en memoria para no pedir la contraseña en cada conexión.
+
+### 4.1. Iniciar el Agente (Automático en dotfiles)
+
+Los dotfiles configuran esto automáticamente en `.bashrc`, pero puedes verificarlo:
+
+```bash
+# Verificar si el agente está corriendo
+echo $SSH_AUTH_SOCK
+
+# Debe mostrar algo como:
+# /tmp/ssh-XXXXXX/agent.12345
+```
+
+### 4.2. Agregar tu Llave al Agente
+
+```bash
+# Agregar llave (te pedirá la contraseña si configuraste una)
+ssh-add ~/.ssh/id_ed25519
+
+# Verificar que se agregó correctamente
+ssh-add -l
+
+# Debe mostrar:
+# 256 SHA256:... tu_email@ejemplo.com (ED25519)
+```
+
+### 4.3. SSH Agent Forwarding (Uso Avanzado)
+
+**¿Qué es?** Permite usar tus llaves **locales** dentro de servidores remotos **sin copiarlas**.
+
+**Caso de Uso:**
+```
+Tu Laptop → Servidor A → Servidor B
+          └─ Usa tus llaves locales en A
+                         └─ Usa tus llaves locales en B (sin copiarlas)
+```
+
+**Ya configurado en `~/.ssh/config` con:**
+```ssh
+Host *
+    ForwardAgent yes
+```
+
+**Probar Forwarding:**
+```bash
+# 1. Conectarte a un servidor
+ssh usuario@servidor-remoto
+
+# 2. YA DENTRO del servidor, verificar que ves tus llaves locales
+ssh-add -l
+
+# Si ves tu llave local listada, ¡el forwarding funciona! 🎉
+```
+
+> ⚠️ **Seguridad**: Solo usa `ForwardAgent yes` en servidores de confianza. Si un servidor está comprometido, podría usar tus llaves mientras estás conectado.
+
+---
+
+## 🪟 Configuración Especial para WSL
+
+Si usas Windows Subsystem for Linux, necesitas **copiar** o **vincular** tus llaves de Windows a WSL.
+
+### Método 1: Copiado Automático (Recomendado)
+
+El instalador incluye una opción que copia las llaves automáticamente:
+
+```bash
+# Después de clonar los dotfiles en WSL
+cd ~/dotfiles
+./install.sh
+
+# Selecciona la opción:
+# [9] 🪟 Sincronizar SSH desde Windows
+```
+
+### Método 2: Copiado Manual
+
+```bash
+# Copiar llaves de Windows a WSL
+cp /mnt/c/Users/TU_USUARIO_WINDOWS/.ssh/id_ed25519* ~/.ssh/
+
+# Asegurar permisos correctos (CRÍTICO)
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+```
+
+### Método 3: Symlink (Avanzado)
+
+Crear un enlace simbólico para compartir las mismas llaves:
+
+```bash
+# ADVERTENCIA: WSL puede tener problemas con permisos en /mnt/c
+# Solo usa esto si entiendes las implicaciones de seguridad
+
+ln -s /mnt/c/Users/TU_USUARIO_WINDOWS/.ssh ~/.ssh
+```
+
+> 💡 **Recomendación**: Usa el Método 1 (automático) o Método 2 (manual) para evitar problemas de permisos.
+
+---
+
+## 🚀 Instalación
+
+Una vez que tienes tus **llaves SSH configuradas y agregadas a GitHub**, puedes proceder con la instalación de los dotfiles.
 
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone https://github.com/herwingx/dotfiles.git ~/dotfiles
+# Clonar usando SSH (por eso necesitábamos configurar SSH primero)
+git clone git@github.com:herwingx/dotfiles.git ~/dotfiles
+
+# Entrar al directorio
 cd ~/dotfiles
 ```
 
+> 🔍 **Nota**: Si ves un error `Permission denied (publickey)`, revisa los pasos de SSH anteriores.
+
 ### 2. Ejecutar el Instalador
 
-El script es **interactivo** y detectará tu distribución automáticamente:
-
 ```bash
+# Dar permisos de ejecución
 chmod +x install.sh
+
+# Ejecutar instalador interactivo
 ./install.sh
 ```
 
@@ -83,8 +450,8 @@ El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para co
   ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗
   ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
   ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
-  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
-                            v2.0_PREMIUM_BUILD // SYSTEM_READY
+  ╚═════╝  ╚═════╝    ╚═╝   ╚═════╝ ╚═╝╚══════╝╚══════╝╚══════╝
+                             v2.0_PREMIUM_BUILD // SYSTEM_READY
 
   // 🚀 INSTALACIÓN AUTOMÁTICA
   +------------------------------------------------------------+
@@ -119,9 +486,27 @@ El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para co
   wrapper@install:~$ 
 ```
 
-> 📘 **Recomendación**: Para una máquina nueva personal, selecciona la opción **[1]** "FULL_STACK_DEPLOY".
->
-> 🔱 **Para Forks/Colaboradores**: Usad la opción **[17] Create New Vault** para generar vuestra propia bóveda de secretos `.env.local.age` y limpiar la configuración del autor original.
+### 4. Seleccionar Opción de Instalación
+
+| Opción | Recomendado Para | Qué Instala |
+|:------:|:-----------------|:------------|
+| **[1]** | 🎯 **Usuarios Nuevos** / Máquina de desarrollo personal | **TODO**: Sistema base + Dev Tools + Docker + Gemini AI + Cloud + Auto-Updates |
+| **[2]** | Servidores / Entornos ligeros | Sistema base + Shell moderno + Git + Aliases |
+| **[3]** | Solo necesitas Docker/Node | GitHub CLI + NVM/Node.js + Docker |
+| **[4]** | Solo configuración de IA | Reglas Gemini + Workflows + MCP Extensions |
+
+> 📘 **Recomendación para Primera Instalación**: Selecciona **[1]** para obtener el stack completo.
+
+### 5. Post-Instalación
+
+Después de la instalación, **recarga tu shell**:
+
+```bash
+# Opción 1: Cerrar y abrir una nueva terminal
+
+# Opción 2: Recargar configuración
+source ~/.bashrc
+```
 
 ---
 
@@ -175,7 +560,7 @@ dotfiles/
 ```mermaid
 flowchart TD
     subgraph ENTRY["🎛️ Entry Points"]
-        A["� install.sh"] --> B["⚙️ common.sh"]
+        A["🚀 install.sh"] --> B["⚙️ common.sh"]
         M["🔐 manage_secrets.sh"] --> B
         U["🗑️ uninstall.sh"] --> B
     end
@@ -225,7 +610,73 @@ flowchart TD
 
 ---
 
-## 📦 Módulos Disponibles
+## 📦 ¿Qué instalamos y por qué?
+
+> 🔍 **Principio de Transparencia**: A diferencia de otros dotfiles que instalan paquetes sin explicación, aquí documentamos **cada herramienta** y su propósito.
+
+### Categoría: Sistema Base
+
+| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
+|:--------|:-----------|:------------------------|
+| **git** | Sistema de control de versiones distribuido | Fundamental para clonar repos, versionar código y colaborar |
+| **curl** | Cliente HTTP en línea de comandos | Descargar archivos, consumir APIs REST, scripts de instalación |
+| **wget** | Descargador de archivos | Alternativa a curl, soporta descargas recursivas |
+| **vim** | Editor de texto modal avanzado | Editor universal disponible en todos los servidores |
+| **micro** | Editor moderno con atajos estilo GUI | Alternativa a vim con curva de aprendizaje más suave (Ctrl+S, Ctrl+C) |
+| **tmux** | Multiplexor de terminal | Sesiones persistentes, ventanas/paneles, trabajo remoto sin pérdida de sesión |
+| **htop** / **btop** | Monitores de sistema interactivos | btop: Monitor moderno con gráficos; htop: Clásico ligero |
+| **build-essential** | Compiladores (gcc, g++, make) | Necesarios para compilar software desde fuente (ej: ble.sh, extensiones npm) |
+| **gawk** | Procesador de texto (GNU awk) | Requerido específicamente por ble.sh para procesamiento avanzado de texto |
+
+### Categoría: Herramientas Modernas de Terminal
+
+| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
+|:--------|:-----------|:------------------------|
+| **lsd** | Reemplazo moderno de `ls` | Listados con iconos, colores semánticos, y tree view integrado |
+| **bat** | Reemplazo de `cat` con syntax highlighting | Lectura de código con resaltado, integración Git, paginación automática |
+| **fzf** | Fuzzy finder interactivo | Búsqueda rápida de archivos, historial, comandos (Ctrl+R) |
+| **zoxide** | CD inteligente con aprendizaje | Salta a directorios frecuentes con `z nombre-parcial` |
+| **delta** | Visor de diffs Git mejorado | Diffs lado a lado con syntax highlighting |
+| **ripgrep** | Búsqueda de texto extremadamente rápida | Alternativa a `grep` 10x más rápida, respeta `.gitignore` |
+| **ranger** | File manager TUI con preview | Navegación visual de archivos con preview de imágenes/código |
+| **tldr** | Páginas de ayuda simplificadas | Alternativa a `man` con ejemplos prácticos concisos |
+| **ble.sh** | Bash Line Editor | Syntax highlighting en tiempo real, autosuggestions, mejor autocompletado |
+| **oh-my-posh** | Engine de prompts personalizados | Prompt informativo con Git status, duración de comandos, nivel de batería |
+
+### Categoría: Herramientas de Desarrollo
+
+| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
+|:--------|:-----------|:------------------------|
+| **GitHub CLI (gh)** | Cliente oficial de GitHub | Crear repos, PRs, releases desde terminal. Integrado con MCP de Gemini |
+| **Docker Engine** | Plataforma de containerización | Desarrollo sin contaminar el sistema, reproducibilidad, microservicios |
+| **docker-compose** | Orquestación de multi-containers | Definir stacks completos (app + DB + cache) en un solo archivo YAML |
+| **NVM** | Node Version Manager | Cambiar entre versiones de Node.js por proyecto |
+| **Node.js LTS** | Runtime de JavaScript | Necesario para herramientas modernas (Gemini CLI, npm globals) |
+| **lazydocker** | TUI para gestionar Docker | Interfaz visual para containers, logs, stats sin memorizar comandos |
+| **ctop** | Top para containers | Monitoreo en tiempo real de uso de recursos por container |
+| **gping** | Ping con gráficos | Diagnóstico de red visual con latencia histórica |
+
+### Categoría: Seguridad y Secretos
+
+| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
+|:--------|:-----------|:------------------------|
+| **age** | Encriptación de archivos moderna | Proteger `.env.age` con secretos (tokens, API keys) |
+| **Bitwarden CLI (bw)** | Gestor de contraseñas en terminal | Extracción automática de credenciales desde vault |
+| **xz-utils** | Compresor/descompresor XZ | Necesario para desempaquetar binarios npm y herramientas comprimidas |
+| **unzip** | Descompresor ZIP | Instalación de paquetes y extensiones distribuidas en .zip |
+
+### Categoría: Antigravity / Gemini
+
+| Componente | ¿Qué hace? | ¿Por qué lo instalamos? |
+|:-----------|:-----------|:------------------------|
+| **gemini-cli** | Cliente de Google Gemini | Asistente IA en terminal con acceso a MCP servers |
+| **GEMINI.md** | Reglas globales de desarrollo | Protocolo de Clean Code, Git Flow, Conventional Commits para IA |
+| **Workflows** | Comandos slash (`/commit`, `/release`) | Automatización de flujos Git con mejores prácticas incorporadas |
+| **MCP Extensions** | Chrome DevTools, GitHub, Postgres | Extienden capacidades de Gemini para debugging, Git, DB |
+
+---
+
+## 🎨 Módulos Disponibles
 
 ### Instalación Rápida (Agrupada)
 
@@ -240,14 +691,12 @@ flowchart TD
 > - **Opción 1 (TODO)**: Instala automáticamente todas las herramientas, incluido Gemini CLI si tienes Node.js
 > - **Opciones individuales**: Te pregunta antes de instalar paquetes opcionales como Gemini CLI
 
-> 🐧 **WSL**: Si estás en Windows Subsystem for Linux, lee la [Guía completa de WSL](docs/WSL.md) para evitar conflictos con binarios de Windows.
-
 ### 📦 Módulos de Sistema
 
 | Opción | Módulo            | Descripción                                                                                                      |
 | :----: | :---------------- | :--------------------------------------------------------------------------------------------------------------- |
 |   5    | Actualizar Sistema| Ejecuta `apt upgrade` / `dnf upgrade` / `pacman -Syu`                                                            |
-|   6    | Paquetes Base     | Instala: git, curl, vim, **micro**, **tldr**, tmux, fzf, ranger, **oh-my-posh**, **lsd**, **lazydocker**, **ctop**, **gping** y herramientas de compilación. |
+|   6    | Paquetes Base     | Instala: git, curl, vim, micro, tldr, tmux, fzf, ranger, oh-my-posh, lsd, lazydocker, ctop, gping y herramientas de compilación. |
 |   7    | Configurar Git    | Vincula `.gitconfig` con configuración global optimizada                                                         |
 |   8    | Importar Keys SSH | Importa llaves SSH públicas desde GitHub (via API)                                                               |
 |   9    | Sincronizar SSH   | Copia llaves SSH desde Windows a WSL (solo aplica en WSL)                                                        |
@@ -260,22 +709,6 @@ flowchart TD
 |   11   | NVM + Node.js | Instala Node Version Manager y la última versión LTS de Node.js        |
 |   12   | Globales NPM  | Instala globalmente: `@anthropics/claude-code`, `@bitwarden/cli`       |
 |   13   | Docker Engine | Instala Docker CE + Docker Compose con configuración de grupo `docker` |
-
-### 🛡️ Transparencia: ¿Qué estamos instalando?
-
-Para generar confianza, aquí detallamos el propósito de las librerías base que instalamos:
-
-| Librería / Tool          | Propósito                                                                               |
-| :----------------------- | :-------------------------------------------------------------------------------------- |
-| 🛠️ **Build Essentials** | `make`, `gcc`, `g++`, `build-essential`. Necesarios para compilar `ble.sh` y otros bins. |
-| 📋 **GNU AWK (gawk)**    | Requerido específicamente por `ble.sh` para el procesamiento avanzado de texto en Bash. |
-| 📦 **Modern Unix Tools** | `lsd`, `bat`, `zoxide`, `delta`, `micro`. Mejoran la visualización y edición de archivos. |
-| 📗 **TLDR / Help**       | `tldr`. Páginas de ayuda simplificadas para comandos comunes.                           |
-| 🐳 **Docker Suite**      | Docker Engine y Compose para containerización local.                                    |
-| 🔒 **Age / Secrets**     | Encriptación de nivel bancario para tus tokens y llaves privadas.                       |
-| 📦 **System Utils**      | `xz-utils`, `unzip`. Necesarios para descomprimir paquetes binarios (ej. herramientas npm). |
-
-> 💡 **Auditoría**: Puedes revisar los scripts en `scripts/*.sh` para ver cada comando `apt install` o `curl` ejecutado. No instalamos nada que no sea estándar o de código abierto.
 
 ### ☁️ Cloud & Integración IA
 
@@ -308,7 +741,7 @@ El sistema maneja dos niveles de secretos para facilitar la colaboración:
 1.  🥇 **`.env.local.age` (Prioridad Alta)**: Tu bóveda personal. Si existe, el sistema la usa y **ignora** la del repositorio. Este archivo está en `.gitignore` para que nunca se suba por error.
 2.  🥈 **`.env.age` (Fallback)**: La bóveda distribuida con el repositorio (útil para backup personal del autor).
  
-> 🔱 **Forks Safe**: Si haces fork de este proyecto, simplemente crea tu propia bóveda local (Opción 21). El sistema la priorizará automáticamente y te ofrecerá archivar la original.
+> 🔱 **Forks Safe**: Si haces fork de este proyecto, simplemente crea tu propia bóveda local (Opción 17). El sistema la priorizará automáticamente y te ofrecerá archivar la original.
  
 ### ¿Por qué Encriptar? (Importante)
  
@@ -361,8 +794,6 @@ bw config server https://bitwarden.com
 
 > 💡 **Creación Inicial**: Si aún no tienes un archivo `.env.age`, selecciona la opción **1**. El script creará uno nuevo, abrirá el editor y te pedirá una passphrase para encriptarlo al guardar.
 
-> ⚠️ **Seguridad**: El archivo `.env.age` está en el repositorio pero encriptado. Nunca subas `.env` en texto plano.
-
 ### Flujo de Descifrado
 
 ```mermaid
@@ -377,7 +808,7 @@ sequenceDiagram
     
     box rgb(30, 60, 50) Security Layer (Age)
         participant Local as 🏠 .env.local.age
-        participant Repo as � .env.age
+        participant Repo as 📦 .env.age
     end
     
     User->>Script: Ejecuta install/manage
@@ -407,153 +838,86 @@ sequenceDiagram
     end
 ```
 
-### ✨ Shell Inteligente (Ble.sh)
-
-Se incluye una configuración altamente optimizada de **Ble.sh** para Bash:
-*   **Zero-Lag Enter**: Configurado para ejecución inmediata (sin saltos de línea accidentales).
-*   **UI Transparente**: Autocompletado con estilo "Ghost" (gris sutil) sin fondos blancos intrusivos.
-*   **Tab-Completion**: Restaurado el comportamiento estándar de TAB para menú y completado.
-
 ---
 
-## 🐞 Antigravity en WSL: Guía Técnica
+## 🐧 Configuración WSL
+
+Si ejecutas estos dotfiles en **Windows Subsystem for Linux (WSL)**, el instalador aplica configuraciones especiales automáticamente.
+
+### 🛡️ Limpieza Automática del PATH
+
+**Problema detectado**: En WSL, el `PATH` incluye rutas de Windows (`/mnt/c/*`) que pueden causar conflictos con binarios de Linux.
+
+**Solución aplicada**: El instalador agrega automáticamente a tu `.bashrc`:
+
+```bash
+# WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    # Filtrar rutas de /mnt/* del PATH
+    NEW_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v '^/mnt/' | tr '\n' ':' | sed 's/:$//')
+    export PATH="$NEW_PATH"
+fi
+```
+
+#### ¿Por qué es necesario?
+
+| Problema | Consecuencia | Solución |
+| :------- | :----------- | :------- |
+| `nvm4w` de Windows en PATH | `gemini` o `node` detectados en `/mnt/c/` no funcionan desde WSL | PATH filtrado, solo binarios de Linux |
+| Extensiones MCP de Gemini fallan | Timeout o error: "Sin salida del comando" | Gemini instalado vía npm DENTRO de WSL |
+| Git de Windows invocado | Problemas con line endings (CRLF vs LF) | Usa `git` de `/usr/bin/` exclusivamente |
+
+### 🎯 Mejores Prácticas en WSL
+
+| Herramienta | ✅ Correcto (Linux) | ❌ Incorrecto (Windows) |
+| :---------- | :------------------- | :----------------------- |
+| **Node.js** | `nvm install node` en WSL | `nvm4w` desde PowerShell |
+| **npm global** | `npm install -g` en WSL | `npm install -g` en CMD |
+| **Git** | `/usr/bin/git` | `/mnt/c/Program Files/Git/bin/git` |
+| **Docker** | Docker Desktop WSL 2 | Docker Toolbox |
+| **SSH Keys** | Copiar con opción "9) SSH desde Windows" | Symlink a `/mnt/c/Users/.../.ssh` |
+
+> 💡 **Verificación**: Ejecuta `which node` y `which git`. Ambos deben apuntar a rutas en `/home/` o `/usr/bin/`, **nunca** a `/mnt/c/`.
+
+### 🤖 Antigravity en WSL: Guía Técnica
 
 El instalador incluye una lógica de **Detección y Reparación Inteligente** para la CLI de Antigravity (`agy`) en WSL.
 
-### 🤖 Comportamiento del Script Automático (`system.sh`)
+#### Comportamiento del Script Automático (`system.sh`)
 
 1.  **Detección de Entorno**: Identifica si corre en WSL. Si es un servidor Linux estándar, se omite inofensivamente.
 2.  **Búsqueda de Usuario Windows**: Usa 3 estrategias (PATH, ruta absoluta y escaneo heurístico de `/mnt/c/Users`) para encontrar tu usuario de Windows, incluso si has limpiado el PATH.
 3.  **Symlink Automático**: Vincula `~/.local/bin/agy` -> `antigravity.exe` de Windows.
-4.  **Gestión de ID de Extensión (Lo Importante)**:
-    *   **Modo Seguro (Default)**: Si la carpeta de la extensión tiene el nombre antiguo (`ms-vscode-remote...`), el script asegura que el lanzador use el ID `ms-vscode-remote.remote-wsl`. Esto garantiza que `agy .` abra siempre (en modo compatibilidad de red).
-    *   **Auto-Reparación**: Si detecta que el ID está configurado a `google...` pero la carpeta no existe (configuración rota), lo **revierte automáticamente** para arreglar el error "No such file".
+4.  **Gestión de ID de Extensión**:
+    *   **Modo Seguro (Default)**: Si la carpeta de la extensión tiene el nombre antiguo (`ms-vscode-remote...`), el script asegura que el lanzador use el ID `ms-vscode-remote.remote-wsl`.
+    *   **Auto-Reparación**: Si detecta que el ID está configurado a `google...` pero la carpeta no existe, lo **revierte automáticamente**.
     *   **Modo Nativo**: Solo si detecta manualmente la carpeta `antigravity-remote-wsl`, aplica el parche para usar el ID de Google.
 
-### ⚡ Cómo activar el "Modo Nativo" (Opcional)
+#### ⚡ Cómo activar el "Modo Nativo" (Opcional)
 
-Por defecto, `agy` abrirá como una carpeta de red (`\\wsl.localhost\...`). Si deseas la integración nativa completa (terminal Linux rápida):
+Por defecto, `agy` abrirá como una carpeta de red (`\\wsl.localhost\...`). Si deseas la integración nativa completa:
 
-1.  En Windows, ve a: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\resources\app\extensions\`
-2.  Copia la carpeta `ms-vscode-remote.remote-wsl`.
-3.  Pega y renombra la copia a: `antigravity-remote-wsl`.
-4.  Ejecuta `./install.sh` (Opción 6) nuevamente.
-    *   El script detectará la nueva carpeta y activará el **Modo Nativo** automáticamente.
+1.  En Windows: `C:\Users\TU_USUARIO\AppData\Local\Programs\Antigravity\resources\app\extensions\`
+2.  Copia la carpeta `ms-vscode-remote.remote-wsl` → Pega y renombra a: `antigravity-remote-wsl`
+3.  Ejecuta `./install.sh` (Opción 6) nuevamente
 
----
+### 🚀 Instalación Recomendada en WSL
 
-
-## 🔑 Guía Maestra de SSH y WSL
-
-Esta sección es crítica si usas **Windows con WSL** o necesitas **Agent Forwarding** (usar tus llaves locales dentro de contenedores o servidores remotos).
-
-### 1. Generar Llaves en Windows (Si aún no tienes)
-Si es tu primera vez, genera tus llaves desde **PowerShell** en Windows:
-
-```powershell
-# En PowerShell (Windows)
-ssh-keygen -t ed25519 -C "tucorreo@ejemplo.com"
-# Presiona Enter para guardar en la ruta por defecto (C:\Users\TuUsuario\.ssh\id_ed25519)
-```
-
-### 2. Agregar Llave Pública a GitHub
-Para que GitHub te reconozca, debes subir tu llave pública:
-
-1. Copia el contenido de la llave pública:
-   - **Windows**: `cat ~/.ssh/id_ed25519.pub | clip` (en Git Bash/PowerShell)
-   - **WSL**: `cat /mnt/c/Users/TU_USUARIO/.ssh/id_ed25519.pub`
-2. Ve a [GitHub Settings > SSH and GPG keys](https://github.com/settings/keys).
-3. Click en **New SSH key**, pega el contenido y guarda.
-
-### 3. Copiar Llaves de Windows a WSL
-WSL es un sistema Linux "separado", por lo que necesita sus propias copias de las llaves (o acceso a ellas).
-
-**Método Recomendado (Script Automático):**
-Ejecuta el instalador y elige la opción **9**:
 ```bash
+# 1. Clonar dotfiles
+git clone git@github.com:herwingx/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+
+# 2. Ejecutar instalación completa
 ./install.sh
-# Opción 9) 🪟 Copiar SSH desde Windows
-```
+# Selecciona opción [1] Instalar TODO
 
-**Método Manual:**
-```bash
-# 1. Copiar llaves
-cp -r /mnt/c/Users/TU_USUARIO/.ssh/id* ~/.ssh/
+# 3. Verificar que Node.js/npm están en WSL (no en Windows)
+which node  # Debe devolver: /home/USER/.nvm/versions/node/vX.X.X/bin/node
+which git   # Debe devolver: /usr/bin/git
 
-# 2. Asignar permisos seguros (CRÍTICO)
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/id_*
-chmod 644 ~/.ssh/*.pub
-```
-
-### 4. Activar SSH Agent (Para Forwarding)
-El **Agent Forwarding** permite que tus llaves "viajen" contigo a través de conexiones SSH.
-
-1. **Asegúrate que el agente corre en tu terminal:**
-   El archivo `.bashrc` incluido configura esto automáticamente, pero puedes verificarlo:
-   ```bash
-   echo $SSH_AUTH_SOCK
-   # Debe mostrar una ruta como: /tmp/ssh-XXXXXX/agent.PID
-   ```
-
-2. **Cargar tu llave al agente:**
-   ```bash
-   ssh-add ~/.ssh/id_ed25519
-   ```
-
-3. **Verificar que la llave está cargada:**
-   ```bash
-   ssh-add -l
-   # Debe listar tu llave: "SHA256:... tucorreo@ejemplo.com"
-   ```
-
-### 5. Configurar Forwarding (vm-to-host)
-Para usar tus llaves locales dentro de servidores remotos o VMs (sin copiarlas ahí):
-
-1. Edita `~/.ssh/config`:
-   ```ssh
-   Host *
-       ForwardAgent yes
-   ```
-
-2. **Prueba de Fuego (Test de Forwarding):**
-   Conéctate a tu servidor/VM y desde *allí* verifica si ves tus llaves locales:
-   ```bash
-   # En tu máquina local:
-   ssh usuario@tu-servidor
-
-   # YA DENTRO del servidor remoto:
-   ssh-add -l
-   # ¡Si ves tu llave local aquí, el forwarding funciona! 🎉
-   ```
-
-### 6. Ejemplo de Archivo de Configuración (`~/.ssh/config`)
-Si no tienes este archivo, créalo. Aquí tienes una plantilla robusta:
-
-```ssh
-# ~/.ssh/config
-
-# --- GLOBAL ---
-# Aplica a todos los hosts
-Host *
-    ForwardAgent yes
-    AddKeysToAgent yes
-    # Evita timeouts en conexiones inactivas
-    ServerAliveInterval 60
-    ServerAliveCountMax 120
-
-# --- GITHUB ---
-# Asegura que siempre se use el usuario 'git'
-Host github.com
-    User git
-    IdentityFile ~/.ssh/id_ed25519
-
-# --- SERVIDORES DE TRABAJO (Ejemplo) ---
-# Host alias
-Host mi-servidor
-    HostName 192.168.1.50
-    User ubuntu
-    IdentityFile ~/.ssh/id_ed25519
+# 4. Si instalaste Gemini CLI, verificar extensiones MCP
+gemini extensions list
 ```
 
 ---
@@ -601,6 +965,77 @@ Este dotfiles incluye aliases modernos para mejorar la productividad. Se instala
 
 ---
 
+## 📚 Documentación
+
+| Documento                                      | Descripción                                                               |
+| :--------------------------------------------- | :------------------------------------------------------------------------ |
+| [gemini/README.md](gemini/README.md)           | **Guía completa de Antigravity**: Extensiones MCP, workflows, instalación |
+| [GEMINI.md](gemini/GEMINI.md)                  | **Protocolo Antigravity**: Reglas globales para asistentes IA             |
+| [Workflows](gemini/workflows/)                 | Flujos automatizados: `/commit`, `/release`, `/publicar`                  |
+| [manage_secrets.sh](scripts/manage_secrets.sh) | Script para editar/ver secretos encriptados                               |
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### Core
+
+| Tecnología        | Uso                                       |
+| :---------------- | :---------------------------------------- |
+| **Bash**          | Scripting y automatización del instalador |
+| **Age**           | Encriptación de secretos (`.env.age`)     |
+| **Bitwarden CLI** | Gestión segura de credenciales            |
+| **rclone**        | Sincronización con almacenamiento cloud   |
+
+### Herramientas de Terminal
+
+| Herramienta    | Descripción                                    |
+| :------------- | :--------------------------------------------- |
+| **Atuin**      | Historial de shell mágico con sync en la nube  |
+| **lsd**        | Reemplazo moderno de `ls` con iconos y colores |
+| **Oh My Posh** | Motor de temas para prompt personalizado       |
+| **fzf**        | Fuzzy finder para búsqueda interactiva         |
+| **tmux**       | Multiplexor de terminal                        |
+| **ranger**     | File manager con preview en terminal           |
+| **lazydocker** | TUI para gestionar Docker                      |
+| **ctop**       | Top para containers Docker                     |
+| **gping**      | Ping visual con gráficos                       |
+| **btop**       | Monitor de recursos moderno                    |
+| **ble.sh**     | Bash Line Editor (Syntax highlight, completion) |
+
+### Desarrollo
+
+| Herramienta    | Descripción                           |
+| :------------- | :------------------------------------ |
+| **Git**        | Versionado con configuración avanzada |
+| **Docker**     | Contenedorización                     |
+| **NVM**        | Gestión de versiones de Node.js       |
+| **GitHub CLI** | Interacción con GitHub desde terminal |
+
+### 🚀 Configuración de Atuin (Historial Inteligente)
+
+**Atuin** potencia tu historial de comandos con búsqueda, sincronización en la nube y estadísticas.
+
+#### Configuración Inicial
+
+```bash
+# 1. Registrarse (primera vez)
+atuin register -u <USUARIO> -e <EMAIL>
+
+# 2. Login (si ya tienes cuenta)
+atuin login -u <USUARIO>
+
+# 3. Importar historial existente
+atuin import auto
+
+# 4. Sincronizar
+atuin sync
+```
+
+> 💡 **Uso**: Presiona `Ctrl+R` o `Flecha Arriba` para buscar en tu historial mágico con filtros avanzados.
+
+---
+
 ## 🧠 Filosofía de Desarrollo
 
 Las decisiones técnicas de este proyecto buscan **estabilidad, reversibilidad y velocidad**.
@@ -642,65 +1077,32 @@ gh release create v1.0.0 --generate-notes
 
 ---
 
-## 📚 Documentación
+## 🔧 Orden de Inicialización en .bashrc
 
-| Documento                                      | Descripción                                                               |
-| :--------------------------------------------- | :------------------------------------------------------------------------ |
-| [gemini/README.md](gemini/README.md)           | **Guía completa de Antigravity**: Extensiones MCP, workflows, instalación |
-| [GEMINI.md](gemini/GEMINI.md)                  | **Protocolo Antigravity**: Reglas globales para asistentes IA             |
-| [Workflows](gemini/workflows/)                 | Flujos automatizados: `/commit`, `/release`, `/publicar`                  |
-| [manage_secrets.sh](scripts/manage_secrets.sh) | Script para editar/ver secretos encriptados                               |
-
----
-
-## 🛠️ Stack Tecnológico
-
-### Core
-
-| Tecnología        | Uso                                       |
-| :---------------- | :---------------------------------------- |
-| **Bash**          | Scripting y automatización del instalador |
-| **Age**           | Encriptación de secretos (`.env.age`)     |
-| **Bitwarden CLI** | Gestión segura de credenciales            |
-| **rclone**        | Sincronización con almacenamiento cloud   |
-
-### Herramientas de Terminal
-
-| Herramienta    | Descripción                                    |
-| :------------- | :--------------------------------------------- |
-| **Atuin**      | Historial de shell mágico con sync en la nube  |
-| **lsd**        | Reemplazo moderno de `ls` con iconos y colores |
-| **Oh My Posh** | Motor de temas para prompt personalizado       |
-| **fzf**        | Fuzzy finder para búsqueda interactiva         |
-| **tmux**       | Multiplexor de terminal                        |
-| **ranger**     | File manager con preview en terminal           |
-| **lazydocker** | TUI para gestionar Docker                      |
-| **ctop**       | Top para containers Docker                     |
-| **gping**      | Ping visual con gráficos                       |
-| **btop**       | Monitor de recursos moderno                    |
-| **ble.sh**     | Bash Line Editor (Syntax highlight, completion) |
-| **build-tools**| Make, GCC, Gawk (Necesarios para `ble.sh`)     |
-
-### 🚀 Configuración de Atuin (Historial)
-
-Para habilitar la sincronización de historial entre tus máquinas:
+Este dotfiles configura tu `.bashrc` con un orden específico para evitar conflictos entre herramientas:
 
 ```bash
-# 1. Registrarse (primera vez)
-atuin register -u <USUARIO> -e <EMAIL>
+# 1. BLE.sh source (DEBE ser la primera línea)
+[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
 
-# 2. Login (si ya tienes cuenta)
-atuin login -u <USUARIO>
+# 2. Configuraciones del sistema (PATH, aliases, etc.)
+# ...
 
-# 3. Importar historial existente
-atuin import auto
+# 3. Herramientas de shell
+eval "$(atuin init bash)"
+eval "$(zoxide init bash)"
+eval "$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
 
-# 4. Sincronizar
-atuin sync
+# 4. Variables de entorno
+export GITHUB_PERSONAL_ACCESS_TOKEN="..."
+
+# 5. BLE.sh attach (DEBE ser la última línea)
+[[ ${BLE_VERSION-} ]] && ble-attach
 ```
-> 💡 Usa `Ctrl-R` o `Flecha Arriba` para buscar en tu historial mágico.
 
-> 💡 Usa `Ctrl-R` o `Flecha Arriba` para buscar en tu historial mágico.
+> ⚠️ **CRÍTICO**: `ble-attach` **DEBE** ser la última línea absoluta del `.bashrc`. Cualquier comando después de `ble-attach` puede causar comportamientos inesperados en el syntax highlighting y autosuggestions.
+
+> 📘 **Referencia**: [Documentación oficial de BLE.sh - Use with other frameworks](https://github.com/akinomyoga/ble.sh#use-with-other-frameworks)
 
 ---
 
@@ -737,51 +1139,6 @@ El script **NO** desinstala paquetes instalados globalmente para evitar romper d
 | `lsd`, `bat`, `ripgrep` | Paquetes del sistema |
 | `nvm` y Node.js | Gestor de versiones (puede tener proyectos dependientes) |
 
-> 💡 **Tip**: Si deseas eliminar también los paquetes del sistema, hazlo manualmente con tu gestor de paquetes:
-> ```bash
-> # Debian/Ubuntu
-> sudo apt remove docker-ce gh tmux fzf
-> 
-> # Fedora/RHEL
-> sudo dnf remove docker-ce gh tmux fzf
-> ```
-
-### 🔧 **Orden de Inicialización en .bashrc (Importante)**
-
-Este dotfiles configura tu `.bashrc` con un orden específico para evitar conflictos entre herramientas:
-
-```bash
-# 1. BLE.sh source (DEBE ser la primera línea)
-[[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
-
-# 2. Configuraciones del sistema (PATH, aliases, etc.)
-# ...
-
-# 3. Herramientas de shell
-eval "$(atuin init bash)"
-eval "$(zoxide init bash)"
-eval "$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
-
-# 4. Variables de entorno
-export GITHUB_PERSONAL_ACCESS_TOKEN="..."
-
-# 5. BLE.sh attach (DEBE ser la última línea)
-[[ ${BLE_VERSION-} ]] && ble-attach
-```
-
-> ⚠️ **CRÍTICO**: `ble-attach` **DEBE** ser la última línea absoluta del `.bashrc`. Cualquier comando después de `ble-attach` puede causar comportamientos inesperados en el syntax highlighting y autosuggestions.
-
-> 📘 **Referencia**: [Documentación oficial de BLE.sh - Use with other frameworks](https://github.com/akinomyoga/ble.sh#use-with-other-frameworks)
-
-### Desarrollo
-
-| Herramienta    | Descripción                           |
-| :------------- | :------------------------------------ |
-| **Git**        | Versionado con configuración avanzada |
-| **Docker**     | Contenedorización                     |
-| **NVM**        | Gestión de versiones de Node.js       |
-| **GitHub CLI** | Interacción con GitHub desde terminal |
-
 ---
 
 ## 🔒 Seguridad
@@ -793,6 +1150,115 @@ export GITHUB_PERSONAL_ACCESS_TOKEN="..."
 | ✅ **SSH Keys seguras**       | Importación automática sin exponer archivos                            |
 | ✅ **Permisos correctos**     | Scripts configuran `chmod 600` para archivos sensibles automáticamente |
 | ✅ **No auto-run peligroso**  | Comandos destructivos requieren aprobación explícita                   |
+
+---
+
+## ❓ FAQ y Troubleshooting
+
+### Problemas comunes y soluciones
+
+#### 🔴 Error: "Permission denied (publickey)" al clonar
+
+**Causa**: Git no encuentra tu llave SSH o GitHub no la reconoce.
+
+**Solución**:
+```bash
+# 1. Verificar que el agente SSH tiene tu llave
+ssh-add -l
+
+# 2. Si está vacío, agregar la llave
+ssh-add ~/.ssh/id_ed25519
+
+# 3. Probar conexión con GitHub
+ssh -T git@github.com
+
+# Deberías ver: "Hi TU_USUARIO! You've successfully authenticated..."
+```
+
+#### 🔴 BLE.sh muestra errores al iniciar terminal
+
+**Causa**: Conflicto en el orden de inicialización en `.bashrc`.
+
+**Solución**:
+```bash
+# Verificar que ble.sh está primero y ble-attach está último
+head -5 ~/.bashrc  # Debe mostrar ble.sh --noattach
+tail -5 ~/.bashrc  # Debe mostrar ble-attach
+
+# Si no, re-ejecuta la opción 6 del instalador
+./install.sh
+# Selecciona [6] Paquetes Base
+```
+
+#### 🔴 WSL: "agy: command not found"
+
+**Causa**: Symlink de Antigravity no se creó correctamente.
+
+**Solución**:
+```bash
+# Re-ejecutar configuración de Antigravity
+./install.sh
+# Selecciona [6] Paquetes Base (incluye configuración de WSL)
+```
+
+#### 🔴 Docker: "permission denied while trying to connect to the Docker daemon socket"
+
+**Causa**: Tu usuario no está en el grupo `docker`.
+
+**Solución**:
+```bash
+# Agregar usuario al grupo docker
+sudo usermod -aG docker $USER
+
+# IMPORTANTE: Cerrar sesión y volver a iniciar
+# O ejecutar:
+newgrp docker
+
+# Verificar
+docker ps  # Debe funcionar sin sudo
+```
+
+#### 🔴 Oh My Posh no muestra iconos / caracteres extraños
+
+**Causa**: Tu terminal no usa una Nerd Font.
+
+**Solución**:
+1. Descarga e instala [Maple Mono NF](https://www.nerdfonts.com/font-downloads) (recomendada)
+2. Configura tu terminal para usar esa fuente:
+   - **Windows Terminal**: Settings → Defaults → Appearance → Font face
+   - **VSCode**: `"terminal.integrated.fontFamily": "Maple Mono NF"`
+   - **iTerm2** (Mac): Preferences → Profiles → Text → Font
+
+#### 🔴 Gemini CLI: "No such file or directory: gemini"
+
+**Causa**: Node.js no está instalado o no está en el PATH.
+
+**Solución**:
+```bash
+# Verificar Node.js
+node --version
+
+# Si no está instalado, ejecutar
+./install.sh
+# Selecciona [11] NVM + Node.js
+
+# Luego instalar Gemini CLI manualmente
+npm install -g @google/generative-ai-cli
+```
+
+#### 🔴 Age: "Error: could not decrypt"
+
+**Causa**: Contraseña incorrecta al desencriptar `.env.age`.
+
+**Solución**:
+```bash
+# Si olvidaste tu contraseña, crea una nueva bóveda
+./install.sh
+# Selecciona [17] Crear Nueva Bóveda (Reset Secrets)
+
+# Luego edita tu nueva bóveda con tus secretos
+./scripts/manage_secrets.sh
+```
 
 ---
 
