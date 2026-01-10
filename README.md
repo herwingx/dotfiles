@@ -30,6 +30,7 @@
 - [🎨 Módulos Disponibles](#-módulos-disponibles)
 - [🔐 Gestión de Secretos](#-gestión-de-secretos-envage)
 - [🐧 Configuración WSL (Antigravity)](#-configuración-wsl)
+- [🧩 Instalación de Extensiones](#-instalación-de-extensiones-antigraviyvscode)
 - [🔧 Aliases Incluidos](#-aliases-incluidos)
 - [📚 Documentación](#-documentación)
 - [🛠️ Stack Tecnológico](#️-stack-tecnológico)
@@ -918,6 +919,95 @@ which git   # Debe devolver: /usr/bin/git
 
 # 4. Si instalaste Gemini CLI, verificar extensiones MCP
 gemini extensions list
+```
+
+---
+
+## 🧩 Instalación de Extensiones (Antigravity/VSCode)
+
+Este proyecto incluye un archivo `.vscode-extensions` con todas las extensiones recomendadas para un entorno de desarrollo completo. Puedes instalarlas automáticamente en una nueva máquina.
+
+### 📋 Extensiones Incluidas
+
+| Extensión | Descripción |
+|:----------|:------------|
+| `aaron-bond.better-comments` | Comentarios mejorados con colores semánticos (TODO, FIXME, !) |
+| `astro-build.astro-vscode` | Soporte oficial para Astro framework |
+| `bierner.markdown-preview-github-styles` | Preview de Markdown con estilos de GitHub |
+| `bradlc.vscode-tailwindcss` | IntelliSense para Tailwind CSS |
+| `christian-kohler.npm-intellisense` | Autocompletado de imports npm |
+| `dbaeumer.vscode-eslint` | Integración completa de ESLint |
+| `formulahendry.auto-rename-tag` | Renombrado automático de tags HTML/JSX |
+| `github.github-vscode-theme` | Temas oficiales de GitHub (Dark/Light) |
+| `github.vscode-github-actions` | Gestión de GitHub Actions en el editor |
+| `github.vscode-pull-request-github` | Revisión de PRs desde el editor |
+| `google.gemini-cli-vscode-ide-companion` | Companion para Gemini CLI (MCP support) |
+| `google.geminicodeassist` | Asistente de código con Gemini AI |
+| `henrikdev.ag-quota` | Monitor de cuota de Antigravity |
+| `mhutchie.git-graph` | Visualizador gráfico de historial Git |
+| `ms-azuretools.vscode-containers` | Soporte para Dev Containers |
+| `ms-azuretools.vscode-docker` | Gestión de Docker (Compose, Dockerfiles) |
+| `ms-vscode.live-server` | Live Server oficial de Microsoft |
+| `oderwat.indent-rainbow` | Colores por niveles de indentación |
+| `pkief.material-icon-theme` | Iconos Material Design para archivos |
+| `pranaygp.vscode-css-peek` | Saltar a definiciones CSS desde HTML |
+| `redhat.vscode-yaml` | Soporte avanzado de YAML con schemas |
+| `ritwickdey.liveserver` | Live Server con auto-reload |
+| `vue.volar` | Soporte oficial de Vue 3 (Volar) |
+
+### 🚀 Instalación Automatizada
+
+#### Linux / WSL (Bash o Zsh)
+
+```bash
+# Opción 1: Desde archivo (recomendado)
+xargs -a ~/.vscode-extensions -L1 antigravity --install-extension
+
+# Opción 2: Desde lista activa (copiar extensiones de otra máquina)
+antigravity --list-extensions | grep '\.' | xargs -L1 antigravity --install-extension
+```
+
+> **📘 Explicación**: 
+> - `grep '\.'`: Filtra líneas con punto (ignora encabezados de texto)
+> - `xargs -L1`: Ejecuta el comando una vez por cada línea
+> - Si ves que están instaladas, el comando solo las valida (sin reinstalar)
+
+#### Windows (PowerShell)
+
+```powershell
+# Opción 1: Desde archivo
+Get-Content $HOME\.vscode-extensions | ForEach-Object { antigravity --install-extension $_ }
+
+# Opción 2: Desde lista activa
+antigravity --list-extensions | Where-Object { $_ -match '\.' } | ForEach-Object { antigravity --install-extension $_ }
+```
+
+### 💡 Tips Útiles
+
+| Acción | Comando |
+|:-------|:--------|
+| **Listar extensiones instaladas** | `antigravity --list-extensions` |
+| **Desinstalar extensión** | `antigravity --uninstall-extension <id>` |
+| **Actualizar extensión** | `antigravity --install-extension <id> --force` |
+| **Exportar lista actualizada** | `antigravity --list-extensions > ~/.vscode-extensions` |
+| **Agregar `antigravity` al PATH** | F1 → "Shell Command: Install 'antigravity' command in PATH" |
+
+### 🔧 Troubleshooting
+
+**Problema**: `antigravity: command not found`
+
+**Solución**:
+1. Abre Antigravity/VSCode
+2. Presiona `F1` o `Ctrl+Shift+P`
+3. Busca: **"Shell Command: Install 'antigravity' command in PATH"**
+4. Reinicia la terminal
+
+**Problema**: Error de permisos en WSL
+
+**Solución**: Asegúrate de que el comando `antigravity` apunte a la versión de Windows:
+```bash
+which antigravity
+# Debe mostrar: /home/USER/.local/bin/agy (symlink a antigravity.exe de Windows)
 ```
 
 ---
