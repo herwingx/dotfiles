@@ -51,13 +51,14 @@ install_packages() {
     if [ -f /etc/debian_version ]; then
         echo -e "${CYAN}   Detectado: Debian/Ubuntu (apt)${NC}"
         $SUDO_CMD apt-get update -y
-        $SUDO_CMD apt-get install -y "${PACKAGES[@]}" build-essential dnsutils w3m-img
+        $SUDO_CMD apt-get install -y "${PACKAGES[@]}" build-essential dnsutils w3m-img age
     elif [ -f /etc/redhat-release ]; then
         echo -e "${CYAN}   Detectado: Fedora/RHEL (dnf)${NC}"
-        $SUDO_CMD dnf install -y "${PACKAGES[@]}" bind-utils w3m-img
+        $SUDO_CMD dnf groupinstall -y "Development Tools"
+        $SUDO_CMD dnf install -y "${PACKAGES[@]}" bind-utils w3m-img age
     elif [ -f /etc/arch-release ]; then
         echo -e "${CYAN}   Detectado: Arch Linux (pacman)${NC}"
-        $SUDO_CMD pacman -Syu --noconfirm "${PACKAGES[@]}" bind w3m
+        $SUDO_CMD pacman -Syu --noconfirm base-devel "${PACKAGES[@]}" bind w3m age
     else
         echo -e "${RED}>>> Sistema no soportado para instalación automática${NC}"
         echo -e "${YELLOW}   Instala manualmente: ${PACKAGES[*]}${NC}"
@@ -434,6 +435,13 @@ install_blesh() {
     
     # 1. Instalación/Compilación robusta
     if [ ! -d "$BLESH_DIR" ] || [ ! -f "$BLESH_DIR/ble.sh" ]; then
+         # Verificar dependencias críticas antes de intentar
+         if ! command -v make &> /dev/null || ! command -v gawk &> /dev/null; then
+             echo -e "${RED}   ✗ Faltan dependencias para compilar ble.sh (make, gawk)${NC}"
+             echo -e "${YELLOW}   Intentando instalar dependencias faltantes...${NC}"
+             install_packages
+         fi
+
          echo -e "${CYAN}   Clonando y compilando ble.sh...${NC}"
          rm -rf /tmp/ble.sh
          if ! git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh; then
