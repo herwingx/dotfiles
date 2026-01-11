@@ -93,7 +93,21 @@ install_nvm_node() {
     
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
     
+    # Asegurar persistencia en .bashrc
+    BASHRC="$HOME/.bashrc"
+    if ! grep -q "export NVM_DIR" "$BASHRC"; then
+        echo -e "${CYAN}   Configurando NVM en .bashrc...${NC}"
+        cat >> "$BASHRC" <<'EOF'
+
+# NVM Configuration
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+EOF
+    fi
+
     # Obtener versión LTS remota
     LTS_VERSION=$(nvm version-remote --lts)
     CURRENT_VERSION=$(node -v 2>/dev/null)
@@ -110,8 +124,8 @@ install_nvm_node() {
     fi
     
     echo -e "${CYAN}   ✓ NVM y Node.js configurados${NC}"
-    echo -e "${CYAN}   Node: $(node --version 2>/dev/null || echo 'reinicia terminal')${NC}"
-    echo -e "${CYAN}   npm: $(npm --version 2>/dev/null || echo 'reinicia terminal')${NC}"
+    echo -e "${CYAN}   Node: $(node --version 2>/dev/null || echo 'Pendiente de recarga')${NC}"
+    echo -e "${CYAN}   npm: $(npm --version 2>/dev/null || echo 'Pendiente de recarga')${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────
