@@ -590,8 +590,25 @@ install_atuin() {
     echo -e "${GREEN}>>> Instalando Atuin...${NC}"
     
     if ! command -v atuin &> /dev/null; then
-        echo -e "${CYAN}   Descargando e instalando Atuin...${NC}"
-        curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh | bash
+        if [ -f /etc/redhat-release ]; then
+            echo -e "${CYAN}   Detectado Fedora: Instalando desde repositorios oficiales...${NC}"
+            $SUDO_CMD dnf install -y atuin
+        elif [ -f /etc/arch-release ]; then
+            echo -e "${CYAN}   Detectado Arch: Instalando desde repositorios oficiales...${NC}"
+            $SUDO_CMD pacman -S atuin --noconfirm
+        elif [ -f /etc/debian_version ]; then
+            echo -e "${CYAN}   Detectado Debian/Ubuntu: Intentando instalación nativa (apt)...${NC}"
+            # Intentar apt primero (Ubuntu 24.04+ tiene atuin)
+            if ! $SUDO_CMD apt-get install -y atuin 2>/dev/null; then
+                 echo -e "${YELLOW}   ! Paquete no encontrado en apt (versión antigua). Usando script oficial...${NC}"
+                 curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh | bash
+            fi
+        else
+            # Fallback genérico
+            echo -e "${CYAN}   Sistema no específico detectado: Usando script oficial...${NC}"
+            curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh | bash
+        fi
+
         echo -e "${CYAN}   ✓ Atuin instalado${NC}"
     else
         echo -e "${YELLOW}   ! Atuin ya está instalado${NC}"
