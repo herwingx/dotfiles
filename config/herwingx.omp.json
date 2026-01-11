@@ -5,7 +5,7 @@
       "alignment": "left",
       "segments": [
         {
-          "foreground": "#61AFEF",
+          "foreground": "#00FF9C",
           "foreground_templates": [
             "{{ if eq .Env.USER \"root\" }}#E06C75{{ end }}"
           ],
@@ -16,11 +16,11 @@
         {
           "foreground": "#d4d4d4",
           "style": "plain",
-          "template": "{{ if .WSL }}<#e96d15>wsl</><#5c6370>:{{ end }}{{ if .Root }}<#E06C75>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#61AFEF>{{ .UserName }}</><#61AFEF>@</><#61AFEF>{{ .HostName }}</>{{ end }}",
+          "template": "{{ if .WSL }}<#00FF9C>wsl</><#5c6370>:</>{{ end }}{{ if .Root }}<#FF0000>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#00FF9C>{{ .UserName }}@{{ .HostName }}</>{{ end }}",
           "type": "session"
         },
         {
-          "foreground": "#C678DD",
+          "foreground": "#0BC5EA",
           "options": {
             "style": "folder"
           },

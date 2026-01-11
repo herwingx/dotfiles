@@ -15,7 +15,7 @@ alias reload='exec bash'
 if command -v dircolors &> /dev/null; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 fi
-export LS_COLORS="${LS_COLORS}:di=01;35"
+export LS_COLORS="${LS_COLORS}:di=01;36"
 
 # -----------------------------------------------------------------------------
 # LSD (LSDeluxe) - Reemplazo moderno de ls
