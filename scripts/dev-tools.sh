@@ -11,6 +11,10 @@
 # Instala GitHub CLI (gh) y ejecuta autenticación automática.
 # Soporta Debian/Ubuntu, Fedora/RHEL y Arch Linux.
 # ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# Instala GitHub CLI (gh) y ejecuta autenticación automática.
+# Soporta Debian/Ubuntu, Fedora/RHEL y Arch Linux.
+# ─────────────────────────────────────────────────────────────
 install_gh_cli() {
     echo -e "${GREEN}>>> Instalando GitHub CLI (gh)...${NC}"
     
@@ -24,8 +28,8 @@ install_gh_cli() {
             $SUDO_CMD apt-get update
             $SUDO_CMD apt-get install gh -y
         elif [ -f /etc/redhat-release ]; then
-            $SUDO_CMD dnf install 'dnf-command(config-manager)' -y
-            $SUDO_CMD dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+            # Robust method: Download repo file directly (works for dnf4 and dnf5)
+            $SUDO_CMD wget -O /etc/yum.repos.d/gh-cli.repo https://cli.github.com/packages/rpm/gh-cli.repo
             $SUDO_CMD dnf install gh -y
         elif [ -f /etc/arch-release ]; then
             $SUDO_CMD pacman -S github-cli --noconfirm
@@ -84,6 +88,8 @@ gh_auth_login() {
 install_nvm_node() {
     echo -e "${GREEN}>>> Instalando NVM y Node.js...${NC}"
     
+    export NVM_DIR="$HOME/.nvm"
+    
     if [ -d "$HOME/.nvm" ]; then
         echo -e "${YELLOW}   ! NVM ya está instalado${NC}"
     else
@@ -91,7 +97,7 @@ install_nvm_node() {
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
     fi
     
-    export NVM_DIR="$HOME/.nvm"
+    # Load NVM for this session
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
     
@@ -108,24 +114,27 @@ export NVM_DIR="$HOME/.nvm"
 EOF
     fi
 
-    # Obtener versión LTS remota
-    LTS_VERSION=$(nvm version-remote --lts)
-    CURRENT_VERSION=$(node -v 2>/dev/null)
-    
-    if [ "$CURRENT_VERSION" = "$LTS_VERSION" ]; then
-        echo -e "${YELLOW}   ! Node.js ya está en la última LTS ($current_version)${NC}"
+    # Force check nvm existence
+    if command -v nvm &> /dev/null; then
+        # Obtener versión LTS remota
+        LTS_VERSION=$(nvm version-remote --lts)
+        CURRENT_VERSION=$(node -v 2>/dev/null)
+        
+        if [ "$CURRENT_VERSION" = "$LTS_VERSION" ]; then
+            echo -e "${YELLOW}   ! Node.js ya está en la última LTS ($current_version)${NC}"
+        else
+            echo -e "${CYAN}   Actualizando/Instalando Node.js LTS ($LTS_VERSION)...${NC}"
+            nvm install --lts
+            nvm use --lts
+            nvm alias default 'lts/*'
+        fi
+        
+        echo -e "${CYAN}   ✓ NVM y Node.js configurados${NC}"
+        echo -e "${CYAN}   Node: $(node --version 2>/dev/null || echo 'Pendiente de recarga')${NC}"
+        echo -e "${CYAN}   npm: $(npm --version 2>/dev/null || echo 'Pendiente de recarga')${NC}"
     else
-        echo -e "${CYAN}   Actualizando/Instalando Node.js LTS ($LTS_VERSION)...${NC}"
-        nvm install --lts
-        nvm use --lts
-        nvm alias default 'lts/*'
-        # Reinstalar paquetes globales si es necesario
-        nvm reinstall-packages default 2>/dev/null || true
+        echo -e "${RED}   ✗ No se pudo cargar NVM. Por favor, reinicia la terminal y vuelve a intentar.${NC}"
     fi
-    
-    echo -e "${CYAN}   ✓ NVM y Node.js configurados${NC}"
-    echo -e "${CYAN}   Node: $(node --version 2>/dev/null || echo 'Pendiente de recarga')${NC}"
-    echo -e "${CYAN}   npm: $(npm --version 2>/dev/null || echo 'Pendiente de recarga')${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -140,12 +149,19 @@ install_npm_global_packages() {
     
     NPM_PATH=$(which npm 2>/dev/null)
     
+    # Try loading again if not found
     if [ -z "$NPM_PATH" ]; then
-        echo -e "${YELLOW}   ! npm no está instalado${NC}"
+        if [ -f "$NVM_DIR/nvm.sh" ]; then
+            \. "$NVM_DIR/nvm.sh"
+            NPM_PATH=$(which npm 2>/dev/null)
+        fi
+    fi
+    
+    if [ -z "$NPM_PATH" ]; then
+        echo -e "${YELLOW}   ! npm no está instalado (ni en path ni en nvm)${NC}"
         read -p "   ¿Deseas instalar NVM + Node ahora? (s/n): " install_nvm
         if [[ "$install_nvm" =~ ^[Ss]$ ]]; then
             install_nvm_node
-            export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             NPM_PATH=$(which npm 2>/dev/null)
         else
@@ -156,11 +172,17 @@ install_npm_global_packages() {
     
     # Sin sudo si usa NVM
     USE_SUDO=""
+    # Check if npm is inside .nvm directory
     if [[ "$NPM_PATH" == *".nvm"* ]]; then
         echo -e "${CYAN}   Usando npm de NVM (sin sudo)${NC}"
     else
-        echo -e "${CYAN}   Usando npm del sistema (con sudo)${NC}"
-        USE_SUDO="$SUDO_CMD"
+        # Verify if user has write access to system npm
+        if [ -w "$(dirname "$NPM_PATH")" ]; then
+             echo -e "${CYAN}   Usando npm del sistema (sin sudo - tienes permisos)${NC}"
+        else
+             echo -e "${CYAN}   Usando npm del sistema (con sudo)${NC}"
+             USE_SUDO="$SUDO_CMD"
+        fi
     fi
     
     # Paquetes con sus comandos para verificar
@@ -188,17 +210,8 @@ install_npm_global_packages() {
                 else
                     echo -e "${CYAN}   Actualizando $package: $INSTALLED_VERSION → $LATEST_VERSION${NC}"
                     $USE_SUDO npm install -g "$package@latest"
-                    
-                    if [ $? -ne 0 ]; then
-                        echo -e "${RED}   ✗ Error actualizando $package${NC}"
-                    else
-                        echo -e "${CYAN}   ✓ $package actualizado${NC}"
-                    fi
                     continue
                 fi
-            else
-                echo -e "${YELLOW}   ! $cmd instalado pero no se pudo verificar versión${NC}"
-                continue
             fi
         fi
         
@@ -270,27 +283,16 @@ bitwarden_login() {
         if [ -n "$BW_CLIENTID" ] && [ -n "$BW_CLIENTSECRET" ]; then
             echo -e "${CYAN}   Usando API key (sin 2FA)...${NC}"
             
-            # Debug: mostrar que las variables están cargadas (sin exponer valores)
-            echo -e "${CYAN}   BW_CLIENTID: ${BW_CLIENTID:0:10}...${NC}"
-            echo -e "${CYAN}   BW_CLIENTSECRET: ****${NC}"
-            
             # Ejecutar login con variables de entorno explícitas
             BW_CLIENTID="$BW_CLIENTID" BW_CLIENTSECRET="$BW_CLIENTSECRET" bw login --apikey
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}   ✗ Error en login${NC}"
-                echo -e "${YELLOW}   Posibles causas:${NC}"
-                echo -e "${YELLOW}   - API keys expiradas (regenerar en vault.bitwarden.com)${NC}"
-                echo -e "${YELLOW}   - Client ID y Secret no coinciden${NC}"
-                echo -e "${YELLOW}   - Problemas de conexión a Bitwarden${NC}"
                 return 1
             fi
             echo -e "${CYAN}   ✓ Login exitoso (bóveda bloqueada)${NC}"
-            echo -e "${YELLOW}   Tip: Usa 'bw unlock' cuando necesites acceder a la bóveda${NC}"
         else
             echo -e "${YELLOW}   ! API keys no disponibles en .env.age${NC}"
-            echo -e "${YELLOW}   Agrega BW_CLIENTID y BW_CLIENTSECRET a tu archivo de secrets${NC}"
-            echo -e "${YELLOW}   O usa 'bw login' manualmente${NC}"
         fi
     fi
 }
@@ -324,7 +326,8 @@ install_docker() {
     elif [ -f /etc/redhat-release ]; then
         echo -e "${CYAN}   Detectado: Fedora/RHEL${NC}"
         $SUDO_CMD dnf -y install dnf-plugins-core
-        $SUDO_CMD dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+        # Robust method: Download repo file directly
+        $SUDO_CMD wget -O /etc/yum.repos.d/docker-ce.repo https://download.docker.com/linux/fedora/docker-ce.repo
         $SUDO_CMD dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         
     elif [ -f /etc/arch-release ]; then

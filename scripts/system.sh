@@ -42,26 +42,39 @@ update_system() {
 install_packages() {
     echo -e "${GREEN}>>> Instalando paquetes del sistema y herramientas de terminal...${NC}"
     
-    PACKAGES=(
+    # Paquetes comunes
+    COMMON_PACKAGES=(
         "git" "curl" "wget" "htop" "btop" "vim" "unzip" "tree" 
-        "net-tools" "neofetch" "tmux" "fzf" "ranger" "mc" "rclone"
-        "make" "gawk" "gcc" "xz-utils" "micro" "tldr"
+        "net-tools" "tmux" "fzf" "ranger" "mc" "rclone"
+        "make" "gawk" "micro" "tldr" "tar"
     )
     
     if [ -f /etc/debian_version ]; then
         echo -e "${CYAN}   Detectado: Debian/Ubuntu (apt)${NC}"
         $SUDO_CMD apt-get update -y
-        $SUDO_CMD apt-get install -y "${PACKAGES[@]}" build-essential dnsutils w3m-img age
+        # Debian names
+        DEB_PACKAGES=("${COMMON_PACKAGES[@]}" "neofetch" "gcc" "xz-utils" "build-essential" "dnsutils" "w3m-img" "age")
+        $SUDO_CMD apt-get install -y "${DEB_PACKAGES[@]}"
+        
     elif [ -f /etc/redhat-release ]; then
         echo -e "${CYAN}   Detectado: Fedora/RHEL (dnf)${NC}"
-        $SUDO_CMD dnf groupinstall -y "Development Tools"
-        $SUDO_CMD dnf install -y "${PACKAGES[@]}" bind-utils w3m-img age
+        # Fedora names: neofetch -> fastfetch, xz-utils -> xz, dnsutils -> bind-utils
+        RPM_PACKAGES=("${COMMON_PACKAGES[@]}" "fastfetch" "gcc" "xz" "bind-utils" "w3m-img" "age")
+        
+        # DNF5 support: 'groupinstall' is deprecated in favor of 'install @Group' or 'group install'
+        # We try strict 'install @' syntax which works on both dnf4 and dnf5
+        echo -e "${CYAN}   Instalando Development Tools...${NC}"
+        $SUDO_CMD dnf install -y @development-tools --skip-broken 2>/dev/null || echo -e "${YELLOW}   ! Skip development tools group (check manually)${NC}"
+        
+        $SUDO_CMD dnf install -y "${RPM_PACKAGES[@]}" --skip-broken
+        
     elif [ -f /etc/arch-release ]; then
         echo -e "${CYAN}   Detectado: Arch Linux (pacman)${NC}"
-        $SUDO_CMD pacman -Syu --noconfirm base-devel "${PACKAGES[@]}" bind w3m age
+        ARCH_PACKAGES=("${COMMON_PACKAGES[@]}" "fastfetch" "gcc" "xz" "base-devel" "bind" "w3m" "age")
+        $SUDO_CMD pacman -Syu --noconfirm "${ARCH_PACKAGES[@]}"
     else
         echo -e "${RED}>>> Sistema no soportado para instalación automática${NC}"
-        echo -e "${YELLOW}   Instala manualmente: ${PACKAGES[*]}${NC}"
+        echo -e "${YELLOW}   Instala manualmente: ${COMMON_PACKAGES[*]}${NC}"
         return
     fi
     
@@ -174,9 +187,9 @@ install_modern_tools() {
             echo 'eval "$(zoxide init bash)"' >> "$HOME/.bashrc"
         fi
         
+        # Alias cd=z
         if ! grep -q 'alias cd="z"' "$HOME/.bash_aliases"; then
-            # Ya no añadimos al archivo vía echo para evitar ensuciar el git
-            echo -e "${CYAN}   ℹ Alias cd=z gestionado en .bash_aliases¹${NC}"
+             echo -e "${CYAN}   ℹ Alias cd=z gestionado en .bash_aliases${NC}"
         fi
         
         echo -e "${CYAN}   ✓ zoxide configurado (alias cd=z)${NC}"
@@ -219,45 +232,62 @@ install_modern_tools() {
     # 4. Git Delta (Better diff)
     if ! command -v delta &> /dev/null; then
         echo -e "${CYAN}   Instalando git-delta...${NC}"
-        # Intentar instalar via cargo si existe, sino binario precompilado
-        if command -v cargo &> /dev/null; then
-            cargo install git-delta
-        else
-            # Fallback manual para sistemas sin cargo
-            # (Aquí simplificamos asumiendo x86_64 linux, lo ideal es detectar arch)
-            DELTA_VERSION="0.16.5"
-            wget -q "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/git-delta_${DELTA_VERSION}_amd64.deb" -O /tmp/delta.deb
-            if [ -f /tmp/delta.deb ]; then
-                 $SUDO_CMD dpkg -i /tmp/delta.deb 2>/dev/null || echo "Fallo instalacion deb delta"
-                 rm /tmp/delta.deb
-            fi
+        INSTALLED=false
+        
+        # Try package manager first
+        if [ -f /etc/debian_version ]; then
+             : # Skip repo on debian usually old
+        elif [ -f /etc/redhat-release ]; then
+             $SUDO_CMD dnf install -y git-delta 2>/dev/null && INSTALLED=true || $SUDO_CMD dnf install -y delta 2>/dev/null && INSTALLED=true
+        elif [ -f /etc/arch-release ]; then
+             $SUDO_CMD pacman -S git-delta --noconfirm 2>/dev/null && INSTALLED=true
+        fi
+        
+        if [ "$INSTALLED" = false ]; then
+             if command -v cargo &> /dev/null; then
+                 cargo install git-delta
+             else
+                 DELTA_VERSION="0.16.5"
+                 if [ -f /etc/debian_version ]; then
+                      wget -q "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/git-delta_${DELTA_VERSION}_amd64.deb" -O /tmp/delta.deb
+                      $SUDO_CMD dpkg -i /tmp/delta.deb 2>/dev/null
+                      rm -f /tmp/delta.deb
+                 else
+                      # Universal Linux binary
+                      echo -e "${YELLOW}   Descargando binario de git-delta...${NC}"
+                      wget -q "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-x86_64-unknown-linux-musl.tar.gz" -O /tmp/delta.tar.gz
+                      tar -xzf /tmp/delta.tar.gz -C /tmp
+                      $SUDO_CMD mv "/tmp/delta-${DELTA_VERSION}-x86_64-unknown-linux-musl/delta" /usr/local/bin/delta
+                      $SUDO_CMD chmod +x /usr/local/bin/delta
+                      rm -rf /tmp/delta.tar.gz "/tmp/delta-${DELTA_VERSION}-x86_64-unknown-linux-musl"
+                 fi
+             fi
         fi
 
-        # Configurar git para usar delta si se instaló
+        # Config
         if command -v delta &> /dev/null; then
             git config --global core.pager "delta"
             git config --global interactive.diffFilter "delta --color-only"
             git config --global delta.navigate true
-            git config --global delta.light false
-            echo -e "${CYAN}   ✓ delta configurado como git pager${NC}"
+            echo -e "${CYAN}   ✓ delta configurado${NC}"
         fi
     fi
 
     # 5. LSD (Modern ls)
     if ! command -v lsd &> /dev/null; then
-        echo -e "${CYAN}   Instalando lsd (ls moderno)...${NC}"
+        echo -e "${CYAN}   Instalando lsd...${NC}"
         if [ -f /etc/debian_version ]; then
             LSD_VERSION="1.1.5"
             wget -q "https://github.com/lsd-rs/lsd/releases/download/v${LSD_VERSION}/lsd_${LSD_VERSION}_amd64.deb" -O /tmp/lsd.deb
-            $SUDO_CMD dpkg -i /tmp/lsd.deb
-            rm /tmp/lsd.deb
+            $SUDO_CMD dpkg -i /tmp/lsd.deb; rm -f /tmp/lsd.deb
         elif [ -f /etc/redhat-release ]; then
             $SUDO_CMD dnf install lsd -y 2>/dev/null || {
-                if command -v cargo &> /dev/null; then
-                    cargo install lsd
-                else
-                    echo -e "${YELLOW}   ! lsd no disponible. Instala cargo.${NC}"
-                fi
+                LSD_VERSION="1.1.5"
+                wget -q "https://github.com/lsd-rs/lsd/releases/download/v${LSD_VERSION}/lsd-${LSD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" -O /tmp/lsd.tar.gz
+                tar -xzf /tmp/lsd.tar.gz -C /tmp
+                $SUDO_CMD mv "/tmp/lsd-${LSD_VERSION}-x86_64-unknown-linux-gnu/lsd" /usr/local/bin/lsd
+                $SUDO_CMD chmod +x /usr/local/bin/lsd
+                rm -rf /tmp/lsd.tar.gz "/tmp/lsd-${LSD_VERSION}-x86_64-unknown-linux-gnu"
             }
         elif [ -f /etc/arch-release ]; then
             $SUDO_CMD pacman -S lsd --noconfirm
@@ -271,7 +301,6 @@ install_modern_tools() {
     if ! command -v lazydocker &> /dev/null; then
         echo -e "${CYAN}   Instalando lazydocker...${NC}"
         curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
-        echo -e "${CYAN}   ✓ lazydocker instalado${NC}"
     else
         echo -e "${YELLOW}   ! lazydocker ya está instalado${NC}"
     fi
@@ -293,10 +322,19 @@ install_modern_tools() {
     # Gping
     if ! command -v gping &> /dev/null; then
         echo -e "${CYAN}   Instalando gping...${NC}"
-        if [ -f /etc/debian_version ] || [ -f /etc/redhat-release ]; then
+        if [ -f /etc/debian_version ]; then
             echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | $SUDO_CMD tee /etc/apt/sources.list.d/azlux.list >/dev/null
             $SUDO_CMD wget -O /usr/share/keyrings/azlux-archive-keyring.gpg  https://azlux.fr/repo.gpg
             $SUDO_CMD apt-get update && $SUDO_CMD apt-get install -y gping
+        elif [ -f /etc/redhat-release ]; then
+            $SUDO_CMD dnf install gping -y 2>/dev/null || {
+                # Binary fallback
+                wget -q https://github.com/orf/gping/releases/latest/download/gping-x86_64-unknown-linux-musl.tar.gz -O /tmp/gping.tar.gz
+                tar -xzf /tmp/gping.tar.gz -C /tmp
+                $SUDO_CMD mv /tmp/gping /usr/local/bin/gping
+                $SUDO_CMD chmod +x /usr/local/bin/gping
+                rm -f /tmp/gping.tar.gz
+            }
         elif [ -f /etc/arch-release ]; then
             $SUDO_CMD pacman -S gping --noconfirm
         fi
