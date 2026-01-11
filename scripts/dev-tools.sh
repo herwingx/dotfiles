@@ -90,7 +90,12 @@ install_nvm_node() {
     
     export NVM_DIR="$HOME/.nvm"
     
-    # 1. Instalación si no existe
+    # Check if NVM dir exists but is broken or empty
+    if [ -d "$NVM_DIR" ] && [ ! -s "$NVM_DIR/nvm.sh" ]; then
+        echo -e "${YELLOW}   ! Directorio NVM corrupto detectado. Limpiando...${NC}"
+        rm -rf "$NVM_DIR"
+    fi
+
     if [ ! -d "$HOME/.nvm" ]; then
         echo -e "${CYAN}   Descargando e instalando NVM...${NC}"
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
@@ -98,22 +103,19 @@ install_nvm_node() {
         echo -e "${YELLOW}   ! NVM ya está instalado${NC}"
     fi
     
-    # 2. Carga FORZADA de NVM para esta sesión (Critical Fix)
+    # Agente de Carga de NVM (The Fix)
+    # Intentamos cargar desde la ubicación estándar
     if [ -s "$NVM_DIR/nvm.sh" ]; then
         \. "$NVM_DIR/nvm.sh"
-    elif [ -s "/usr/local/nvm/nvm.sh" ]; then
-        export NVM_DIR="/usr/local/nvm"
-        \. "/usr/local/nvm/nvm.sh"
     fi
     
-    # 3. Verificación de carga
+    # Si falla, intentamos cargar desde bashrc simulando shell interactiva
     if ! command -v nvm &> /dev/null; then
-        echo -e "${RED}   ✗ Error crítico: No se pudo cargar NVM en esta sesión.${NC}"
-        echo -e "${YELLOW}   Intentando carga alternativa...${NC}"
-        # Último intento: buscar en bashrc
-        source ~/.bashrc
+         export NVM_DIR="$HOME/.nvm"
+         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     fi
 
+    # Verificación final
     if command -v nvm &> /dev/null; then
         # Instalación de Node LTS
         LTS_VERSION=$(nvm version-remote --lts)
@@ -131,24 +133,11 @@ install_nvm_node() {
         echo -e "${CYAN}   ✓ NVM y Node.js configurados${NC}"
         echo -e "${CYAN}   Node: $(node --version)${NC}"
         echo -e "${CYAN}   npm: $(npm --version)${NC}"
-        
-        # Guardar en bashrc si no está
-        if ! grep -q "NVM_DIR" "$HOME/.bashrc"; then
-             echo 'export NVM_DIR="$HOME/.nvm"' >> "$HOME/.bashrc"
-             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> "$HOME/.bashrc"
-             echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> "$HOME/.bashrc"
-        fi
     else
-        echo -e "${RED}   ✗ Falló la carga de NVM. Reinicia la terminal manualmente.${NC}"
-        # Fallback a Node del sistema si NVM falla catastróficamente
-        if ! command -v node &> /dev/null; then
-             echo -e "${YELLOW}   ! Instalando Node.js del sistema como fallback...${NC}"
-             if [ -f /etc/redhat-release ]; then
-                 $SUDO_CMD dnf install -y nodejs npm
-             elif [ -f /etc/debian_version ]; then
-                 $SUDO_CMD apt-get install -y nodejs npm
-             fi
-        fi
+        echo -e "${RED}   ✗ Error crítico: NVM instalado pero no cargable.${NC}"
+        echo -e "${YELLOW}   ! Cierra esta terminal y abre una nueva para que NVM funcione.${NC}"
+        # No instalamos node del sistema para no causar conflictos de versiones
+        return 1
     fi
 }
 
