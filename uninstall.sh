@@ -84,6 +84,8 @@ rm -f ~/.local/bin/zoxide
 rm -f ~/.local/bin/lsd
 rm -rf ~/.local/share/blesh
 rm -rf ~/.atuin
+rm -rf ~/.local/share/atuin
+rm -rf ~/.config/atuin
 rm -rf ~/.cache/oh-my-posh
 print_success "Local tools removed"
 
