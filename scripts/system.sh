@@ -111,6 +111,17 @@ install_bash_aliases() {
     ln -sf "$DOTFILES_DIR/config/.bash_aliases" "$ALIAS_FILE"
     echo -e "${CYAN}   ✓ Aliases configurados${NC}"
     
+    # Asegurar que .bashrc cargue .bash_aliases
+    BASHRC="$HOME/.bashrc"
+    if ! grep -q "source ~/.bash_aliases" "$BASHRC"; then
+        echo -e "${CYAN}   Configurando .bashrc para cargar .bash_aliases...${NC}"
+        echo "" >> "$BASHRC"
+        echo "# Cargar aliases personales" >> "$BASHRC"
+        echo 'if [ -f ~/.bash_aliases ]; then' >> "$BASHRC"
+        echo '    . ~/.bash_aliases' >> "$BASHRC"
+        echo 'fi' >> "$BASHRC"
+    fi
+    
     # Limpiar PATH en WSL (eliminar rutas de Windows)
     configure_wsl_path
 }
@@ -135,18 +146,25 @@ configure_wsl_path() {
         return
     fi
     
-    # Agregar al .bashrc la limpieza de PATH
-    cat >> "$BASHRC" <<'EOF'
-
-# WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)
-if grep -qi microsoft /proc/version 2>/dev/null; then
-    # Filtrar rutas de /mnt/* del PATH
-    NEW_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v '^/mnt/' | tr '\n' ':' | sed 's/:$//')
-    export PATH="$NEW_PATH"
-fi
-EOF
+    # Agregar al .bashrc la limpieza de PATH al PRINCIPIO (Solo si no existe)
+    if ! grep -q "# WSL: Limpiar PATH de Windows" "$BASHRC"; then
+        echo -e "${CYAN}   Agregando configuración de PATH al inicio de .bashrc...${NC}"
+        {
+            echo "# WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)"
+            echo 'if grep -qi microsoft /proc/version 2>/dev/null; then'
+            echo '    # Filtrar rutas de /mnt/* del PATH'
+            echo '    NEW_PATH=$(echo "$PATH" | tr ":" "\n" | grep -v "^/mnt/" | tr "\n" ":" | sed "s/:$//")'
+            echo '    export PATH="$NEW_PATH"'
+            echo 'fi'
+            echo 'export PATH="$HOME/.local/bin:$HOME/.atuin/bin:$PATH"'
+            echo ""
+            cat "$BASHRC"
+        } > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
+    else
+        echo -e "${YELLOW}   ! Configuración de PATH ya existe en .bashrc${NC}"
+    fi
     
-    echo -e "${CYAN}   ✓ PATH configurado para ignorar binarios de Windows${NC}"
+    echo -e "${CYAN}   ✓ PATH verificado${NC}"
     echo -e "${YELLOW}   ⚠️  Recarga tu shell (source ~/.bashrc) para aplicar cambios${NC}"
 }
 
@@ -175,11 +193,6 @@ install_modern_tools() {
         if ! command -v zoxide &> /dev/null; then
             echo -e "${YELLOW}   ! No disponible en repo. Usando script de instalación...${NC}"
             curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
-        fi
-
-        # Asegurar PATH para ~/.local/bin (donde instala el script fallback)
-        if ! grep -q ".local/bin" "$HOME/.bashrc"; then
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
         fi
 
         # Configurar en .bashrc
@@ -572,7 +585,9 @@ EOF
             cat "$BASHRC"
         } > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
 
-        # Inyectar ATTACH al final
+        # Asegurar que ble-attach sea la ULTIMA línea del archivo
+        # Primero lo quitamos si existe en cualquier lado
+        sed -i '/ble-attach/d' "$BASHRC"
         echo "" >> "$BASHRC"
         echo "# Ble.sh attach (Debe ser la última línea)" >> "$BASHRC"
         echo "$BLE_ATTACH_BLOCK" >> "$BASHRC"
@@ -614,10 +629,19 @@ install_atuin() {
         echo -e "${YELLOW}   ! Atuin ya está instalado${NC}"
     fi
 
-    # Configurar .bashrc
+    # Configurar .bashrc (Antes de ble-attach)
     BASHRC="$HOME/.bashrc"
+    
+    # Asegurar que la ruta de atuin esté disponible para el eval
+    export PATH="$HOME/.atuin/bin:$PATH"
+    
     if ! grep -q "atuin init bash" "$BASHRC"; then
-        echo 'eval "$(atuin init bash)"' >> "$BASHRC"
+        # Lo insertamos antes de ble-attach si existe, sino al final
+        if grep -q "ble-attach" "$BASHRC"; then
+             sed -i '/# Ble.sh attach/i eval "$(atuin init bash)"' "$BASHRC"
+        else
+             echo 'eval "$(atuin init bash)"' >> "$BASHRC"
+        fi
         echo -e "${CYAN}   ✓ Atuin init agregado a .bashrc${NC}"
     fi
 
@@ -654,15 +678,19 @@ install_oh_my_posh() {
         echo -e "${RED}   ✗ No se encontró el tema config/herwingx.omp.json${NC}"
     fi
 
-    # Configurar .bashrc
+    # Configurar .bashrc (Antes de ble-attach)
     BASHRC="$HOME/.bashrc"
     OMP_INIT='eval "$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"'
     
     # Remover configuraciones viejas de oh-my-posh si existen (limpieza)
     sed -i '/oh-my-posh init bash/d' "$BASHRC"
     
-    # Agregar la nueva configuración al final
-    echo "$OMP_INIT" >> "$BASHRC"
+    # Agregar la nueva configuración antes de ble-attach si existe, sino al final
+    if grep -q "ble-attach" "$BASHRC"; then
+         sed -i "/# Ble.sh attach/i $OMP_INIT" "$BASHRC"
+    else
+         echo "$OMP_INIT" >> "$BASHRC"
+    fi
     
     echo -e "${CYAN}   ✓ Tema herwingx configurado en .bashrc${NC}"
 }
