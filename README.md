@@ -54,13 +54,13 @@
 
 **¿Qué hace diferente a estos dotfiles?**
 
-| Característica | Beneficio |
-|:---------------|:----------|
-| 🔍 **Transparencia Total** | Cada paquete tiene documentación de por qué se instala |
-| 🎯 **Modular** | Instala solo lo que necesitas (sistema, dev, IA, cloud) |
-| 🔐 **Seguro por Defecto** | Gestión de secretos con Age encryption |
-| 📖 **Documentación Completa** | Guías paso a paso para usuarios sin experiencia previa |
-| 🤖 **IA-Ready** | Integración con Gemini/Antigravity y workflows automatizados |
+| Característica               | Beneficio                                                    |
+| :--------------------------- | :----------------------------------------------------------- |
+| 🔍 **Transparencia Total**    | Cada paquete tiene documentación de por qué se instala       |
+| 🎯 **Modular**                | Instala solo lo que necesitas (sistema, dev, IA, cloud)      |
+| 🔐 **Seguro por Defecto**     | Gestión de secretos con Age encryption                       |
+| 📖 **Documentación Completa** | Guías paso a paso para usuarios sin experiencia previa       |
+| 🤖 **IA-Ready**               | Integración con Gemini/Antigravity y workflows automatizados |
 
 ---
 
@@ -86,12 +86,12 @@
 
 ### Requisitos del Sistema
 
-| Requisito       | Descripción                                                              |
-| :-------------- | :----------------------------------------------------------------------- |
-| 🐧 **Sistema**   | Linux (Debian, Ubuntu, Fedora, Arch) o WSL                               |
-| 🌐 **Conexión**  | Acceso a Internet para descargar paquetes                                |
-| 🔐 **Git/GitHub**| Cuenta de GitHub (gratuita) para clonar y contribuir                     |
-| 🔑 **SSH Keys**  | **OBLIGATORIO** - Crearemos esto juntos en los próximos pasos            |
+| Requisito        | Descripción                                                   |
+| :--------------- | :------------------------------------------------------------ |
+| 🐧 **Sistema**    | Linux (Debian, Ubuntu, Fedora, Arch) o WSL                    |
+| 🌐 **Conexión**   | Acceso a Internet para descargar paquetes                     |
+| 🔐 **Git/GitHub** | Cuenta de GitHub (gratuita) para clonar y contribuir          |
+| 🔑 **SSH Keys**   | **OBLIGATORIO** - Crearemos esto juntos en los próximos pasos |
 
 ---
 
@@ -489,12 +489,12 @@ El instalador presenta una interfaz técnica estilo **Cyberpunk/Hacker** para co
 
 ### 4. Seleccionar Opción de Instalación
 
-| Opción | Recomendado Para | Qué Instala |
-|:------:|:-----------------|:------------|
+| Opción  | Recomendado Para                                       | Qué Instala                                                                    |
+| :-----: | :----------------------------------------------------- | :----------------------------------------------------------------------------- |
 | **[1]** | 🎯 **Usuarios Nuevos** / Máquina de desarrollo personal | **TODO**: Sistema base + Dev Tools + Docker + Gemini AI + Cloud + Auto-Updates |
-| **[2]** | Servidores / Entornos ligeros | Sistema base + Shell moderno + Git + Aliases |
-| **[3]** | Solo necesitas Docker/Node | GitHub CLI + NVM/Node.js + Docker |
-| **[4]** | Solo configuración de IA | Reglas Gemini + Workflows + MCP Extensions |
+| **[2]** | Servidores / Entornos ligeros                          | Sistema base + Shell moderno + Git + Aliases                                   |
+| **[3]** | Solo necesitas Docker/Node                             | GitHub CLI + NVM/Node.js + Docker                                              |
+| **[4]** | Solo configuración de IA                               | Reglas Gemini + Workflows + MCP Extensions                                     |
 
 > 📘 **Recomendación para Primera Instalación**: Selecciona **[1]** para obtener el stack completo.
 
@@ -617,63 +617,63 @@ flowchart TD
 
 ### Categoría: Sistema Base
 
-| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
-|:--------|:-----------|:------------------------|
-| **git** | Sistema de control de versiones distribuido | Fundamental para clonar repos, versionar código y colaborar |
-| **curl** | Cliente HTTP en línea de comandos | Descargar archivos, consumir APIs REST, scripts de instalación |
-| **wget** | Descargador de archivos | Alternativa a curl, soporta descargas recursivas |
-| **vim** | Editor de texto modal avanzado | Editor universal disponible en todos los servidores |
-| **micro** | Editor moderno con atajos estilo GUI | Alternativa a vim con curva de aprendizaje más suave (Ctrl+S, Ctrl+C) |
-| **tmux** | Multiplexor de terminal | Sesiones persistentes, ventanas/paneles, trabajo remoto sin pérdida de sesión |
-| **htop** / **btop** | Monitores de sistema interactivos | btop: Monitor moderno con gráficos; htop: Clásico ligero |
-| **build-essential** | Compiladores (gcc, g++, make) | Necesarios para compilar software desde fuente (ej: ble.sh, extensiones npm) |
-| **gawk** | Procesador de texto (GNU awk) | Requerido específicamente por ble.sh para procesamiento avanzado de texto |
+| Paquete             | ¿Qué hace?                                  | ¿Por qué lo instalamos?                                                       |
+| :------------------ | :------------------------------------------ | :---------------------------------------------------------------------------- |
+| **git**             | Sistema de control de versiones distribuido | Fundamental para clonar repos, versionar código y colaborar                   |
+| **curl**            | Cliente HTTP en línea de comandos           | Descargar archivos, consumir APIs REST, scripts de instalación                |
+| **wget**            | Descargador de archivos                     | Alternativa a curl, soporta descargas recursivas                              |
+| **vim**             | Editor de texto modal avanzado              | Editor universal disponible en todos los servidores                           |
+| **micro**           | Editor moderno con atajos estilo GUI        | Alternativa a vim con curva de aprendizaje más suave (Ctrl+S, Ctrl+C)         |
+| **tmux**            | Multiplexor de terminal                     | Sesiones persistentes, ventanas/paneles, trabajo remoto sin pérdida de sesión |
+| **htop** / **btop** | Monitores de sistema interactivos           | btop: Monitor moderno con gráficos; htop: Clásico ligero                      |
+| **build-essential** | Compiladores (gcc, g++, make)               | Necesarios para compilar software desde fuente (ej: ble.sh, extensiones npm)  |
+| **gawk**            | Procesador de texto (GNU awk)               | Requerido específicamente por ble.sh para procesamiento avanzado de texto     |
 
 ### Categoría: Herramientas Modernas de Terminal
 
-| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
-|:--------|:-----------|:------------------------|
-| **lsd** | Reemplazo moderno de `ls` | Listados con iconos, colores semánticos, y tree view integrado |
-| **bat** | Reemplazo de `cat` con syntax highlighting | Lectura de código con resaltado, integración Git, paginación automática |
-| **fzf** | Fuzzy finder interactivo | Búsqueda rápida de archivos, historial, comandos (Ctrl+R) |
-| **zoxide** | CD inteligente con aprendizaje | Salta a directorios frecuentes con `z nombre-parcial` |
-| **delta** | Visor de diffs Git mejorado | Diffs lado a lado con syntax highlighting |
-| **ripgrep** | Búsqueda de texto extremadamente rápida | Alternativa a `grep` 10x más rápida, respeta `.gitignore` |
-| **ranger** | File manager TUI con preview | Navegación visual de archivos con preview de imágenes/código |
-| **tldr** | Páginas de ayuda simplificadas | Alternativa a `man` con ejemplos prácticos concisos |
-| **ble.sh** | Bash Line Editor | Syntax highlighting en tiempo real, autosuggestions, mejor autocompletado |
-| **oh-my-posh** | Engine de prompts personalizados | Prompt informativo con Git status, duración de comandos, nivel de batería |
+| Paquete        | ¿Qué hace?                                 | ¿Por qué lo instalamos?                                                   |
+| :------------- | :----------------------------------------- | :------------------------------------------------------------------------ |
+| **lsd**        | Reemplazo moderno de `ls`                  | Listados con iconos, colores semánticos, y tree view integrado            |
+| **bat**        | Reemplazo de `cat` con syntax highlighting | Lectura de código con resaltado, integración Git, paginación automática   |
+| **fzf**        | Fuzzy finder interactivo                   | Búsqueda rápida de archivos, historial, comandos (Ctrl+R)                 |
+| **zoxide**     | CD inteligente con aprendizaje             | Salta a directorios frecuentes con `z nombre-parcial`                     |
+| **delta**      | Visor de diffs Git mejorado                | Diffs lado a lado con syntax highlighting                                 |
+| **ripgrep**    | Búsqueda de texto extremadamente rápida    | Alternativa a `grep` 10x más rápida, respeta `.gitignore`                 |
+| **ranger**     | File manager TUI con preview               | Navegación visual de archivos con preview de imágenes/código              |
+| **tldr**       | Páginas de ayuda simplificadas             | Alternativa a `man` con ejemplos prácticos concisos                       |
+| **ble.sh**     | Bash Line Editor                           | Syntax highlighting en tiempo real, autosuggestions, mejor autocompletado |
+| **oh-my-posh** | Engine de prompts personalizados           | Prompt informativo con Git status, duración de comandos, nivel de batería |
 
 ### Categoría: Herramientas de Desarrollo
 
-| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
-|:--------|:-----------|:------------------------|
-| **GitHub CLI (gh)** | Cliente oficial de GitHub | Crear repos, PRs, releases desde terminal. Integrado con MCP de Gemini |
-| **Docker Engine** | Plataforma de containerización | Desarrollo sin contaminar el sistema, reproducibilidad, microservicios |
-| **docker-compose** | Orquestación de multi-containers | Definir stacks completos (app + DB + cache) en un solo archivo YAML |
-| **NVM** | Node Version Manager | Cambiar entre versiones de Node.js por proyecto |
-| **Node.js LTS** | Runtime de JavaScript | Necesario para herramientas modernas (Gemini CLI, npm globals) |
-| **lazydocker** | TUI para gestionar Docker | Interfaz visual para containers, logs, stats sin memorizar comandos |
-| **ctop** | Top para containers | Monitoreo en tiempo real de uso de recursos por container |
-| **gping** | Ping con gráficos | Diagnóstico de red visual con latencia histórica |
+| Paquete             | ¿Qué hace?                       | ¿Por qué lo instalamos?                                                |
+| :------------------ | :------------------------------- | :--------------------------------------------------------------------- |
+| **GitHub CLI (gh)** | Cliente oficial de GitHub        | Crear repos, PRs, releases desde terminal. Integrado con MCP de Gemini |
+| **Docker Engine**   | Plataforma de containerización   | Desarrollo sin contaminar el sistema, reproducibilidad, microservicios |
+| **docker-compose**  | Orquestación de multi-containers | Definir stacks completos (app + DB + cache) en un solo archivo YAML    |
+| **NVM**             | Node Version Manager             | Cambiar entre versiones de Node.js por proyecto                        |
+| **Node.js LTS**     | Runtime de JavaScript            | Necesario para herramientas modernas (Gemini CLI, npm globals)         |
+| **lazydocker**      | TUI para gestionar Docker        | Interfaz visual para containers, logs, stats sin memorizar comandos    |
+| **ctop**            | Top para containers              | Monitoreo en tiempo real de uso de recursos por container              |
+| **gping**           | Ping con gráficos                | Diagnóstico de red visual con latencia histórica                       |
 
 ### Categoría: Seguridad y Secretos
 
-| Paquete | ¿Qué hace? | ¿Por qué lo instalamos? |
-|:--------|:-----------|:------------------------|
-| **age** | Encriptación de archivos moderna | Proteger `.env.age` con secretos (tokens, API keys) |
-| **Bitwarden CLI (bw)** | Gestor de contraseñas en terminal | Extracción automática de credenciales desde vault |
-| **xz-utils** | Compresor/descompresor XZ | Necesario para desempaquetar binarios npm y herramientas comprimidas |
-| **unzip** | Descompresor ZIP | Instalación de paquetes y extensiones distribuidas en .zip |
+| Paquete                | ¿Qué hace?                        | ¿Por qué lo instalamos?                                              |
+| :--------------------- | :-------------------------------- | :------------------------------------------------------------------- |
+| **age**                | Encriptación de archivos moderna  | Proteger `.env.age` con secretos (tokens, API keys)                  |
+| **Bitwarden CLI (bw)** | Gestor de contraseñas en terminal | Extracción automática de credenciales desde vault                    |
+| **xz-utils**           | Compresor/descompresor XZ         | Necesario para desempaquetar binarios npm y herramientas comprimidas |
+| **unzip**              | Descompresor ZIP                  | Instalación de paquetes y extensiones distribuidas en .zip           |
 
 ### Categoría: Antigravity / Gemini
 
-| Componente | ¿Qué hace? | ¿Por qué lo instalamos? |
-|:-----------|:-----------|:------------------------|
-| **gemini-cli** | Cliente de Google Gemini | Asistente IA en terminal con acceso a MCP servers |
-| **GEMINI.md** | Reglas globales de desarrollo | Protocolo de Clean Code, Git Flow, Conventional Commits para IA |
-| **Workflows** | Comandos slash (`/commit`, `/release`) | Automatización de flujos Git con mejores prácticas incorporadas |
-| **MCP Extensions** | Chrome DevTools, GitHub, Postgres | Extienden capacidades de Gemini para debugging, Git, DB |
+| Componente         | ¿Qué hace?                             | ¿Por qué lo instalamos?                                         |
+| :----------------- | :------------------------------------- | :-------------------------------------------------------------- |
+| **gemini-cli**     | Cliente de Google Gemini               | Asistente IA en terminal con acceso a MCP servers               |
+| **GEMINI.md**      | Reglas globales de desarrollo          | Protocolo de Clean Code, Git Flow, Conventional Commits para IA |
+| **Workflows**      | Comandos slash (`/commit`, `/release`) | Automatización de flujos Git con mejores prácticas incorporadas |
+| **MCP Extensions** | Chrome DevTools, GitHub, Postgres      | Extienden capacidades de Gemini para debugging, Git, DB         |
 
 ---
 
@@ -681,12 +681,12 @@ flowchart TD
 
 ### Instalación Rápida (Agrupada)
 
-| Opción | Descripción                                                       | Modo | Ideal para                    |
-| :----: | :---------------------------------------------------------------- | :--- | :---------------------------- |
+| Opción | Descripción                                                       | Modo                                          | Ideal para                    |
+| :----: | :---------------------------------------------------------------- | :-------------------------------------------- | :---------------------------- |
 |   1    | **Instalar TODO**: Full Stack + IA + Cloud + Auto-Update          | 🤖 **Automático** (instala todo sin preguntar) | Máquina nueva de desarrollo   |
-|   2    | **Solo Sistema**: Update + Paquetes + Tools + Aliases + Git + SSH | 💬 Interactivo | Servidores o entornos ligeros |
-|   3    | **Solo Dev Tools**: GitHub CLI + NVM/Node.js + Docker             | 💬 Interactivo | Entornos de desarrollo        |
-|   4    | **Solo Antigravity AI**: Reglas GEMINI.md + Workflows IA          | 💬 Interactivo | Solo configuración de IA      |
+|   2    | **Solo Sistema**: Update + Paquetes + Tools + Aliases + Git + SSH | 💬 Interactivo                                 | Servidores o entornos ligeros |
+|   3    | **Solo Dev Tools**: GitHub CLI + NVM/Node.js + Docker             | 💬 Interactivo                                 | Entornos de desarrollo        |
+|   4    | **Solo Antigravity AI**: Reglas GEMINI.md + Workflows IA          | 💬 Interactivo                                 | Solo configuración de IA      |
 
 > 💡 **Modo Automático vs Interactivo**:
 > - **Opción 1 (TODO)**: Instala automáticamente todas las herramientas, incluido Gemini CLI si tienes Node.js
@@ -694,13 +694,13 @@ flowchart TD
 
 ### 📦 Módulos de Sistema
 
-| Opción | Módulo            | Descripción                                                                                                      |
-| :----: | :---------------- | :--------------------------------------------------------------------------------------------------------------- |
-|   5    | Actualizar Sistema| Ejecuta `apt upgrade` / `dnf upgrade` / `pacman -Syu`                                                            |
-|   6    | Paquetes Base     | Instala: git, curl, vim, micro, tldr, tmux, fzf, ranger, oh-my-posh, lsd, lazydocker, ctop, gping y herramientas de compilación. |
-|   7    | Configurar Git    | Vincula `.gitconfig` con configuración global optimizada                                                         |
-|   8    | Importar Keys SSH | Importa llaves SSH públicas desde GitHub (via API)                                                               |
-|   9    | Sincronizar SSH   | Copia llaves SSH desde Windows a WSL (solo aplica en WSL)                                                        |
+| Opción | Módulo             | Descripción                                                                                                                      |
+| :----: | :----------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+|   5    | Actualizar Sistema | Ejecuta `apt upgrade` / `dnf upgrade` / `pacman -Syu`                                                                            |
+|   6    | Paquetes Base      | Instala: git, curl, vim, micro, tldr, tmux, fzf, ranger, oh-my-posh, lsd, lazydocker, ctop, gping y herramientas de compilación. |
+|   7    | Configurar Git     | Vincula `.gitconfig` con configuración global optimizada                                                                         |
+|   8    | Importar Keys SSH  | Importa llaves SSH públicas desde GitHub (via API)                                                                               |
+|   9    | Sincronizar SSH    | Copia llaves SSH desde Windows a WSL (solo aplica en WSL)                                                                        |
 
 ### 🛠️ Herramientas Dev
 
@@ -713,13 +713,13 @@ flowchart TD
 
 ### ☁️ Cloud & Integración IA
 
-| Opción | Módulo              | Descripción                                                                                  |
-| :----: | :------------------ | :------------------------------------------------------------------------------------------- |
-|   14   | Reglas IA           | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA              |
-|   15   | Comandos Slash      | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/`       |
-|   16   | **Decrypt Secrets** | Desencripta `.env.age` o `.env.local.age` y carga variables en sesión                        |
-|   17   | **New Vault**       | **Crea una nueva bóveda local** y archiva la original (Ideal para Forks)                     |
-|   18   | Configurar Rclone   | Configura rclone para Google Drive usando token desde secrets                                |
+| Opción | Módulo              | Descripción                                                                            |
+| :----: | :------------------ | :------------------------------------------------------------------------------------- |
+|   14   | Reglas IA           | Instala `GEMINI.md` en `~/.gemini/` con reglas de desarrollo para asistentes IA        |
+|   15   | Comandos Slash      | Instala workflows slash (`/commit`, `/release`, `/publicar`) en `~/.gemini/workflows/` |
+|   16   | **Decrypt Secrets** | Desencripta `.env.age` o `.env.local.age` y carga variables en sesión                  |
+|   17   | **New Vault**       | **Crea una nueva bóveda local** y archiva la original (Ideal para Forks)               |
+|   18   | Configurar Rclone   | Configura rclone para Google Drive usando token desde secrets                          |
 
 ### 🔄 Mantenimiento
 
@@ -862,21 +862,21 @@ fi
 
 #### ¿Por qué es necesario?
 
-| Problema | Consecuencia | Solución |
-| :------- | :----------- | :------- |
-| `nvm4w` de Windows en PATH | `gemini` o `node` detectados en `/mnt/c/` no funcionan desde WSL | PATH filtrado, solo binarios de Linux |
-| Extensiones MCP de Gemini fallan | Timeout o error: "Sin salida del comando" | Gemini instalado vía npm DENTRO de WSL |
-| Git de Windows invocado | Problemas con line endings (CRLF vs LF) | Usa `git` de `/usr/bin/` exclusivamente |
+| Problema                         | Consecuencia                                                     | Solución                                |
+| :------------------------------- | :--------------------------------------------------------------- | :-------------------------------------- |
+| `nvm4w` de Windows en PATH       | `gemini` o `node` detectados en `/mnt/c/` no funcionan desde WSL | PATH filtrado, solo binarios de Linux   |
+| Extensiones MCP de Gemini fallan | Timeout o error: "Sin salida del comando"                        | Gemini instalado vía npm DENTRO de WSL  |
+| Git de Windows invocado          | Problemas con line endings (CRLF vs LF)                          | Usa `git` de `/usr/bin/` exclusivamente |
 
 ### 🎯 Mejores Prácticas en WSL
 
-| Herramienta | ✅ Correcto (Linux) | ❌ Incorrecto (Windows) |
-| :---------- | :------------------- | :----------------------- |
-| **Node.js** | `nvm install node` en WSL | `nvm4w` desde PowerShell |
-| **npm global** | `npm install -g` en WSL | `npm install -g` en CMD |
-| **Git** | `/usr/bin/git` | `/mnt/c/Program Files/Git/bin/git` |
-| **Docker** | Docker Desktop WSL 2 | Docker Toolbox |
-| **SSH Keys** | Copiar con opción "9) SSH desde Windows" | Symlink a `/mnt/c/Users/.../.ssh` |
+| Herramienta    | ✅ Correcto (Linux)                       | ❌ Incorrecto (Windows)             |
+| :------------- | :--------------------------------------- | :--------------------------------- |
+| **Node.js**    | `nvm install node` en WSL                | `nvm4w` desde PowerShell           |
+| **npm global** | `npm install -g` en WSL                  | `npm install -g` en CMD            |
+| **Git**        | `/usr/bin/git`                           | `/mnt/c/Program Files/Git/bin/git` |
+| **Docker**     | Docker Desktop WSL 2                     | Docker Toolbox                     |
+| **SSH Keys**   | Copiar con opción "9) SSH desde Windows" | Symlink a `/mnt/c/Users/.../.ssh`  |
 
 > 💡 **Verificación**: Ejecuta `which node` y `which git`. Ambos deben apuntar a rutas en `/home/` o `/usr/bin/`, **nunca** a `/mnt/c/`.
 
@@ -929,31 +929,31 @@ Este proyecto incluye un archivo `.vscode-extensions` con todas las extensiones 
 
 ### 📋 Extensiones Incluidas
 
-| Extensión | Descripción |
-|:----------|:------------|
-| `aaron-bond.better-comments` | Comentarios mejorados con colores semánticos (TODO, FIXME, !) |
-| `astro-build.astro-vscode` | Soporte oficial para Astro framework |
-| `bierner.markdown-preview-github-styles` | Preview de Markdown con estilos de GitHub |
-| `bradlc.vscode-tailwindcss` | IntelliSense para Tailwind CSS |
-| `christian-kohler.npm-intellisense` | Autocompletado de imports npm |
-| `dbaeumer.vscode-eslint` | Integración completa de ESLint |
-| `formulahendry.auto-rename-tag` | Renombrado automático de tags HTML/JSX |
-| `github.github-vscode-theme` | Temas oficiales de GitHub (Dark/Light) |
-| `github.vscode-github-actions` | Gestión de GitHub Actions en el editor |
-| `github.vscode-pull-request-github` | Revisión de PRs desde el editor |
-| `google.gemini-cli-vscode-ide-companion` | Companion para Gemini CLI (MCP support) |
-| `google.geminicodeassist` | Asistente de código con Gemini AI |
-| `henrikdev.ag-quota` | Monitor de cuota de Antigravity |
-| `mhutchie.git-graph` | Visualizador gráfico de historial Git |
-| `ms-azuretools.vscode-containers` | Soporte para Dev Containers |
-| `ms-azuretools.vscode-docker` | Gestión de Docker (Compose, Dockerfiles) |
-| `ms-vscode.live-server` | Live Server oficial de Microsoft |
-| `oderwat.indent-rainbow` | Colores por niveles de indentación |
-| `pkief.material-icon-theme` | Iconos Material Design para archivos |
-| `pranaygp.vscode-css-peek` | Saltar a definiciones CSS desde HTML |
-| `redhat.vscode-yaml` | Soporte avanzado de YAML con schemas |
-| `ritwickdey.liveserver` | Live Server con auto-reload |
-| `vue.volar` | Soporte oficial de Vue 3 (Volar) |
+| Extensión                                | Descripción                                                   |
+| :--------------------------------------- | :------------------------------------------------------------ |
+| `aaron-bond.better-comments`             | Comentarios mejorados con colores semánticos (TODO, FIXME, !) |
+| `astro-build.astro-vscode`               | Soporte oficial para Astro framework                          |
+| `bierner.markdown-preview-github-styles` | Preview de Markdown con estilos de GitHub                     |
+| `bradlc.vscode-tailwindcss`              | IntelliSense para Tailwind CSS                                |
+| `christian-kohler.npm-intellisense`      | Autocompletado de imports npm                                 |
+| `dbaeumer.vscode-eslint`                 | Integración completa de ESLint                                |
+| `formulahendry.auto-rename-tag`          | Renombrado automático de tags HTML/JSX                        |
+| `github.github-vscode-theme`             | Temas oficiales de GitHub (Dark/Light)                        |
+| `github.vscode-github-actions`           | Gestión de GitHub Actions en el editor                        |
+| `github.vscode-pull-request-github`      | Revisión de PRs desde el editor                               |
+| `google.gemini-cli-vscode-ide-companion` | Companion para Gemini CLI (MCP support)                       |
+| `google.geminicodeassist`                | Asistente de código con Gemini AI                             |
+| `henrikdev.ag-quota`                     | Monitor de cuota de Antigravity                               |
+| `mhutchie.git-graph`                     | Visualizador gráfico de historial Git                         |
+| `ms-azuretools.vscode-containers`        | Soporte para Dev Containers                                   |
+| `ms-azuretools.vscode-docker`            | Gestión de Docker (Compose, Dockerfiles)                      |
+| `ms-vscode.live-server`                  | Live Server oficial de Microsoft                              |
+| `oderwat.indent-rainbow`                 | Colores por niveles de indentación                            |
+| `pkief.material-icon-theme`              | Iconos Material Design para archivos                          |
+| `pranaygp.vscode-css-peek`               | Saltar a definiciones CSS desde HTML                          |
+| `redhat.vscode-yaml`                     | Soporte avanzado de YAML con schemas                          |
+| `ritwickdey.liveserver`                  | Live Server con auto-reload                                   |
+| `vue.volar`                              | Soporte oficial de Vue 3 (Volar)                              |
 
 ### 🚀 Instalación Automatizada
 
@@ -1018,12 +1018,12 @@ xargs -a profile-backend.txt -L1 antigravity --install-extension
 
 ### 💡 Tips Útiles
 
-| Acción | Comando |
-|:-------|:--------|
-| **Listar extensiones instaladas** | `antigravity --list-extensions` |
-| **Desinstalar extensión** | `antigravity --uninstall-extension <id>` |
-| **Actualizar extensión** | `antigravity --install-extension <id> --force` |
-| **Exportar lista actualizada** | `antigravity --list-extensions > ~/.vscode-extensions` |
+| Acción                            | Comando                                                     |
+| :-------------------------------- | :---------------------------------------------------------- |
+| **Listar extensiones instaladas** | `antigravity --list-extensions`                             |
+| **Desinstalar extensión**         | `antigravity --uninstall-extension <id>`                    |
+| **Actualizar extensión**          | `antigravity --install-extension <id> --force`              |
+| **Exportar lista actualizada**    | `antigravity --list-extensions > ~/.vscode-extensions`      |
 | **Agregar `antigravity` al PATH** | F1 → "Shell Command: Install 'antigravity' command in PATH" |
 
 ### 🔧 Troubleshooting
@@ -1113,18 +1113,18 @@ Este dotfiles incluye aliases modernos para mejorar la productividad. Se instala
 
 ### Herramientas de Terminal
 
-| Herramienta    | Descripción                                    |
-| :------------- | :--------------------------------------------- |
-| **Atuin**      | Historial de shell mágico con sync en la nube  |
-| **lsd**        | Reemplazo moderno de `ls` con iconos y colores |
-| **Oh My Posh** | Motor de temas para prompt personalizado       |
-| **fzf**        | Fuzzy finder para búsqueda interactiva         |
-| **tmux**       | Multiplexor de terminal                        |
-| **ranger**     | File manager con preview en terminal           |
-| **lazydocker** | TUI para gestionar Docker                      |
-| **ctop**       | Top para containers Docker                     |
-| **gping**      | Ping visual con gráficos                       |
-| **btop**       | Monitor de recursos moderno                    |
+| Herramienta    | Descripción                                     |
+| :------------- | :---------------------------------------------- |
+| **Atuin**      | Historial de shell mágico con sync en la nube   |
+| **lsd**        | Reemplazo moderno de `ls` con iconos y colores  |
+| **Oh My Posh** | Motor de temas para prompt personalizado        |
+| **fzf**        | Fuzzy finder para búsqueda interactiva          |
+| **tmux**       | Multiplexor de terminal                         |
+| **ranger**     | File manager con preview en terminal            |
+| **lazydocker** | TUI para gestionar Docker                       |
+| **ctop**       | Top para containers Docker                      |
+| **gping**      | Ping visual con gráficos                        |
+| **btop**       | Monitor de recursos moderno                     |
 | **ble.sh**     | Bash Line Editor (Syntax highlight, completion) |
 
 ### Desarrollo
@@ -1240,28 +1240,28 @@ Si necesitas limpiar tu sistema, el script `uninstall.sh` revierte los cambios:
 
 ### ✅ **¿Qué se elimina correctamente?**
 
-| Componente | Ubicación | Acción |
-|:-----------|:----------|:-------|
-| **BLE.sh** | `~/.local/share/blesh` | ✅ Eliminado completamente |
-| **BLE.sh (.bashrc)** | Líneas `ble.sh --noattach` y `ble-attach` | ✅ Eliminadas |
-| **Atuin** | `~/.atuin` | ✅ Eliminado completamente |
-| **Atuin (.bashrc)** | Líneas `atuin init bash` | ✅ Eliminadas |
-| **Oh My Posh (.bashrc)** | Líneas `oh-my-posh init` | ✅ Eliminadas |
-| **Gemini/Antigravity** | `~/.gemini` | ✅ Eliminado completamente |
-| **GitHub Token** | Variable `GITHUB_PERSONAL_ACCESS_TOKEN` | ✅ Eliminada de .bashrc |
-| **Symlinks** | `.bash_aliases`, `.gitconfig`, tema Oh My Posh | ✅ Eliminados |
+| Componente               | Ubicación                                      | Acción                    |
+| :----------------------- | :--------------------------------------------- | :------------------------ |
+| **BLE.sh**               | `~/.local/share/blesh`                         | ✅ Eliminado completamente |
+| **BLE.sh (.bashrc)**     | Líneas `ble.sh --noattach` y `ble-attach`      | ✅ Eliminadas              |
+| **Atuin**                | `~/.atuin`                                     | ✅ Eliminado completamente |
+| **Atuin (.bashrc)**      | Líneas `atuin init bash`                       | ✅ Eliminadas              |
+| **Oh My Posh (.bashrc)** | Líneas `oh-my-posh init`                       | ✅ Eliminadas              |
+| **Gemini/Antigravity**   | `~/.gemini`                                    | ✅ Eliminado completamente |
+| **GitHub Token**         | Variable `GITHUB_PERSONAL_ACCESS_TOKEN`        | ✅ Eliminada de .bashrc    |
+| **Symlinks**             | `.bash_aliases`, `.gitconfig`, tema Oh My Posh | ✅ Eliminados              |
 
 ### ⚠️ **¿Qué NO se elimina? (Herramientas del sistema)**
 
 El script **NO** desinstala paquetes instalados globalmente para evitar romper dependencias de otros usuarios:
 
-| Herramienta | Razón |
-|:------------|:------|
-| `git`, `docker`, `gh`, `tmux`, `fzf` | Paquetes del sistema (apt/dnf/pacman) |
-| `oh-my-posh` binario | Instalado en `/usr/local/bin/` (requiere sudo) |
-| `zoxide` binario | Instalado en `~/.local/bin/` |
-| `lsd`, `bat`, `ripgrep` | Paquetes del sistema |
-| `nvm` y Node.js | Gestor de versiones (puede tener proyectos dependientes) |
+| Herramienta                          | Razón                                                    |
+| :----------------------------------- | :------------------------------------------------------- |
+| `git`, `docker`, `gh`, `tmux`, `fzf` | Paquetes del sistema (apt/dnf/pacman)                    |
+| `oh-my-posh` binario                 | Instalado en `/usr/local/bin/` (requiere sudo)           |
+| `zoxide` binario                     | Instalado en `~/.local/bin/`                             |
+| `lsd`, `bat`, `ripgrep`              | Paquetes del sistema                                     |
+| `nvm` y Node.js                      | Gestor de versiones (puede tener proyectos dependientes) |
 
 ---
 
@@ -1298,6 +1298,43 @@ ssh -T git@github.com
 
 # Deberías ver: "Hi TU_USUARIO! You've successfully authenticated..."
 ```
+
+---
+
+## 🗑️ Desinstalación Total
+
+El proyecto incluye un script de **Desinstalación Radical** diseñado para dejar tu sistema limpio, ideal si quieres revertir cambios o reinstalar desde cero.
+
+```bash
+./uninstall.sh
+```
+
+**Este script limpia:**
+*   ⚠️ **Backups y Archivos Dotfiles**: Elimina `~/.dotfiles`, `~/.bashrc` (restaura backup si existe), `~/.inputrc`, etc.
+*   ⚠️ **Directorios de Configuración**: Borra `~/.config/nvim`, `~/.config/tmux`, `~/.gemini`, etc.
+*   ⚠️ **Runtimes y Herramientas**:
+    *   **NVM + Nodejs**: Elimina `~/.nvm`, `.npm`, `.node_repl_history`.
+    *   **Docker**: Detiene contenedores, elimina imágenes/volúmenes y desinstala paquetes (opcional).
+    *   **Rust/Cargo**: Elimina `~/.cargo` y `~/.rustup`.
+    *   **Go**: Elimina `~/go` y `/usr/local/go`.
+    *   **Brew**: Desinstala Homebrew y sus paquetes.
+*   ⚠️ **Binarios Locales**: Elimina herramientas instaladas en `~/.local/bin` (zoxide, oh-my-posh, etc.).
+
+> 🛑 **ADVERTENCIA**: Este es un comando destructivo. Úsalo con precaución. El script pedirá confirmación antes de borrar componentes críticos como Docker.
+```
+
+## ❓ FAQ y Troubleshooting
+
+### 1. `nvm: command not found`
+A veces la terminal no carga NVM inmediatamente después de instalar.
+**Solución**: Cierra y abre la terminal, o ejecuta `source ~/.bashrc`. El script de instalación ahora intenta forzar la carga, pero el reinicio manual es infalible.
+
+### 2. Error de permisos en Git/SSH
+Si `git clone` falla, asegúrate de haber subido tu llave pública a GitHub (Paso 2 de Prerequisitos).
+**Solución**: Ejecuta `ssh -T git@github.com` para verificar.
+
+### 3. Bitwarden Login falla
+Verifique que `BW_CLIENTID` y `BW_CLIENTSECRET` en tu `.env.age` sean correctos.
 
 #### 🔴 BLE.sh muestra errores al iniciar terminal
 
