@@ -20,7 +20,7 @@
           "type": "session"
         },
         {
-          "foreground": "#61AFEF",
+          "foreground": "#C678DD",
           "options": {
             "style": "folder"
           },

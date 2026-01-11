@@ -9,6 +9,15 @@ alias sync-dotfiles='(cd ~/dotfiles && git pull && ./install.sh --all) && source
 alias reload='exec bash'
 
 # -----------------------------------------------------------------------------
+# Theme & Colors (Harmonization)
+# -----------------------------------------------------------------------------
+# Forzar directorios en Púrpura (Magenta) para coincidir con Oh My Posh
+if command -v dircolors &> /dev/null; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+fi
+export LS_COLORS="${LS_COLORS}:di=01;35"
+
+# -----------------------------------------------------------------------------
 # LSD (LSDeluxe) - Reemplazo moderno de ls
 # -----------------------------------------------------------------------------
 if command -v lsd &> /dev/null; then
