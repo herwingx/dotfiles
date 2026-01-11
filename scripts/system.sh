@@ -328,17 +328,28 @@ install_modern_tools() {
             $SUDO_CMD apt-get update && $SUDO_CMD apt-get install -y gping
         elif [ -f /etc/redhat-release ]; then
             $SUDO_CMD dnf install gping -y 2>/dev/null || {
-                # Binary fallback
-                wget -q https://github.com/orf/gping/releases/latest/download/gping-x86_64-unknown-linux-musl.tar.gz -O /tmp/gping.tar.gz
-                tar -xzf /tmp/gping.tar.gz -C /tmp
-                $SUDO_CMD mv /tmp/gping /usr/local/bin/gping
-                $SUDO_CMD chmod +x /usr/local/bin/gping
-                rm -f /tmp/gping.tar.gz
+                # Binary fallback - Updated URL
+                echo -e "${YELLOW}   ! gping no está en repos, intentando binario...${NC}"
+                GPING_URL="https://github.com/orf/gping/releases/download/gping-v1.16.1/gping-Linux-x86_64.tar.gz"
+                wget -q "$GPING_URL" -O /tmp/gping.tar.gz
+                
+                if [ -s /tmp/gping.tar.gz ]; then
+                    tar -xzf /tmp/gping.tar.gz -C /tmp
+                    $SUDO_CMD mv /tmp/gping /usr/local/bin/gping
+                    $SUDO_CMD chmod +x /usr/local/bin/gping
+                    rm -f /tmp/gping.tar.gz
+                    echo -e "${CYAN}   ✓ gping instalado (binario)${NC}"
+                else
+                    echo -e "${RED}   ✗ Falló descarga de gping${NC}"
+                fi
             }
         elif [ -f /etc/arch-release ]; then
             $SUDO_CMD pacman -S gping --noconfirm
         fi
-        echo -e "${CYAN}   ✓ gping instalado${NC}"
+        
+        if command -v gping &> /dev/null; then
+             echo -e "${CYAN}   ✓ gping verificado${NC}"
+        fi
     else
         echo -e "${YELLOW}   ! gping ya está instalado${NC}"
     fi
