@@ -1244,7 +1244,7 @@ Si necesitas limpiar tu sistema, el script `uninstall.sh` revierte los cambios:
 | :----------------------- | :--------------------------------------------- | :------------------------ |
 | **BLE.sh**               | `~/.local/share/blesh`                         | ✅ Eliminado completamente |
 | **BLE.sh (.bashrc)**     | Líneas `ble.sh --noattach` y `ble-attach`      | ✅ Eliminadas              |
-| **Atuin**                | `~/.atuin`                                     | ✅ Eliminado completamente |
+| **Atuin**                | `~/.atuin`, `~/.local/share/atuin` | ✅ Eliminado completamente |
 | **Atuin (.bashrc)**      | Líneas `atuin init bash`                       | ✅ Eliminadas              |
 | **Oh My Posh (.bashrc)** | Líneas `oh-my-posh init`                       | ✅ Eliminadas              |
 | **Gemini/Antigravity**   | `~/.gemini`                                    | ✅ Eliminado completamente |

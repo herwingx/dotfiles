@@ -70,9 +70,15 @@ gh_auth_login() {
     
     if [ -n "$GH_TOKEN" ]; then
         echo -e "${CYAN}   Usando token de secrets encriptados...${NC}"
+        
+        # Asegurar que el directorio de config existe y es del usuario
+        mkdir -p "$HOME/.config/gh"
+        chmod 700 "$HOME/.config/gh"
+        
         echo "$GH_TOKEN" | gh auth login --with-token
         if [ $? -eq 0 ]; then
             echo -e "${CYAN}   ✓ Autenticación exitosa${NC}"
+            # Guardar token en host config explicitamente si es necesario (gh suele hacerlo solo)
             return 0
         fi
     fi
