@@ -11,10 +11,7 @@
 # Instala GitHub CLI (gh) y ejecuta autenticación automática.
 # Soporta Debian/Ubuntu, Fedora/RHEL y Arch Linux.
 # ─────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────
-# Instala GitHub CLI (gh) y ejecuta autenticación automática.
-# Soporta Debian/Ubuntu, Fedora/RHEL y Arch Linux.
-# ─────────────────────────────────────────────────────────────
+
 install_gh_cli() {
     echo -e "${GREEN}>>> Instalando GitHub CLI (gh)...${NC}"
     
@@ -75,7 +72,11 @@ gh_auth_login() {
         mkdir -p "$HOME/.config/gh"
         chmod 700 "$HOME/.config/gh"
         
-        echo "$GH_TOKEN" | gh auth login --with-token
+        # Ejecutamos en subshell, eliminando GH_TOKEN del entorno para obligar
+        # a 'gh' a leer desde stdin (con --with-token) y guardar la credencial permanentemente.
+        # Si GH_TOKEN está presente, 'gh' ignoraría --with-token.
+        echo "$GH_TOKEN" | (unset GH_TOKEN; gh auth login --with-token)
+        
         if [ $? -eq 0 ]; then
             echo -e "${CYAN}   ✓ Autenticación exitosa${NC}"
             # Guardar token en host config explicitamente si es necesario (gh suele hacerlo solo)
