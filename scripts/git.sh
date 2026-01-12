@@ -17,6 +17,14 @@ install_gitconfig() {
     # Fuerza SSH aunque copies links HTTPS (vital para forwarding)
     git config --global url."git@github.com:".insteadOf "https://github.com/"
     echo -e "${CYAN}   ✓ Git configurado${NC}"
+
+    # Configurar credential helper para persistencia en LXC/Headless
+    # En WSL git suele usar el de Windows, pero en LXC puro necesitamos 'store' o 'cache'
+    if ! grep -qi microsoft /proc/version 2>/dev/null; then
+         # Si no es WSL (es un Linux nativo o container)
+         echo -e "${CYAN}   Configurando credential.helper store (para persistencia en LXC)...${NC}"
+         git config --global credential.helper store
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────
