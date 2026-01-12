@@ -805,9 +805,9 @@ install_oh_my_posh() {
 # Oh My Posh (Prompt Theme)
 if command -v oh-my-posh &> /dev/null; then
     if [ -f "$HOME/.cache/oh-my-posh/themes/herwingx.omp.json" ]; then
-        eval "\$(/usr/local/bin/oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
+        eval "\$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
     else
-        eval "\$(/usr/local/bin/oh-my-posh init bash)"
+        eval "\$(oh-my-posh init bash)"
     fi
 fi
 EOF
