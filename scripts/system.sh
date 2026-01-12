@@ -29,6 +29,72 @@ fix_locales() {
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Helper: Gestión robusta de bloques en .bashrc
+# Modo: "top", "bottom", "before-ble" (antes de ble-attach)
+# ─────────────────────────────────────────────────────────────
+update_bashrc_block() {
+    local name="$1"
+    local content="$2"
+    local mode="$3"
+    local bashrc="$HOME/.bashrc"
+    
+    local start="<!-- BEGIN_${name} -->"
+    local end="<!-- END_${name} -->"
+    
+    # 1. Limpiar bloque existente
+    sed -i "/$start/,/$end/d" "$bashrc"
+    
+    # 2. Preparar nuevo bloque
+    local block="# $start
+$content
+# $end"
+
+    # 3. Insertar según modo
+    if [ "$mode" == "top" ]; then
+        # Usar archivos temporales para evitar problemas de buffer/truncado con cat
+        cp "$bashrc" "$bashrc.tmp"
+        echo "$block" > "$bashrc"
+        echo "" >> "$bashrc"
+        cat "$bashrc.tmp" >> "$bashrc"
+        rm -f "$bashrc.tmp"
+        
+    elif [ "$mode" == "before-ble" ]; then
+        # 1. Prioridad: Buscar marcador de inicio de bloque BLE (Evita anidación)
+        local anchor=$(grep -n "<!-- BEGIN_BLE_ATTACH -->" "$bashrc" | head -n1 | cut -d: -f1)
+        
+        # 2. Fallback: Buscar comando ble-attach (evitando comentarios)
+        if [ -z "$anchor" ]; then
+             anchor=$(grep -n "ble-attach" "$bashrc" | grep -v "^#" | head -n1 | cut -d: -f1)
+        fi
+        
+        if [ -n "$anchor" ]; then
+             local head_lines=$((anchor - 1))
+             
+             cp "$bashrc" "$bashrc.tmp"
+             if [ "$head_lines" -ge 0 ]; then
+                 head -n "$head_lines" "$bashrc.tmp" > "$bashrc"
+             else
+                 > "$bashrc"
+             fi
+             
+             echo "" >> "$bashrc"
+             echo "$block" >> "$bashrc"
+             echo "" >> "$bashrc"
+             tail -n "+$anchor" "$bashrc.tmp" >> "$bashrc"
+             rm -f "$bashrc.tmp"
+        else
+            # Si no se encuentra, append
+            echo "" >> "$bashrc"
+            echo "$block" >> "$bashrc"
+        fi
+        
+    else # bottom
+        echo "" >> "$bashrc"
+        echo "$block" >> "$bashrc"
+    fi
+}
+
 update_system() {
     echo -e "${GREEN}>>> Actualizando el sistema...${NC}"
     
@@ -113,8 +179,8 @@ install_packages() {
         tldr --update &>/dev/null || true
     fi
     
-    install_modern_tools
     install_bash_aliases
+    install_modern_tools
     
     echo -e "${CYAN}   ✓ Sistema completo configurado${NC}"
 }
@@ -133,34 +199,18 @@ install_bash_aliases() {
     # Asegurar que .bashrc cargue .bash_aliases de forma ROBUSTA
     BASHRC="$HOME/.bashrc"
     
-    ALIASES_BLOCK=$(cat <<EOF
-# <!-- BEGIN_ALIASES -->
+    CONTENT=$(cat <<EOF
 # Cargar aliases personales
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
-# <!-- END_ALIASES -->
 EOF
 )
-    # Limpiar bloque anterior por marcadores
-    sed -i '/<!-- BEGIN_ALIASES -->/,/<!-- END_ALIASES -->/d' "$BASHRC"
+    # Limpieza legacy
+    sed -i '/source ~\/.bash_aliases/d' "$BASHRC"
+    sed -i '/\. ~\/.bash_aliases/d' "$BASHRC"
 
-    # Limpieza legacy (si no hay marcadores)
-    if ! grep -q "BEGIN_ALIASES" "$BASHRC"; then
-        # Intentamos borrar bloques antiguos con patrones específicos
-        # Cuidado: Esto es frágil, pero necesario para limpiar lo viejo
-        sed -i '/source ~\/.bash_aliases/d' "$BASHRC"
-        sed -i '/\. ~\/.bash_aliases/d' "$BASHRC"
-    fi
-
-    # Insertar al final del archivo si no está ble-attach, o antes si lo está
-    if grep -q "ble-attach" "$BASHRC"; then
-         export BLOCK="$ALIASES_BLOCK"
-         awk '/ble-attach/ {print ENVIRON["BLOCK"]; print ""; print $0; next} 1' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
-    else
-         echo "" >> "$BASHRC"
-         echo "$ALIASES_BLOCK" >> "$BASHRC"
-    fi
+    update_bashrc_block "ALIASES" "$CONTENT" "before-ble"
     
     # Limpiar variables de entorno hardcodeadas problemáticas (GitHub Token viejo)
     # Esto soluciona que 'gh auth login' se pierda al abrir nueva terminal si el token en bashrc es inválido
@@ -195,32 +245,19 @@ configure_wsl_path() {
     
     # Agregar al .bashrc la limpieza de PATH al PRINCIPIO (Solo si no existe)
     # Bloque de configuración WSL PATH
-    WSL_PATH_BLOCK=$(cat <<EOF
-# <!-- BEGIN_WSL_PATH -->
+    CONTENT=$(cat <<EOF
 # WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)
 if grep -qi microsoft /proc/version 2>/dev/null; then
     # Filtrar rutas de /mnt/* del PATH
     NEW_PATH=\$(echo "\$PATH" | tr ":" "\n" | grep -v "^/mnt/" | tr "\n" ":" | sed "s/:\$//")
     export PATH="\$NEW_PATH"
 fi
-# <!-- END_WSL_PATH -->
 EOF
 )
-
-    # 1. Limpiar bloque existente
-    sed -i '/<!-- BEGIN_WSL_PATH -->/,/<!-- END_WSL_PATH -->/d' "$BASHRC"
-    
-    # 2. Limpieza legacy
+    # Limpieza legacy
     sed -i '/# WSL: Limpiar PATH de Windows/d' "$BASHRC"
 
-    # 3. Insertar al PRINCIPIO del archivo (Crítico para PATH)
-    # Primero leemos el archivo actual
-    CURRENT_CONTENT=$(cat "$BASHRC")
-    
-    # Escribimos: Bloque WSL + Salto + Contenido previo
-    echo "$WSL_PATH_BLOCK" > "$BASHRC"
-    echo "" >> "$BASHRC"
-    echo "$CURRENT_CONTENT" >> "$BASHRC"
+    update_bashrc_block "WSL_PATH" "$CONTENT" "top"
     
     echo -e "${CYAN}   ✓ PATH verificado${NC}"
     echo -e "${YELLOW}   ⚠️  Recarga tu shell (source ~/.bashrc) para aplicar cambios${NC}"
@@ -234,27 +271,11 @@ ensure_path() {
     
     # Solo agregar si no se detecta ya una configuración explícita de este tipo
     # Bloque PATH universal
-    PATH_BLOCK=$(cat <<EOF
-# <!-- BEGIN_PATH_FIX -->
-export PATH="\$HOME/.local/bin:\$HOME/.atuin/bin:/usr/local/bin:\$PATH"
-# <!-- END_PATH_FIX -->
-EOF
-)
-    # Limpiar y reinsertar
-    sed -i '/<!-- BEGIN_PATH_FIX -->/,/<!-- END_PATH_FIX -->/d' "$BASHRC"
-    sed -i '/export PATH="\$HOME\/.local\/bin:\$HOME\/.atuin\/bin:\/usr\/local\/bin:\$PATH"/d' "$BASHRC" # Legacy exact match
+    CONTENT='export PATH="$HOME/.local/bin:$HOME/.atuin/bin:/usr/local/bin:$PATH"'
 
-    # Insertar después del bloque WSL si existe, o al principio
-    if grep -q "END_WSL_PATH" "$BASHRC"; then
-         export BLOCK="$PATH_BLOCK"
-         awk '/<!-- END_WSL_PATH -->/ {print $0; print ""; print ENVIRON["BLOCK"]; next} 1' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
-    else
-         # Si no hay bloque WSL, poner al principio
-         CURRENT=$(cat "$BASHRC")
-         echo "$PATH_BLOCK" > "$BASHRC"
-         echo "" >> "$BASHRC"
-         echo "$CURRENT" >> "$BASHRC"
-    fi
+    sed -i '/export PATH="\$HOME\/.local\/bin:\$HOME\/.atuin\/bin:\/usr\/local\/bin:\$PATH"/d' "$BASHRC"
+
+    update_bashrc_block "PATH_FIX" "$CONTENT" "before-ble"
 }
 
 
@@ -290,25 +311,15 @@ install_modern_tools() {
     fi
 
     # Configurar en .bashrc con marcadores (SIEMPRE, incluso si ya existía)
-    ZOXIDE_BLOCK=$(cat <<EOF
-# <!-- BEGIN_ZOXIDE -->
+    CONTENT=$(cat <<EOF
 # Zoxide (Smarter cd)
 if command -v zoxide &>/dev/null; then
     eval "\$(zoxide init bash)"
 fi
-# <!-- END_ZOXIDE -->
 EOF
 )
-    sed -i '/<!-- BEGIN_ZOXIDE -->/,/<!-- END_ZOXIDE -->/d' "$BASHRC"
-    sed -i '/zoxide init bash/d' "$BASHRC" # Legacy removal
-
-    # Insertar antes de ble-attach
-    if grep -q "ble-attach" "$BASHRC"; then
-            export BLOCK="$ZOXIDE_BLOCK"
-            awk '/ble-attach/ {print ENVIRON["BLOCK"]; print ""; print $0; next} 1' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
-    else
-            echo "$ZOXIDE_BLOCK" >> "$BASHRC"
-    fi
+    sed -i '/zoxide init bash/d' "$BASHRC"
+    update_bashrc_block "ZOXIDE" "$CONTENT" "before-ble"
     
     # Alias cd=z (Gestionado en .bash_aliases, solo log informativo)
     if ! grep -q 'alias cd="z"' "$HOME/.bash_aliases"; then
@@ -481,7 +492,8 @@ EOF
     install_oh_my_posh
 
     # Ble.sh (Bash Line Editor) - Debe ir AL FINAL
-    install_blesh
+    # Se ha movido a instaladores principales para garantizar orden (install_all / install_system_all)
+    # install_blesh
 
     # Tmux Configuration (Premium)
     if [ -f "$DOTFILES_DIR/config/.tmux.conf" ]; then
@@ -673,48 +685,28 @@ if [[ ${BLE_VERSION-} ]]; then
 fi
 EOF
 
-    # 3. Configurar .bashrc de forma atómica y segura
+    # 3. Configurar .bashrc de forma segura (preservando otros bloques)
     if [ -f "$BLESH_DIR/ble.sh" ]; then
         BASHRC="$HOME/.bashrc"
         
-        # BLOCKS for Ble.sh
-        BLE_SOURCE_BLOCK=$(cat <<EOF
-# <!-- BEGIN_BLE_SOURCE -->
-# 1. Ble.sh Source (Must be at the start for proper functionality)
-[[ \$- == *i* && -f ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
-# <!-- END_BLE_SOURCE -->
-EOF
-)
-        BLE_ATTACH_BLOCK=$(cat <<EOF
-# <!-- BEGIN_BLE_ATTACH -->
-# 6. Ble.sh Attach (Must be the last line)
-[[ \${BLE_VERSION-} ]] && ble-attach
-# <!-- END_BLE_ATTACH -->
-EOF
-)
-
-        # 1. CLEANUP (Remove old blocks and legacy lines)
-        sed -i '/<!-- BEGIN_BLE_SOURCE -->/,/<!-- END_BLE_SOURCE -->/d' "$BASHRC"
-        sed -i '/<!-- BEGIN_BLE_ATTACH -->/,/<!-- END_BLE_ATTACH -->/d' "$BASHRC"
-        
-        # Legacy cleanup
+        # Limpieza legacy SOLO de líneas de ble.sh (no bloques completos)
         sed -i '/source ~\/.*ble.sh/d' "$BASHRC"
-        sed -i '/ble-attach/d' "$BASHRC"
+        # NO borrar ble-attach aquí porque lo necesitamos como ancla para otros bloques
         sed -i '/# Ble.sh attach/d' "$BASHRC"
-        sed -i '/: # .*ble.sh.*/d' "$BASHRC" # Limpiar comentarios generados por fixes anteriores
+        sed -i '/: # .*ble.sh.*/d' "$BASHRC"
 
-        # 2. INSERT SOURCE AT TOP
-        # Read current content
-        CURRENT_CONTENT=$(cat "$BASHRC")
-        echo "$BLE_SOURCE_BLOCK" > "$BASHRC"
-        echo "" >> "$BASHRC"
-        echo "$CURRENT_CONTENT" >> "$BASHRC"
+        # Contenido de los bloques (sin marcadores, el helper los añade)
+        BLE_SOURCE_CONTENT='# 1. Ble.sh Source (Must be at the start for proper functionality)
+[[ $- == *i* && -f ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null'
 
-        # 3. INSERT ATTACH AT BOTTOM
-        echo "" >> "$BASHRC"
-        echo "$BLE_ATTACH_BLOCK" >> "$BASHRC"
+        BLE_ATTACH_CONTENT='# 6. Ble.sh Attach (Must be the last line)
+[[ ${BLE_VERSION-} ]] && ble-attach'
+
+        # Usar el helper para insertar/actualizar bloques de forma segura
+        update_bashrc_block "BLE_SOURCE" "$BLE_SOURCE_CONTENT" "top"
+        update_bashrc_block "BLE_ATTACH" "$BLE_ATTACH_CONTENT" "bottom"
         
-        echo -e "${CYAN}   ✓ .bashrc configurado (Source al inicio, Attach al final con marcadores)${NC}"
+        echo -e "${CYAN}   ✓ .bashrc configurado (Source al inicio, Attach al final)${NC}"
     else
         echo -e "${RED}   ✗ No se encontró ble.sh tras la instalación${NC}"
     fi
@@ -758,8 +750,7 @@ install_atuin() {
     export PATH="$HOME/.atuin/bin:$PATH"
     
     # Configurar .bashrc (Atuin INIT)
-    ATUIN_BLOCK=$(cat <<EOF
-# <!-- BEGIN_ATUIN -->
+    CONTENT=$(cat <<EOF
 # Atuin (Magical Shell History)
 if [ -f "\$HOME/.atuin/bin/env" ]; then
     . "\$HOME/.atuin/bin/env"
@@ -767,20 +758,10 @@ fi
 if command -v atuin &>/dev/null; then
     eval "\$(atuin init bash)"
 fi
-# <!-- END_ATUIN -->
 EOF
 )
-    # Limpiar previo
-    sed -i '/<!-- BEGIN_ATUIN -->/,/<!-- END_ATUIN -->/d' "$BASHRC"
-    sed -i '/atuin init bash/d' "$BASHRC" # Legacy
-
-    # Insertar antes de ble-attach
-    if grep -q "ble-attach" "$BASHRC"; then
-         export BLOCK="$ATUIN_BLOCK"
-         awk '/ble-attach/ {print ENVIRON["BLOCK"]; print ""; print $0; next} 1' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
-    else
-         echo "$ATUIN_BLOCK" >> "$BASHRC"
-    fi
+    sed -i '/atuin init bash/d' "$BASHRC"
+    update_bashrc_block "ATUIN" "$CONTENT" "before-ble"
     echo -e "${CYAN}   ✓ Atuin init agregado a .bashrc${NC}"
 
     # Instrucciones post-instalación
@@ -820,42 +801,19 @@ install_oh_my_posh() {
     BASHRC="$HOME/.bashrc"
     
     # Bloque de configuración con MARCADORES para fácil reemplazo
-    OMP_BLOCK=$(cat <<EOF
-# <!-- BEGIN_OMP -->
-# Oh My Posh (Prompt Theme) - Managed by dotfiles
+    CONTENT=$(cat <<EOF
+# Oh My Posh (Prompt Theme)
 if command -v oh-my-posh &> /dev/null; then
-    # Ensure the config file exists
     if [ -f "$HOME/.cache/oh-my-posh/themes/herwingx.omp.json" ]; then
         eval "\$(/usr/local/bin/oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
     else
-        # Fallback default theme
         eval "\$(/usr/local/bin/oh-my-posh init bash)"
     fi
 fi
-# <!-- END_OMP -->
 EOF
 )
-
-    # 1. Limpiar versiones previas (Legacy y Bloques marcados)
-    # Eliminar bloque marcado si existe
-    sed -i '/<!-- BEGIN_OMP -->/,/<!-- END_OMP -->/d' "$BASHRC"
-    
-    # Limpieza legacy de emergencia (solo si no se detectan marcadores)
-    if ! grep -q "BEGIN_OMP" "$BASHRC"; then
-        sed -i '/oh-my-posh init bash/d' "$BASHRC"
-        # Cuidado con eliminar comentarios genéricos, ser específico si es posible
-    fi
-
-    # 2. Insertar el bloque nuevo
-    if grep -q "ble-attach" "$BASHRC"; then
-        # Insertamos antes de ble-attach
-        export BLOCK="$OMP_BLOCK"
-        awk '/ble-attach/ {print ENVIRON["BLOCK"]; print ""; print $0; next} 1' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
-    else
-        # Si no hay ble-attach, lo añadimos al final
-        echo "" >> "$BASHRC"
-        echo "$OMP_BLOCK" >> "$BASHRC"
-    fi
+    sed -i '/oh-my-posh init bash/d' "$BASHRC"
+    update_bashrc_block "OMP" "$CONTENT" "before-ble"
     
     echo -e "${CYAN}   ✓ Tema herwingx configurado en .bashrc${NC}"
 }
