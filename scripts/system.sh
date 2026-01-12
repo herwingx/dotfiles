@@ -176,7 +176,7 @@ configure_wsl_path() {
             echo '    NEW_PATH=$(echo "$PATH" | tr ":" "\n" | grep -v "^/mnt/" | tr "\n" ":" | sed "s/:$//")'
             echo '    export PATH="$NEW_PATH"'
             echo 'fi'
-            echo 'export PATH="$HOME/.local/bin:$HOME/.atuin/bin:$PATH"'
+            echo 'export PATH="$HOME/.local/bin:$HOME/.atuin/bin:/usr/local/bin:$PATH"'
             echo ""
             cat "$BASHRC"
         } > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
@@ -714,7 +714,7 @@ install_oh_my_posh() {
 
     # Configurar .bashrc (Antes de ble-attach)
     BASHRC="$HOME/.bashrc"
-    OMP_INIT='eval "$(oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"'
+    OMP_INIT='eval "$(/usr/local/bin/oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"'
     
     # Remover configuraciones viejas de oh-my-posh si existen (limpieza)
     sed -i '/oh-my-posh init bash/d' "$BASHRC"
