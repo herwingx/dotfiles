@@ -79,7 +79,11 @@ gh_auth_login() {
         
         if [ $? -eq 0 ]; then
             echo -e "${CYAN}   ✓ Autenticación exitosa${NC}"
-            # Guardar token en host config explicitamente si es necesario (gh suele hacerlo solo)
+            
+            # Configurar git para usar gh como credential helper
+            echo -e "${CYAN}   Configurando git para usar credenciales de gh...${NC}"
+            gh auth setup-git
+            
             return 0
         fi
     fi
