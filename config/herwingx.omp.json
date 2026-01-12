@@ -16,7 +16,7 @@
         {
           "foreground": "#d4d4d4",
           "style": "plain",
-          "template": "{{ if .Root }}<#FF0000>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#00FF9C>{{ .UserName }}@{{ .HostName }}</>{{ end }}",
+          "template": "{{ if .Root }}<#E06C75>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#00FF9C>{{ .UserName }}@{{ .HostName }}</>{{ end }}",
           "type": "session"
         },
         {
