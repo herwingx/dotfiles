@@ -713,19 +713,37 @@ install_oh_my_posh() {
         echo -e "${RED}   ✗ No se encontró el tema config/herwingx.omp.json${NC}"
     fi
 
-    # Configurar .bashrc (Antes de ble-attach)
+    # Configurar .bashrc de manera limpia y robusta
     BASHRC="$HOME/.bashrc"
-    OMP_INIT='eval "$(/usr/local/bin/oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"'
     
-    # Remover configuraciones viejas de oh-my-posh si existen (limpieza)
-    # IMPORTANTE: Usar comentario con no-op (:) para evitar dejar bloques vacíos (if ...; then; else; fi)
-    sed -i 's/.*oh-my-posh init bash.*/: # &/' "$BASHRC"
-    
-    # Agregar la nueva configuración antes de ble-attach si existe, sino al final
-    if grep -q "ble-attach" "$BASHRC"; then
-         sed -i "/# Ble.sh attach/i $OMP_INIT" "$BASHRC"
+    # Bloque de configuración optimizado (heredoc para evitar errores de escape)
+    OMP_BLOCK=$(cat <<EOF
+# Oh My Posh (Prompt Theme) - Managed by dotfiles
+if command -v oh-my-posh &> /dev/null; then
+    # Ensure the config file exists
+    if [ -f "$HOME/.cache/oh-my-posh/themes/herwingx.omp.json" ]; then
+        eval "\$(/usr/local/bin/oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"
     else
-         echo "$OMP_INIT" >> "$BASHRC"
+        # Fallback default theme
+        eval "\$(/usr/local/bin/oh-my-posh init bash)"
+    fi
+fi
+EOF
+)
+
+    # 1. Limpiar cualquier bloque previo (usando sed para borrar el bloque completo si es posible, o marcando)
+    # Por seguridad, borramos líneas que contengan "oh-my-posh init" para evitar duplicados
+    sed -i '/oh-my-posh init bash/d' "$BASHRC"
+    sed -i '/# Oh My Posh/d' "$BASHRC"
+
+    # 2. Insertar el bloque nuevo en una posición segura (antes de ble-attach)
+    if grep -q "ble-attach" "$BASHRC"; then
+        # Insertamos antes de ble-attach usando un archivo temporal para manejar el bloque multilínea
+        awk -v block="$OMP_BLOCK" '/ble-attach/ {print block; print ""; print $0; next} 1' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
+    else
+        # Si no hay ble-attach, lo añadimos al final
+        echo "" >> "$BASHRC"
+        echo "$OMP_BLOCK" >> "$BASHRC"
     fi
     
     echo -e "${CYAN}   ✓ Tema herwingx configurado en .bashrc${NC}"
