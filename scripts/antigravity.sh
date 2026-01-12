@@ -83,32 +83,16 @@ install_gemini_settings() {
         
         BASHRC="$HOME/.bashrc"
         
-        # Eliminar entrada anterior si existe para evitar duplicados
+        # Limpieza legacy (líneas sueltas sin marcadores)
         sed -i '/export GITHUB_PERSONAL_ACCESS_TOKEN=/d' "$BASHRC"
         sed -i '/# GitHub Token para Gemini CLI/d' "$BASHRC"
+        sed -i '/# GitHub Token (Preserved/d' "$BASHRC"
         
-        # Verificar si existe ble-attach (debe ser la última línea)
-        if grep -q "ble-attach" "$BASHRC"; then
-            # Insertar el token ANTES del bloque de ble-attach
-            # 1. Eliminar temporalmente el bloque de ble-attach
-            sed -i '/# Ble.sh attach (must be last)/d' "$BASHRC"
-            sed -i '/ble-attach/d' "$BASHRC"
-            
-            # 2. Agregar el token
-            echo "" >> "$BASHRC"
-            echo "# GitHub Token para Gemini CLI" >> "$BASHRC"
-            echo "export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\"" >> "$BASHRC"
-            
-            # 3. Re-agregar ble-attach al final
-            echo "" >> "$BASHRC"
-            echo "# Ble.sh attach (must be last)" >> "$BASHRC"
-            echo '[[ ${BLE_VERSION-} ]] && ble-attach' >> "$BASHRC"
-        else
-            # Si no hay ble-attach, agregar normalmente al final
-            echo "" >> "$BASHRC"
-            echo "# GitHub Token para Gemini CLI" >> "$BASHRC"
-            echo "export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\"" >> "$BASHRC"
-        fi
+        # Usar el helper para insertar el token de forma segura
+        TOKEN_CONTENT="# GitHub Token para Gemini CLI
+export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\""
+        
+        update_bashrc_block "GH_TOKEN" "$TOKEN_CONTENT" "before-ble"
         
         # Exportar también en la sesión actual para que las extensiones lo usen
         export GITHUB_PERSONAL_ACCESS_TOKEN="$GH_TOKEN"

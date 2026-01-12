@@ -29,6 +29,7 @@ install_all() {
     install_dev_tools_all
     install_antigravity_full
     install_auto_update
+    install_blesh
     show_reload_message
 }
 
