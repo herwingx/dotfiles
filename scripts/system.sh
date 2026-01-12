@@ -212,8 +212,6 @@ EOF
     
     # 2. Limpieza legacy
     sed -i '/# WSL: Limpiar PATH de Windows/d' "$BASHRC"
-    # No borramos el código legacy automáticamente porque es complejo detectarlo sin romper cosas,
-    # confiamos en que el usuario ya tiene la versión limpia o que el bloque nuevo tiene precedencia.
 
     # 3. Insertar al PRINCIPIO del archivo (Crítico para PATH)
     # Primero leemos el archivo actual
