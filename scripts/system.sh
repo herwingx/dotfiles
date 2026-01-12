@@ -575,9 +575,11 @@ ble-bind -f 'RET' 'accept-line'
 # Configuración de autocompletado
 # Reactivamos el autocompletado automático (necesario para que TAB responda ágilmente)
 _safe_bleopt complete_auto_complete 1
+_safe_bleopt complete_auto_history 1
+_safe_bleopt complete_ambiguous 1
 
 # Menú de completado limpio (solo con TAB)
-_safe_bleopt complete_menu_style desc-raw
+_safe_bleopt complete_menu_style align-nowrap
 
 # Ocultar el mensaje de estado de salida [ble: exit XXX]
 _safe_bleopt exec_exit_status ""
