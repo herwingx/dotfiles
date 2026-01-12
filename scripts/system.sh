@@ -609,9 +609,10 @@ EOF
         BLE_ATTACH_BLOCK='[[ ${BLE_VERSION-} ]] && ble-attach'
 
         # Limpiar entradas previas para evitar duplicidad o desorden
-        sed -i '/ble.sh/d' "$BASHRC"
-        sed -i '/ble-attach/d' "$BASHRC"
-        sed -i '/Ble.sh attach/d' "$BASHRC"
+        # Usamos : # para comentar y evitar bloques vacíos (syntax error fix)
+        sed -i 's/.*ble.sh.*/: # &/' "$BASHRC"
+        sed -i 's/.*ble-attach.*/: # &/' "$BASHRC"
+        sed -i 's/.*Ble.sh attach.*/: # &/' "$BASHRC"
 
         # Inyectar SOURCE al inicio (creamos archivo temporal)
         {
@@ -620,8 +621,8 @@ EOF
         } > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
 
         # Asegurar que ble-attach sea la ULTIMA línea del archivo
-        # Primero lo quitamos si existe en cualquier lado
-        sed -i '/ble-attach/d' "$BASHRC"
+        # Primero lo quitamos si existe en cualquier lado (comentamos)
+        sed -i 's/.*ble-attach.*/: # &/' "$BASHRC"
         echo "" >> "$BASHRC"
         echo "# Ble.sh attach (Debe ser la última línea)" >> "$BASHRC"
         echo "$BLE_ATTACH_BLOCK" >> "$BASHRC"
@@ -717,7 +718,8 @@ install_oh_my_posh() {
     OMP_INIT='eval "$(/usr/local/bin/oh-my-posh init bash --config ~/.cache/oh-my-posh/themes/herwingx.omp.json)"'
     
     # Remover configuraciones viejas de oh-my-posh si existen (limpieza)
-    sed -i '/oh-my-posh init bash/d' "$BASHRC"
+    # IMPORTANTE: Usar comentario con no-op (:) para evitar dejar bloques vacíos (if ...; then; else; fi)
+    sed -i 's/.*oh-my-posh init bash.*/: # &/' "$BASHRC"
     
     # Agregar la nueva configuración antes de ble-attach si existe, sino al final
     if grep -q "ble-attach" "$BASHRC"; then
