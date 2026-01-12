@@ -108,8 +108,17 @@ install_nvm_node() {
     fi
 
     if [ ! -d "$HOME/.nvm" ]; then
-        echo -e "${CYAN}   Descargando e instalando NVM...${NC}"
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        echo -e "${CYAN}   Instalando NVM (Robust Git Clone)...${NC}"
+        # Usar git clone directo anulando cualquier configuración global de SSH insteadOf
+        # Esto previene errores si el usuario tiene .gitconfig forzando SSH pero sin llaves cargadas
+        if git clone -c url."https://github.com/".insteadOf= https://github.com/nvm-sh/nvm.git "$HOME/.nvm"; then
+            cd "$HOME/.nvm"
+            git checkout v0.40.1
+            cd - > /dev/null
+        else
+            echo -e "${RED}   ✗ Error clonando NVM. Revisa tu conexión.${NC}"
+            return 1
+        fi
     else
         echo -e "${YELLOW}   ! NVM ya está instalado${NC}"
     fi
