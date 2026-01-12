@@ -16,7 +16,7 @@
         {
           "foreground": "#d4d4d4",
           "style": "plain",
-          "template": "{{ if .WSL }}<#00FF9C>wsl</><#5c6370>:</>{{ end }}{{ if .Root }}<#FF0000>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#00FF9C>{{ .UserName }}@{{ .HostName }}</>{{ end }}",
+          "template": "{{ if .Root }}<#FF0000>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#00FF9C>{{ .UserName }}@{{ .HostName }}</>{{ end }}",
           "type": "session"
         },
         {
@@ -201,12 +201,6 @@
           "options": {
             "threshold": 500
           }
-        },
-        {
-          "foreground": "#5C6370",
-          "style": "plain",
-          "template": " <#61AFEF>󰍛</> {{ .PhysicalPercentUsed | printf \"%.2f\" }}%",
-          "type": "sysinfo"
         },
         {
           "foreground": "#98C379",
