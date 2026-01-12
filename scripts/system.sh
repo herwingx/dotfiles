@@ -11,11 +11,30 @@
 # Actualiza el sistema operativo según la distribución detectada.
 # Ejecuta upgrade y autoremove para limpiar paquetes huérfanos.
 # ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# Genera y configura locales (Fix para LXC/Docker)
+# ─────────────────────────────────────────────────────────────
+fix_locales() {
+    if [ -f /etc/debian_version ]; then
+        echo -e "${CYAN}   Verificando locales...${NC}"
+        if ! locale -a | grep -q "en_US.utf8"; then
+            echo -e "${YELLOW}   ! Locales faltantes. Generando en_US.UTF-8...${NC}"
+            $SUDO_CMD apt-get install -y locales >/dev/null 2>&1
+            $SUDO_CMD locale-gen en_US.UTF-8
+            $SUDO_CMD update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+            export LANG=en_US.UTF-8
+            export LC_ALL=en_US.UTF-8
+            echo -e "${CYAN}   ✓ Locales generados${NC}"
+        fi
+    fi
+}
+
 update_system() {
     echo -e "${GREEN}>>> Actualizando el sistema...${NC}"
     
     if [ -f /etc/debian_version ]; then
         echo -e "${CYAN}   Detectado: Debian/Ubuntu (apt)${NC}"
+        fix_locales
         $SUDO_CMD apt-get update -y
         $SUDO_CMD apt-get upgrade -y
         $SUDO_CMD apt-get autoremove -y
@@ -122,8 +141,9 @@ install_bash_aliases() {
         echo 'fi' >> "$BASHRC"
     fi
     
-    # Limpiar PATH en WSL (eliminar rutas de Windows)
+    # Limpiar PATH en WSL y asegurar PATH universal
     configure_wsl_path
+    ensure_path
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -166,6 +186,20 @@ configure_wsl_path() {
     
     echo -e "${CYAN}   ✓ PATH verificado${NC}"
     echo -e "${YELLOW}   ⚠️  Recarga tu shell (source ~/.bashrc) para aplicar cambios${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Asegura que /usr/local/bin esté en el PATH (Crítico para oh-my-posh/LXC)
+# ─────────────────────────────────────────────────────────────
+ensure_path() {
+    BASHRC="$HOME/.bashrc"
+    
+    # Solo agregar si no se detecta ya una configuración explícita de este tipo
+    if ! grep -q "export PATH=.*:/usr/local/bin" "$BASHRC"; then
+        echo -e "${CYAN}   Asegurando /usr/local/bin en PATH...${NC}"
+        # Usamos una sintaxis segura que preserva lo existente y añade las rutas clave
+        echo 'export PATH="$HOME/.local/bin:$HOME/.atuin/bin:/usr/local/bin:$PATH"' >> "$BASHRC"
+    fi
 }
 
 
