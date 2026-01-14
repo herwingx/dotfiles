@@ -5,15 +5,6 @@
       "alignment": "left",
       "segments": [
         {
-          "foreground": "#00FF9C",
-          "foreground_templates": [
-            "{{ if eq .Env.USER \"root\" }}#E06C75{{ end }}"
-          ],
-          "style": "plain",
-          "template": "{{ .Icon }} ",
-          "type": "os"
-        },
-        {
           "foreground": "#d4d4d4",
           "style": "plain",
           "template": "{{ if .Root }}<#E06C75>{{ .UserName }}@{{ .HostName }}</>{{ else }}<#00FF9C>{{ .UserName }}@{{ .HostName }}</>{{ end }}",
@@ -39,15 +30,6 @@
           "style": "plain",
           "template": "<#61AFEF>(</>{{ .UpstreamIcon }}{{ if .UpstreamIcon }} {{ end }}{{ .HEAD }}{{ if gt .Ahead 0 }} <#98C379>↑{{ .Ahead }}</>{{ end }}{{ if gt .Behind 0 }} <#E5C07B>↓{{ .Behind }}</>{{ end }}{{ if .Working.Changed }} <#E5C07B> {{ .Working.String }}</>{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} <#98C379> {{ .Staging.String }}</>{{ end }}<#61AFEF>)</>",
           "type": "git"
-        },
-        {
-          "foreground": "#98C379",
-          "options": {
-            "fetch_version": true
-          },
-          "style": "plain",
-          "template": " <#5C6370>via</> <#98C379>\ue781 {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }}</>",
-          "type": "node"
         },
         {
           "foreground": "#E5C07B",
@@ -132,30 +114,6 @@
           "style": "plain",
           "template": " <#5C6370>via</> <#E5C07B>\ue79f {{ .Full }}</>",
           "type": "bun"
-        },
-        {
-          "foreground": "#E06C75",
-          "style": "plain",
-          "template": " <#E06C75>📦 {{ .Full }}</>",
-          "type": "npm"
-        },
-        {
-          "foreground": "#61AFEF",
-          "options": {
-            "display_mode": "files",
-            "extensions": [
-              "Dockerfile",
-              "docker-compose.yml",
-              "docker-compose.yaml",
-              "compose.yml",
-              "compose.yaml",
-              ".dockerignore"
-            ],
-            "fetch_context": true
-          },
-          "style": "plain",
-          "template": " <#5C6370>via</> <#61AFEF> {{ .Context }}</>",
-          "type": "docker"
         },
         {
           "foreground": "#E5C07B",
