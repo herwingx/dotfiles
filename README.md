@@ -350,15 +350,16 @@ Tu Laptop → Servidor A → Servidor B
                          └─ Usa tus llaves locales en B (sin copiarlas)
 ```
 
-**Ya configurado en `~/.ssh/config` con:**
+**Ya configurado globalmente en `~/.ssh/config`:**
 ```ssh
 Host *
     ForwardAgent yes
+    AddKeysToAgent yes
 ```
 
 **Probar Forwarding:**
 ```bash
-# 1. Conectarte a un servidor
+# 1. Conectarte a cualquier servidor (GitHub, Servidor Privado, etc)
 ssh usuario@servidor-remoto
 
 # 2. YA DENTRO del servidor, verificar que ves tus llaves locales
@@ -367,7 +368,18 @@ ssh-add -l
 # Si ves tu llave local listada, ¡el forwarding funciona! 🎉
 ```
 
-> ⚠️ **Seguridad**: Solo usa `ForwardAgent yes` en servidores de confianza. Si un servidor está comprometido, podría usar tus llaves mientras estás conectado.
+> 🛡️ **Nota de Seguridad**: Hemos habilitado `ForwardAgent` globalmente para facilitar tu flujo de trabajo. Sin embargo, para entornos locales (`192.168.*`), mantenemos relajadas las validaciones de `StrictHostKeyChecking` para evitar alertas constantes al recrear máquinas virtuales.
+
+---
+
+## 🖼️ Manejo de Imágenes y Binarios
+
+Este proyecto incluye un archivo archivo **`.gitattributes`** configurado para proteger la integridad de tus archivos multimedia (imágenes, fuentes, etc.) en entornos mixtos (Windows/Linux).
+
+**¿Qué hace?**
+- Fuerza a Git a tratar `.png`, `.jpg`, `.ico`, etc. como **binarios**.
+- Evita que Git intente convertir los saltos de línea (CRLF/LF) dentro de los bytes de la imagen, lo cual suele corromper los archivos al transferirlos entre sistemas operativos.
+- Asegura que tus assets se vean perfectos tanto en Fedora como en Windows.
 
 ---
 
