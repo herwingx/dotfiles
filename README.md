@@ -969,36 +969,22 @@ Este proyecto incluye un archivo `.vscode-extensions` con todas las extensiones 
 
 ### 🚀 Instalación Automatizada
 
-Asegúrate de estar en la raíz del repositorio para que los comandos encuentren el archivo `.vscode-extensions`:
+### 🚀 Instalación Automatizada
 
+Hemos incluido un script inteligente que detecta tu editor (`code`, `codium`, `antigravity`) e instala las extensiones automáticamente.
+
+**Ejecutar script:**
 ```bash
-cd ~/dotfiles
+./scripts/extensions.sh
 ```
 
-#### Linux / WSL (Bash o Zsh)
+**Soporta:**
+- Visual Studio Code (`code`)
+- VSCodium (`codium`)
+- Google Antigravity (`agy` / `antigravity`)
+- Cursor (`cursor`)
 
-```bash
-# Opción 1: Desde archivo del repositorio (recomendado)
-xargs -a .vscode-extensions -L1 antigravity --install-extension
-
-# Opción 2: Desde lista activa (copiar extensiones de otra máquina)
-antigravity --list-extensions | grep '\.' | xargs -L1 antigravity --install-extension
-```
-
-> **📘 Explicación**: 
-> - `grep '\.'`: Filtra líneas con punto (ignora encabezados de texto)
-> - `xargs -L1`: Ejecuta el comando una vez por cada línea
-> - Si ves que están instaladas, el comando solo las valida (sin reinstalar)
-
-#### Windows (PowerShell)
-
-```powershell
-# Opción 1: Desde archivo exacto del repositorio
-Get-Content .\.vscode-extensions | ForEach-Object { antigravity --install-extension $_ }
-
-# Opción 2: Desde lista activa del sistema actual
-antigravity --list-extensions | Where-Object { $_ -match '\.' } | ForEach-Object { antigravity --install-extension $_ }
-```
+> 💡 **Nota**: Si usas **WSL**, el script detectará tu instalación de Windows si configuraste el enlace correctamente.
 
 ### 📦 Gestión de Extensiones
 
@@ -1009,12 +995,15 @@ Si instalaste nuevas extensiones manualmente y quieres guardarlas en el repo:
 
 **Linux / WSL:**
 ```bash
-antigravity --list-extensions > .vscode-extensions
+#### Actualizar lista del repositorio (Backup)
+Si instalaste nuevas extensiones manualmente y quieres guardarlas en el repo:
+
+```bash
+# Guardar extensiones actuales en .vscode-extensions
+./scripts/extensions.sh --backup
 ```
 
-**Windows:**
-```powershell
-antigravity --list-extensions | Out-File -Encoding UTF8 .vscode-extensions
+Esto detectará tu editor automáticamente y generará la lista limpia.
 ```
 
 #### Crear un nuevo perfil
