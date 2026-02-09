@@ -10,10 +10,28 @@
 # ─────────────────────────────────────────────────────────────
 # Instala GitHub CLI (gh) y ejecuta autenticación automática.
 # Soporta Debian/Ubuntu, Fedora/RHEL y Arch Linux.
+# Incluye verificación de dependencias para ejecución standalone.
 # ─────────────────────────────────────────────────────────────
 
 install_gh_cli() {
     echo -e "${GREEN}>>> Instalando GitHub CLI (gh)...${NC}"
+    
+    # --- DEPENDENCY CHECK ---
+    if ! command -v curl &> /dev/null || ! command -v wget &> /dev/null; then
+        echo -e "${YELLOW}   ! Dependencias faltantes (curl/wget). Instalando base...${NC}"
+        if declare -f install_packages > /dev/null; then
+            install_packages
+        else
+            if [ -f /etc/debian_version ]; then
+                $SUDO_CMD apt-get update && $SUDO_CMD apt-get install -y curl wget ca-certificates
+            elif [ -f /etc/redhat-release ]; then
+                $SUDO_CMD dnf install -y curl wget ca-certificates
+            elif [ -f /etc/arch-release ]; then
+                $SUDO_CMD pacman -S curl wget ca-certificates --noconfirm
+            fi
+        fi
+    fi
+    # ------------------------
     
     if command -v gh &> /dev/null; then
         echo -e "${YELLOW}   ! GitHub CLI ya está instalado: $(gh --version | head -1)${NC}"
@@ -94,25 +112,27 @@ gh_auth_login() {
 
 # ─────────────────────────────────────────────────────────────
 # Instala NVM (Node Version Manager) y Node.js LTS.
-# Si ya están instalados, muestra las versiones actuales.
+# Incluye persistencia robusta en .bashrc usando update_bashrc_block.
+# Fuerza alias default a LTS para que siempre esté disponible.
 # ─────────────────────────────────────────────────────────────
 install_nvm_node() {
     echo -e "${GREEN}>>> Instalando NVM y Node.js...${NC}"
     
     export NVM_DIR="$HOME/.nvm"
     
-    # Check if NVM dir exists but is broken or empty
+    # 1. Limpieza preventiva de instalación corrupta
     if [ -d "$NVM_DIR" ] && [ ! -s "$NVM_DIR/nvm.sh" ]; then
         echo -e "${YELLOW}   ! Directorio NVM corrupto detectado. Limpiando...${NC}"
         rm -rf "$NVM_DIR"
     fi
 
-    if [ ! -d "$HOME/.nvm" ]; then
+    # 2. Instalación de NVM
+    if [ ! -d "$NVM_DIR" ]; then
         echo -e "${CYAN}   Instalando NVM (Robust Git Clone)...${NC}"
         # Usar git clone directo anulando cualquier configuración global de SSH insteadOf
         # Esto previene errores si el usuario tiene .gitconfig forzando SSH pero sin llaves cargadas
-        if git clone -c url."https://github.com/".insteadOf= https://github.com/nvm-sh/nvm.git "$HOME/.nvm"; then
-            cd "$HOME/.nvm"
+        if git clone -c url."https://github.com/".insteadOf= https://github.com/nvm-sh/nvm.git "$NVM_DIR"; then
+            cd "$NVM_DIR"
             git checkout v0.40.1
             cd - > /dev/null
         else
@@ -123,22 +143,33 @@ install_nvm_node() {
         echo -e "${YELLOW}   ! NVM ya está instalado${NC}"
     fi
     
-    # Agente de Carga de NVM (The Fix)
-    # Intentamos cargar desde la ubicación estándar
-    if [ -s "$NVM_DIR/nvm.sh" ]; then
-        \. "$NVM_DIR/nvm.sh"
-    fi
-    
-    # Si falla, intentamos cargar desde bashrc simulando shell interactiva
-    if ! command -v nvm &> /dev/null; then
-         export NVM_DIR="$HOME/.nvm"
-         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    # 3. PERSISTENCIA ROBUSTA EN .BASHRC (El Fix Crítico)
+    # Usamos update_bashrc_block para inyectar el bloque de carga de NVM
+    # Modo 'before-ble' para que cargue antes de ble-attach pero después de WSL PATH
+    NVM_BLOCK='# NVM (Node Version Manager) - Carga automática
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # Carga nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # Carga completions'
+
+    # Aseguramos que la función existe (por si se ejecuta standalone)
+    if declare -f update_bashrc_block > /dev/null; then
+        echo -e "${CYAN}   Configurando persistencia en .bashrc...${NC}"
+        update_bashrc_block "NVM" "$NVM_BLOCK" "before-ble"
+    else
+        # Fallback si no se cargó system.sh
+        echo -e "${YELLOW}   ! Usando fallback para .bashrc${NC}"
+        if ! grep -q 'NVM_DIR' "$HOME/.bashrc"; then
+            echo "" >> "$HOME/.bashrc"
+            echo "$NVM_BLOCK" >> "$HOME/.bashrc"
+        fi
     fi
 
-    # Verificación final
+    # 4. Carga inmediata para la sesión actual
+    \. "$NVM_DIR/nvm.sh"
+
+    # 5. Instalación de Node LTS y configuración de default
     if command -v nvm &> /dev/null; then
-        # Instalación de Node LTS
-        LTS_VERSION=$(nvm version-remote --lts)
+        LTS_VERSION=$(nvm version-remote --lts 2>/dev/null)
         CURRENT_VERSION=$(node -v 2>/dev/null)
         
         if [ "$CURRENT_VERSION" = "$LTS_VERSION" ]; then
@@ -147,16 +178,22 @@ install_nvm_node() {
             echo -e "${CYAN}   Instalando Node.js LTS ($LTS_VERSION)...${NC}"
             nvm install --lts
             nvm use --lts
-            nvm alias default 'lts/*'
         fi
         
+        # CRÍTICO: Forzar alias default a LTS para nuevas terminales
+        echo -e "${CYAN}   Configurando Node LTS como default permanente...${NC}"
+        nvm alias default 'lts/*'
+        
+        # Actualizar npm a última versión compatible
+        echo -e "${CYAN}   Actualizando npm...${NC}"
+        npm install -g npm@latest 2>/dev/null || true
+        
         echo -e "${CYAN}   ✓ NVM y Node.js configurados${NC}"
-        echo -e "${CYAN}   Node: $(node --version)${NC}"
+        echo -e "${CYAN}   Node: $(node --version) (default: lts/*)${NC}"
         echo -e "${CYAN}   npm: $(npm --version)${NC}"
     else
         echo -e "${RED}   ✗ Error crítico: NVM instalado pero no cargable.${NC}"
         echo -e "${YELLOW}   ! Cierra esta terminal y abre una nueva para que NVM funcione.${NC}"
-        # No instalamos node del sistema para no causar conflictos de versiones
         return 1
     fi
 }
@@ -324,9 +361,30 @@ bitwarden_login() {
 # ─────────────────────────────────────────────────────────────
 # Instala Docker y Docker Compose.
 # Agrega el usuario actual al grupo docker.
+# Incluye verificación de dependencias para ejecución standalone.
 # ─────────────────────────────────────────────────────────────
 install_docker() {
     echo -e "${GREEN}>>> Instalando Docker...${NC}"
+    
+    # --- DEPENDENCY CHECK ---
+    # Verificar si curl y ca-certificates están instalados
+    if ! command -v curl &> /dev/null; then
+        echo -e "${YELLOW}   ! Dependencias faltantes (curl). Instalando base...${NC}"
+        # Llamada cruzada segura a system.sh
+        if declare -f install_packages > /dev/null; then
+            install_packages
+        else
+            # Fallback básico si system.sh no está cargado
+            if [ -f /etc/debian_version ]; then
+                $SUDO_CMD apt-get update && $SUDO_CMD apt-get install -y curl ca-certificates gnupg wget
+            elif [ -f /etc/redhat-release ]; then
+                $SUDO_CMD dnf install -y curl ca-certificates gnupg wget
+            elif [ -f /etc/arch-release ]; then
+                $SUDO_CMD pacman -S curl ca-certificates gnupg wget --noconfirm
+            fi
+        fi
+    fi
+    # ------------------------
     
     if command -v docker &> /dev/null; then
         echo -e "${YELLOW}   ! Docker ya está instalado: $(docker --version)${NC}"

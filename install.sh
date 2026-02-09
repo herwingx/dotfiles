@@ -26,10 +26,22 @@ install_all() {
     configure_rclone
     install_gitconfig
     install_ssh_keys
+    configure_ssh_agent  # Nuevo: SSH Agent auto-start
     install_dev_tools_all
     install_antigravity_full
     install_auto_update
-    install_blesh
+    # install_blesh (Deshabilitado: Warp/VSCode Incompatible)
+    show_reload_message
+}
+
+# Instalación solo del sistema base (Opción 2 del menú)
+install_system_all() {
+    update_system
+    install_packages
+    install_gitconfig
+    install_ssh_keys
+    configure_ssh_agent  # SSH Agent auto-start
+    # install_blesh (Deshabilitado: Warp/VSCode Incompatible)
     show_reload_message
 }
 
@@ -113,6 +125,7 @@ show_menu() {
     echo -e "${NEON_CYAN}  // 🔄 MANTENIMIENTO${NC}"
     echo -ne "  "; p_opt "19" "Activar Auto-Updates"; p_opt "20" "Ejecutar Update Manual"; echo ""
     echo -ne "  "; p_opt "21" "Desactivar Auto-Updates"; echo ""
+    echo -ne "  "; p_opt "22" "Eliminar ble.sh (Fix VS Code)"; p_opt "23" "Instalar ble.sh (Opcional)"; echo ""
     echo ""
     
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
@@ -145,6 +158,8 @@ show_menu() {
         19) install_auto_update || handle_error $? "AUTO_UPDATE_ENABLE" ;;
         20) run_manual_update || handle_error $? "MANUAL_UPDATE" ;;
         21) uninstall_auto_update || handle_error $? "AUTO_UPDATE_DISABLE" ;;
+        22) disable_blesh || handle_error $? "BLESH_DISABLE" ;;
+        23) install_blesh || handle_error $? "BLESH_INSTALL" ;;
         0)
             echo ""
             echo -e "${NEON_GREEN}  >> SYSTEM SHUTDOWN... GOODBYE.${NC}"

@@ -713,10 +713,47 @@ EOF
 }
 
 # ─────────────────────────────────────────────────────────────
+# Deshabilita ble.sh (para compatibilidad con VS Code / Warp)
+# ─────────────────────────────────────────────────────────────
+disable_blesh() {
+    echo -e "${YELLOW}>>> Deshabilitando ble.sh (reparación de terminal)...${NC}"
+    
+    # 1. Limpiar .bashrc
+    sed -i '/ble.sh/d' "$HOME/.bashrc"
+    sed -i '/ble-attach/d' "$HOME/.bashrc"
+    sed -i '/<!-- BEGIN_BLE_SOURCE -->/,/<!-- END_BLE_SOURCE -->/d' "$HOME/.bashrc"
+    sed -i '/<!-- BEGIN_BLE_ATTACH -->/,/<!-- END_BLE_ATTACH -->/d' "$HOME/.bashrc"
+    
+    # 2. Borrar cache
+    rm -rf "$HOME/.local/share/blesh"
+    rm -rf "$HOME/.cache/ble.sh"
+    
+    echo -e "${GREEN}   ✓ ble.sh eliminado. Reinicia tu terminal.${NC}"
+}
+
+# ─────────────────────────────────────────────────────────────
 # Instala Atuin (Historial de Shell Mágico)
+# Incluye configuración optimizada para búsqueda global y sync.
 # ─────────────────────────────────────────────────────────────
 install_atuin() {
     echo -e "${GREEN}>>> Instalando Atuin...${NC}"
+    
+    # --- DEPENDENCY CHECK ---
+    if ! command -v curl &> /dev/null; then
+        echo -e "${YELLOW}   ! Dependencia faltante (curl). Instalando...${NC}"
+        if declare -f install_packages > /dev/null; then
+            install_packages
+        else
+            if [ -f /etc/debian_version ]; then
+                $SUDO_CMD apt-get update && $SUDO_CMD apt-get install -y curl
+            elif [ -f /etc/redhat-release ]; then
+                $SUDO_CMD dnf install -y curl
+            elif [ -f /etc/arch-release ]; then
+                $SUDO_CMD pacman -S curl --noconfirm
+            fi
+        fi
+    fi
+    # ------------------------
     
     if ! command -v atuin &> /dev/null; then
         if [ -f /etc/redhat-release ]; then
@@ -740,10 +777,99 @@ install_atuin() {
 
         echo -e "${CYAN}   ✓ Atuin instalado${NC}"
     else
-        echo -e "${YELLOW}   ! Atuin ya está instalado${NC}"
+        echo -e "${YELLOW}   ! Atuin ya está instalado: $(atuin --version 2>/dev/null | head -1)${NC}"
     fi
 
-    # Configurar .bashrc (Antes de ble-attach)
+    # ─────────────────────────────────────────────────────────────
+    # CONFIGURACIÓN OPTIMIZADA
+    # ─────────────────────────────────────────────────────────────
+    ATUIN_CONFIG_DIR="$HOME/.config/atuin"
+    ATUIN_CONFIG="$ATUIN_CONFIG_DIR/config.toml"
+    
+    mkdir -p "$ATUIN_CONFIG_DIR"
+    
+    # Solo crear config si no existe (respetar personalización del usuario)
+    if [ ! -f "$ATUIN_CONFIG" ]; then
+        echo -e "${CYAN}   Creando configuración optimizada...${NC}"
+        cat > "$ATUIN_CONFIG" << 'EOF'
+# ═══════════════════════════════════════════════════════════════
+# ATUIN CONFIGURATION - Optimized by Dotfiles
+# ═══════════════════════════════════════════════════════════════
+# Documentación: https://atuin.sh/docs/config
+
+# ─────────────────────────────────────────────────────────────
+# BÚSQUEDA
+# ─────────────────────────────────────────────────────────────
+# Modo de filtrado al buscar (Ctrl+R)
+# Opciones: global, host, session, directory
+filter_mode = "global"
+
+# Modo de filtrado al presionar flecha arriba
+# "session" es más intuitivo (como bash normal)
+filter_mode_shell_up_key_binding = "session"
+
+# Ordenar por: time, count
+search_mode = "fuzzy"
+
+# ─────────────────────────────────────────────────────────────
+# INTERFAZ (UI)
+# ─────────────────────────────────────────────────────────────
+# Estilo de la UI de búsqueda
+# Opciones: auto, full, compact
+style = "compact"
+
+# Búsqueda inline (más moderna)
+inline_height = 20
+
+# Mostrar preview del comando completo
+show_preview = true
+
+# Mostrar contexto (directorio, host)
+show_help = true
+
+# ─────────────────────────────────────────────────────────────
+# SINCRONIZACIÓN
+# ─────────────────────────────────────────────────────────────
+# Sincronizar automáticamente
+auto_sync = true
+
+# Frecuencia de sync (en segundos)
+sync_frequency = "10m"
+
+# Dirección del sync server (default: atuin.sh)
+# sync_address = "https://api.atuin.sh"
+
+# ─────────────────────────────────────────────────────────────
+# HISTORIAL
+# ─────────────────────────────────────────────────────────────
+# Guardar comandos que empiezan con espacio
+secrets_filter = true
+
+# Historial local máximo (default: unlimited)
+# max_history_length = 100000
+
+# Excluir comandos sensibles
+history_filter = [
+    "^echo .*password",
+    "^export.*TOKEN",
+    "^export.*SECRET",
+    "^export.*KEY",
+]
+
+# ─────────────────────────────────────────────────────────────
+# ATAJOS DE TECLADO
+# ─────────────────────────────────────────────────────────────
+# Usar Ctrl+R para búsqueda (default)
+# Flecha arriba para búsqueda en sesión
+EOF
+        echo -e "${CYAN}   ✓ Config creada: $ATUIN_CONFIG${NC}"
+    else
+        echo -e "${YELLOW}   ! Config existente encontrada, no se sobrescribe${NC}"
+    fi
+
+    # ─────────────────────────────────────────────────────────────
+    # CONFIGURAR .bashrc
+    # ─────────────────────────────────────────────────────────────
     BASHRC="$HOME/.bashrc"
     
     # Asegurar que la ruta de atuin esté disponible para el eval
@@ -764,12 +890,76 @@ EOF
     update_bashrc_block "ATUIN" "$CONTENT" "before-ble"
     echo -e "${CYAN}   ✓ Atuin init agregado a .bashrc${NC}"
 
-    # Instrucciones post-instalación
-    echo -e "${YELLOW}   ⚠️  Paso final (requiere interacción manual):${NC}"
-    echo -e "${YELLOW}   Ejecuta estos comandos para sincronizar tu historial:${NC}"
-    echo -e "${CYAN}     1. atuin register -u <usuario> -e <email>${NC}"
-    echo -e "${CYAN}     2. atuin import auto${NC}"
-    echo -e "${CYAN}     3. atuin sync${NC}"
+    # ─────────────────────────────────────────────────────────────
+    # AUTO-LOGIN CON CREDENCIALES DE .env.age
+    # ─────────────────────────────────────────────────────────────
+    # Verificar si ya está logueado
+    if command -v atuin &> /dev/null; then
+        if atuin status 2>/dev/null | grep -q "logged in"; then
+            echo -e "${YELLOW}   ! Ya estás logueado en Atuin${NC}"
+        else
+            # Intentar cargar credenciales de .env.age
+            if [ -n "$ATUIN_USERNAME" ] && [ -n "$ATUIN_KEY" ]; then
+                echo -e "${CYAN}   Detectadas credenciales Atuin en secrets...${NC}"
+                echo -e "${CYAN}   Intentando login automático...${NC}"
+                
+                # Login con key (más seguro que password)
+                if echo "$ATUIN_KEY" | atuin login -u "$ATUIN_USERNAME" --key - 2>/dev/null; then
+                    echo -e "${CYAN}   ✓ Login automático exitoso${NC}"
+                    
+                    # Importar historial si es primera vez
+                    if [ ! -f "$HOME/.local/share/atuin/history.db" ]; then
+                        echo -e "${CYAN}   Importando historial existente...${NC}"
+                        atuin import auto 2>/dev/null || true
+                    fi
+                    
+                    # Sync inicial
+                    echo -e "${CYAN}   Sincronizando...${NC}"
+                    atuin sync 2>/dev/null || true
+                    echo -e "${CYAN}   ✓ Atuin configurado completamente${NC}"
+                else
+                    echo -e "${YELLOW}   ! Login automático falló. Configura manualmente.${NC}"
+                fi
+            elif [ -n "$ATUIN_USERNAME" ] && [ -n "$ATUIN_PASSWORD" ]; then
+                # Fallback: login con password (menos seguro)
+                echo -e "${CYAN}   Detectadas credenciales Atuin (password)...${NC}"
+                if atuin login -u "$ATUIN_USERNAME" -p "$ATUIN_PASSWORD" 2>/dev/null; then
+                    echo -e "${CYAN}   ✓ Login automático exitoso${NC}"
+                    atuin import auto 2>/dev/null || true
+                    atuin sync 2>/dev/null || true
+                else
+                    echo -e "${YELLOW}   ! Login automático falló.${NC}"
+                fi
+            else
+                # No hay credenciales, mostrar instrucciones manuales
+                echo ""
+                echo -e "${NEON_GREEN}   ╔════════════════════════════════════════════════════════════╗${NC}"
+                echo -e "${NEON_GREEN}   ║  📚 ATUIN - PASOS FINALES (opcional pero recomendado)      ║${NC}"
+                echo -e "${NEON_GREEN}   ╚════════════════════════════════════════════════════════════╝${NC}"
+                echo ""
+                echo -e "${CYAN}   Para sincronizar tu historial entre máquinas:${NC}"
+                echo ""
+                echo -e "${WHITE}   1. Registrarse (una sola vez):${NC}"
+                echo -e "${GRAY}      atuin register -u <usuario> -e <email> -p <password>${NC}"
+                echo ""
+                echo -e "${WHITE}   2. O hacer login si ya tienes cuenta:${NC}"
+                echo -e "${GRAY}      atuin login -u <usuario> -p <password>${NC}"
+                echo ""
+                echo -e "${WHITE}   3. Obtener tu key para auto-login futuro:${NC}"
+                echo -e "${GRAY}      atuin key${NC}"
+                echo -e "${GRAY}      (Guarda esto en ATUIN_KEY de tu .env.age)${NC}"
+                echo ""
+                echo -e "${WHITE}   4. Importar historial existente:${NC}"
+                echo -e "${GRAY}      atuin import auto${NC}"
+                echo ""
+                echo -e "${WHITE}   5. Sincronizar:${NC}"
+                echo -e "${GRAY}      atuin sync${NC}"
+                echo ""
+                echo -e "${YELLOW}   💡 La sincronización es E2E encriptada. Nadie puede leer tu historial.${NC}"
+                echo ""
+            fi
+        fi
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -820,13 +1010,18 @@ EOF
 
 # ─────────────────────────────────────────────────────────────
 # Instalación agrupada de todo el sistema:
-# update + packages + git config + ssh keys
+# update + packages + git config + ssh keys + ssh agent
 # ─────────────────────────────────────────────────────────────
 install_system_all() {
     update_system
     install_packages
     install_gitconfig
     install_ssh_keys
+    # SSH Agent auto-start (definida en git.sh)
+    if declare -f configure_ssh_agent > /dev/null; then
+        configure_ssh_agent
+    fi
+    # ble.sh eliminado por causar conflictos con terminales modernas (Warp, VS Code)
     show_reload_message
 }
 

@@ -19,12 +19,10 @@
 - [🎯 ¿Qué es este proyecto?](#-qué-es-este-proyecto)
 - [✨ Características](#-características)
 - [⚡ Prerequisitos OBLIGATORIOS](#-prerequisitos-obligatorios)
-  - [🔑 Generar Llaves SSH](#-paso-1-generar-llaves-ssh)
-  - [📤 Agregar Llave a GitHub](#-paso-2-agregar-llave-pública-a-github)
-  - [⚙️ Configurar SSH Config](#-paso-3-configurar-ssh-config)
-  - [🔐 SSH Agent y Forwarding](#-paso-4-ssh-agent-y-forwarding)
-  - [🪟 Configuración WSL](#-configuración-especial-para-wsl)
-- [🚀 Instalación](#-instalación)
+  - [🛤️ Elige tu Camino de Instalación](#️-elige-tu-camino-de-instalación)
+  - [🪟 Flujo A: Windows + WSL](#-flujo-a-windows--wsl)
+  - [🐧 Flujo B: Linux Nativo](#-flujo-b-linux-nativo)
+- [🚀 Instalación (Menú Interactivo)](#-instalación)
 - [🏗️ Arquitectura](#️-arquitectura)
 - [📦 ¿Qué instalamos y por qué?](#-qué-instalamos-y-por-qué)
 - [🎨 Módulos Disponibles](#-módulos-disponibles)
@@ -95,39 +93,54 @@
 
 ---
 
-## 🔑 Paso 1: Generar Llaves SSH
+## 🛤️ Elige tu Camino de Instalación
 
-Las llaves SSH te permiten autenticarte con GitHub y servidores remotos **sin contraseñas**. Son el estándar de la industria.
+Dependiendo de tu sistema operativo, sigue **UNO** de estos flujos:
 
-### 🪟 Opción A: Windows (Nativo)
+| Tu Entorno | Flujo a Seguir |
+|:-----------|:---------------|
+| 🪟 **Windows con WSL** | [Flujo A: Windows + WSL](#-flujo-a-windows--wsl) → SSH se crea en Windows y se copia a WSL |
+| 🐧 **Linux Nativo** | [Flujo B: Linux Nativo](#-flujo-b-linux-nativo) → SSH se crea directamente en Linux |
 
-Si trabajas en Windows (incluso si usarás WSL después), genera tus llaves **primero en Windows**:
+---
 
-#### 1.1. Abrir PowerShell o Git Bash
+## 🪟 Flujo A: Windows + WSL
 
-- Presiona `Win + X` → Selecciona **"Windows PowerShell"** o **"Terminal"**
-- O usa **Git Bash** si ya lo tienes instalado
+> 📘 **Filosofía**: En entornos Windows+WSL, creamos las llaves SSH **una sola vez en Windows** y las copiamos a cada instancia de WSL. Esto centraliza la gestión y evita duplicidad.
 
-#### 1.2. Generar la llave
+### ✅ Checklist de Instalación (Orden Cronológico)
+
+```
+□ Paso 1: Generar SSH en Windows (PowerShell)
+□ Paso 2: Activar SSH Agent en Windows (PowerShell)
+□ Paso 3: Crear ~/.ssh/config en Windows
+□ Paso 4: Agregar llave pública a GitHub
+□ Paso 5: Instalar WSL (si no lo tienes)
+□ Paso 6: Copiar SSH desde Windows a WSL
+□ Paso 7: Clonar y ejecutar dotfiles en WSL
+```
+
+### 🔑 Paso 1: Generar Llaves SSH en Windows
+
+Abre **Windows Terminal** o **PowerShell** (como Administrador recomendado):
 
 ```powershell
-# Comando para generar llave SSH con algoritmo Ed25519 (más seguro y rápido que RSA)
+# Generar llave SSH Ed25519 (el estándar moderno)
 ssh-keygen -t ed25519 -C "tu_email@ejemplo.com"
 ```
 
 **Preguntas que te hará:**
 
 1. **"Enter file in which to save the key"**: 
-   - Presiona `Enter` para usar la ruta por defecto: `C:\Users\TU_USUARIO\.ssh\id_ed25519`
+   - Presiona `Enter` para usar: `C:\Users\TU_USUARIO\.ssh\id_ed25519`
 
 2. **"Enter passphrase"**: 
-   - **RECOMENDADO**: Ingresa una contraseña segura (se pedirá cada vez que uses la llave)
-   - **Opcional**: Presiona `Enter` para sin contraseña (menos seguro, pero más conveniente)
+   - **RECOMENDADO**: Ingresa una contraseña segura
+   - **Opcional**: Deja vacío (menos seguro)
 
-#### 1.3. Verificar que se creó
+**Verificar que se creó:**
 
 ```powershell
-# Listar archivos creados
 ls ~/.ssh/
 
 # Deberías ver:
@@ -135,138 +148,46 @@ ls ~/.ssh/
 # id_ed25519.pub ← Llave PÚBLICA (esta sí puedes compartir)
 ```
 
----
+### 🚀 Paso 2: Activar SSH Agent en Windows
 
-### 🐧 Opción B: Linux / WSL
+El SSH Agent mantiene tus llaves en memoria para no ingresar la contraseña constantemente.
 
-Si estás en Linux puro o ya dentro de WSL:
-
-#### 1.1. Abrir tu terminal
-
-```bash
-# Generar llave SSH
-ssh-keygen -t ed25519 -C "tu_email@ejemplo.com"
-```
-
-#### 1.2. Responder las preguntas
-
-1. **"Enter file in which to save the key"**: 
-   - Presiona `Enter` para usar `/home/TU_USUARIO/.ssh/id_ed25519`
-
-2. **"Enter passphrase"**: 
-   - Ingresa una contraseña o deja vacío
-
-#### 1.3. Verificar
-
-```bash
-ls -la ~/.ssh/
-
-# Deberías ver:
-# id_ed25519     (Permisos: 600)
-# id_ed25519.pub (Permisos: 644)
-```
-
----
-
-## 📤 Paso 2: Agregar Llave Pública a GitHub
-
-Para que GitHub te reconozca y puedas hacer `git clone`, `git push`, etc., debes subir tu **llave pública**.
-
-### 2.1. Copiar la Llave Pública
-
-**Windows (PowerShell/Git Bash):**
 ```powershell
-# Copiar al portapapeles
-cat ~/.ssh/id_ed25519.pub | clip
+# 1. Verificar estado del servicio SSH Agent
+Get-Service ssh-agent
 
-# O mostrar en pantalla para copiar manualmente
-cat ~/.ssh/id_ed25519.pub
+# 2. Si está en "Stopped", iniciarlo y configurar inicio automático
+Set-Service -Name ssh-agent -StartupType Automatic
+Start-Service ssh-agent
+
+# 3. Agregar tu llave al agente
+ssh-add $env:USERPROFILE\.ssh\id_ed25519
 ```
 
-**Linux/WSL:**
-```bash
-# Mostrar en pantalla
-cat ~/.ssh/id_ed25519.pub
+> 💡 **Verificar que funcionó**: Ejecuta `ssh-add -l` y deberías ver tu llave listada.
 
-# Si tienes xclip instalado (Ubuntu Desktop)
-cat ~/.ssh/id_ed25519.pub | xclip -selection clipboard
+### ⚙️ Paso 3: Crear SSH Config en Windows
 
-# En WSL, copiar a portapapeles de Windows
-cat ~/.ssh/id_ed25519.pub | clip.exe
-```
+Crea el archivo `C:\Users\TU_USUARIO\.ssh\config`:
 
-### 2.2. Agregar a GitHub
-
-1. Ve a: [https://github.com/settings/keys](https://github.com/settings/keys)
-2. Click en **"New SSH key"**
-3. **Title**: Nombre descriptivo (ej: "Laptop Personal", "PC Trabajo WSL")
-4. **Key type**: `Authentication Key`
-5. **Key**: Pega el contenido completo (empieza con `ssh-ed25519 AAAA...`)
-6. Click en **"Add SSH key"**
-
-### 2.3. Probar la Conexión
-
-```bash
-# Verificar que GitHub te reconoce
-ssh -T git@github.com
-
-# Respuesta esperada:
-# Hi TU_USUARIO! You've successfully authenticated, but GitHub does not provide shell access.
-```
-
-> ✅ Si ves tu usuario de GitHub en el mensaje, **¡la configuración es correcta!**
-
----
-
-## ⚙️ Paso 3: Configurar SSH Config
-
-El archivo `~/.ssh/config` te permite definir **atajos** y **configuraciones** para tus conexiones SSH.
-
-### 3.1. Crear/Editar el archivo
-
-**Linux/WSL:**
-```bash
-# Crear carpeta si no existe
-mkdir -p ~/.ssh
-
-# Editar con tu editor favorito
-nano ~/.ssh/config
-# o
-vim ~/.ssh/config
-```
-
-**Windows:**
 ```powershell
-# Crear carpeta si no existe
-mkdir -Force ~/.ssh
-
-# Editar (usa notepad o VSCode)
-notepad $HOME\.ssh\config
+# Crear archivo de configuración
+notepad $env:USERPROFILE\.ssh\config
 ```
 
-### 3.2. Configuración Básica Recomendada
-
-Copia y pega esta configuración base:
+Pega este contenido:
 
 ```ssh
-# ~/.ssh/config
+# ~/.ssh/config (Windows)
 
 # ========================================
 # CONFIGURACIÓN GLOBAL
 # ========================================
-# Aplica a TODOS los hosts
 Host *
-    # Agregar llaves automáticamente al agente SSH
     AddKeysToAgent yes
-    
-    # Habilitar SSH Agent Forwarding (usar tus llaves locales en servidores remotos)
     ForwardAgent yes
-    
-    # Evitar timeouts en conexiones largas inactivas
     ServerAliveInterval 60
     ServerAliveCountMax 120
-    
-    # Reutilizar conexiones para acelerar múltiples comandos
     ControlMaster auto
     ControlPath ~/.ssh/sockets/%r@%h-%p
     ControlPersist 600
@@ -278,13 +199,11 @@ Host github.com
     HostName github.com
     User git
     IdentityFile ~/.ssh/id_ed25519
-    # Usar IPv4 preferentemente (evita problemas con IPv6)
     AddressFamily inet
 
 # ========================================
 # EJEMPLO: Servidor Remoto
 # ========================================
-# Puedes agregar tus propios servidores aquí
 # Host mi-servidor
 #     HostName 192.168.1.100
 #     User usuario
@@ -292,83 +211,209 @@ Host github.com
 #     IdentityFile ~/.ssh/id_ed25519
 ```
 
-### 3.3. Crear carpeta de sockets (para ControlMaster)
+**Crear carpeta de sockets:**
 
-```bash
-mkdir -p ~/.ssh/sockets
+```powershell
+mkdir -Force $env:USERPROFILE\.ssh\sockets
 ```
 
-### 3.4. Asegurar Permisos Correctos
+### 📤 Paso 4: Agregar Llave a GitHub
+
+```powershell
+# Copiar llave pública al portapapeles
+Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub | clip
+```
+
+1. Ve a: [https://github.com/settings/keys](https://github.com/settings/keys)
+2. Click en **"New SSH key"**
+3. **Title**: Nombre descriptivo (ej: "PC Windows Principal")
+4. **Key type**: `Authentication Key`
+5. **Key**: Pega el contenido (Ctrl+V)
+6. Click en **"Add SSH key"**
+
+**Probar conexión:**
+
+```powershell
+ssh -T git@github.com
+
+# Respuesta esperada:
+# Hi TU_USUARIO! You've successfully authenticated...
+```
+
+### 🐧 Paso 5: Instalar WSL (si no lo tienes)
+
+```powershell
+# Instalar WSL con Ubuntu (default)
+wsl --install
+
+# O elegir una distribución específica
+wsl --install -d Ubuntu-24.04
+
+# Reiniciar si es necesario
+```
+
+### 📋 Paso 6: Copiar SSH a WSL
+
+Abre tu terminal de WSL y ejecuta:
 
 ```bash
-# CRÍTICO: SSH rechaza configuraciones con permisos inseguros
+# Crear directorio SSH
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+# Copiar llaves desde Windows (reemplaza TU_USUARIO_WINDOWS)
+cp /mnt/c/Users/TU_USUARIO_WINDOWS/.ssh/id_ed25519* ~/.ssh/
+cp /mnt/c/Users/TU_USUARIO_WINDOWS/.ssh/config ~/.ssh/
+
+# Ajustar permisos (CRÍTICO)
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+chmod 600 ~/.ssh/config
+
+# Crear carpeta de sockets
+mkdir -p ~/.ssh/sockets
+
+# Probar conexión
+ssh -T git@github.com
+```
+
+> 💡 **Automatización**: Los dotfiles incluyen la opción `[9] Sincronizar SSH desde Windows` que **detecta automáticamente tu usuario de Windows** y copia las llaves sin intervención manual.
+
+### 🚀 Paso 7: Instalar Dotfiles en WSL
+
+```bash
+# Clonar repositorio
+git clone git@github.com:herwingx/dotfiles.git ~/dotfiles
+
+# Ejecutar instalador
+cd ~/dotfiles
+./install.sh
+
+# Selecciona [1] para instalación completa
+```
+
+---
+
+## 🐧 Flujo B: Linux Nativo
+
+> 📘 **Para usuarios de Linux puro** (Fedora, Ubuntu, Arch, Debian) sin Windows involucrado.
+
+### ✅ Checklist de Instalación (Orden Cronológico)
+
+```
+□ Paso 1: Generar SSH en Linux
+□ Paso 2: Crear ~/.ssh/config
+□ Paso 3: Agregar llave pública a GitHub
+□ Paso 4: Clonar y ejecutar dotfiles
+```
+
+### 🔑 Paso 1: Generar Llaves SSH
+
+```bash
+# Generar llave SSH Ed25519
+ssh-keygen -t ed25519 -C "tu_email@ejemplo.com"
+
+# Responder:
+# 1. Enter file: [Enter] para default (~/.ssh/id_ed25519)
+# 2. Passphrase: [Tu contraseña segura] o [Enter] para vacío
+
+# Verificar
+ls -la ~/.ssh/
+# Deberías ver id_ed25519 y id_ed25519.pub
+```
+
+### ⚙️ Paso 2: Crear SSH Config
+
+```bash
+# Crear directorio y archivo
+mkdir -p ~/.ssh/sockets
+nano ~/.ssh/config
+```
+
+Pega este contenido (idéntico a Windows):
+
+```ssh
+# ~/.ssh/config (Linux)
+
+Host *
+    AddKeysToAgent yes
+    ForwardAgent yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 120
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 600
+
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    AddressFamily inet
+```
+
+**Asegurar permisos:**
+
+```bash
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/config
 chmod 600 ~/.ssh/id_ed25519
 chmod 644 ~/.ssh/id_ed25519.pub
 ```
 
----
+### 🚀 Paso 3: Activar SSH Agent en Linux
 
-## 🔐 Paso 4: SSH Agent y Forwarding
-
-El **SSH Agent** mantiene tus llaves en memoria para no pedir la contraseña en cada conexión.
-
-### 4.1. Iniciar el Agente (Automático en dotfiles)
-
-Los dotfiles configuran esto automáticamente en `.bashrc`, pero puedes verificarlo:
+Los dotfiles configuran esto automáticamente, pero para hacerlo manualmente:
 
 ```bash
-# Verificar si el agente está corriendo
-echo $SSH_AUTH_SOCK
+# Iniciar agente (temporal para esta sesión)
+eval "$(ssh-agent -s)"
 
-# Debe mostrar algo como:
-# /tmp/ssh-XXXXXX/agent.12345
-```
-
-### 4.2. Agregar tu Llave al Agente
-
-```bash
-# Agregar llave (te pedirá la contraseña si configuraste una)
+# Agregar llave
 ssh-add ~/.ssh/id_ed25519
 
-# Verificar que se agregó correctamente
+# Verificar
 ssh-add -l
-
-# Debe mostrar:
-# 256 SHA256:... tu_email@ejemplo.com (ED25519)
 ```
 
-### 4.3. SSH Agent Forwarding (Uso Avanzado)
+> 💡 **Persistencia**: Los dotfiles agregan un bloque a `.bashrc` que inicia el agente automáticamente al abrir terminal.
 
-**¿Qué es?** Permite usar tus llaves **locales** dentro de servidores remotos **sin copiarlas**.
+### 📤 Paso 4: Agregar Llave a GitHub
 
-**Caso de Uso:**
-```
-Tu Laptop → Servidor A → Servidor B
-          └─ Usa tus llaves locales en A
-                         └─ Usa tus llaves locales en B (sin copiarlas)
-```
-
-**Ya configurado globalmente en `~/.ssh/config`:**
-```ssh
-Host *
-    ForwardAgent yes
-    AddKeysToAgent yes
-```
-
-**Probar Forwarding:**
 ```bash
-# 1. Conectarte a cualquier servidor (GitHub, Servidor Privado, etc)
-ssh usuario@servidor-remoto
+# Copiar llave pública (mostrar en pantalla)
+cat ~/.ssh/id_ed25519.pub
 
-# 2. YA DENTRO del servidor, verificar que ves tus llaves locales
-ssh-add -l
-
-# Si ves tu llave local listada, ¡el forwarding funciona! 🎉
+# Si tienes xclip:
+cat ~/.ssh/id_ed25519.pub | xclip -selection clipboard
 ```
 
-> 🛡️ **Nota de Seguridad**: Hemos habilitado `ForwardAgent` globalmente para facilitar tu flujo de trabajo. Sin embargo, para entornos locales (`192.168.*`), mantenemos relajadas las validaciones de `StrictHostKeyChecking` para evitar alertas constantes al recrear máquinas virtuales.
+1. Ve a: [https://github.com/settings/keys](https://github.com/settings/keys)
+2. Click en **"New SSH key"**
+3. **Title**: Nombre descriptivo (ej: "Laptop Fedora")
+4. Pega la llave y guarda
+
+**Probar conexión:**
+
+```bash
+ssh -T git@github.com
+
+# Respuesta esperada:
+# Hi TU_USUARIO! You've successfully authenticated...
+```
+
+### 🚀 Paso 5: Instalar Dotfiles
+
+```bash
+# Clonar repositorio
+git clone git@github.com:herwingx/dotfiles.git ~/dotfiles
+
+# Ejecutar instalador
+cd ~/dotfiles
+./install.sh
+
+# Selecciona [1] para instalación completa
+```
+
+---
 
 ---
 
@@ -383,53 +428,9 @@ Este proyecto incluye un archivo archivo **`.gitattributes`** configurado para p
 
 ---
 
-## 🪟 Configuración Especial para WSL
-
-Si usas Windows Subsystem for Linux, necesitas **copiar** o **vincular** tus llaves de Windows a WSL.
-
-### Método 1: Copiado Automático (Recomendado)
-
-El instalador incluye una opción que copia las llaves automáticamente:
-
-```bash
-# Después de clonar los dotfiles en WSL
-cd ~/dotfiles
-./install.sh
-
-# Selecciona la opción:
-# [9] 🪟 Sincronizar SSH desde Windows
-```
-
-### Método 2: Copiado Manual
-
-```bash
-# Copiar llaves de Windows a WSL
-cp /mnt/c/Users/TU_USUARIO_WINDOWS/.ssh/id_ed25519* ~/.ssh/
-
-# Asegurar permisos correctos (CRÍTICO)
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/id_ed25519
-chmod 644 ~/.ssh/id_ed25519.pub
-```
-
-### Método 3: Symlink (Avanzado)
-
-Crear un enlace simbólico para compartir las mismas llaves:
-
-```bash
-# ADVERTENCIA: WSL puede tener problemas con permisos en /mnt/c
-# Solo usa esto si entiendes las implicaciones de seguridad
-
-ln -s /mnt/c/Users/TU_USUARIO_WINDOWS/.ssh ~/.ssh
-```
-
-> 💡 **Recomendación**: Usa el Método 1 (automático) o Método 2 (manual) para evitar problemas de permisos.
-
----
-
 ## 🚀 Instalación
 
-Una vez que tienes tus **llaves SSH configuradas y agregadas a GitHub**, puedes proceder con la instalación de los dotfiles.
+> 📘 **Nota**: Esta sección asume que ya completaste uno de los flujos de prerequisitos ([Flujo A](#-flujo-a-windows--wsl) o [Flujo B](#-flujo-b-linux-nativo)) y puedes clonar con SSH.
 
 ### 1. Clonar el Repositorio
 
@@ -805,7 +806,20 @@ bw config server https://bitwarden.com
 |   1    | **Editar** | Crea/Desencripta → Edita → Encripta (pide password)      |
 |   2    | **Ver**    | Muestra el contenido desencriptado en consola (temporal) |
 
-> 💡 **Creación Inicial**: Si aún no tienes un archivo `.env.age`, selecciona la opción **1**. El script creará uno nuevo, abrirá el editor y te pedirá una passphrase para encriptarlo al guardar.
+> 💡 **Creación Inicial**: Si aún no tienes una bóveda propia (solo tienes la del repositorio y no la contraseña), selecciona la opción **[17] Crear Nueva Bóveda**. El script detectará que es un fork, archivará la original y te guiará para configurar tus propios secretos.
+
+### 📋 Variables Soportadas
+
+| Variable | Descripción | Uso |
+|:---------|:------------|:----|
+| `GH_TOKEN` | Personal Access Token de GitHub | Autenticación `gh` CLI y extensiones |
+| `BW_CLIENTID` | Client ID de Bitwarden | Login automático API Bitwarden |
+| `BW_CLIENTSECRET` | Client Secret de Bitwarden | Login automático API Bitwarden |
+| `ATUIN_USERNAME` | Usuario de Atuin | Login y Sync de historial |
+| `ATUIN_KEY` | Key de encriptación de Atuin | Login automático seguro |
+| `RCLONE_TOKEN_JSON` | Token JSON de Google Drive | Configuración automática de rclone |
+| `TELEGRAM_BOT_TOKEN` | Token del Bot | Notificaciones de updates |
+| `TELEGRAM_CHAT_ID` | ID del Chat | Destino de notificaciones |
 
 ### Flujo de Descifrado
 
@@ -1141,7 +1155,19 @@ Este dotfiles incluye aliases modernos para mejorar la productividad. Se instala
 
 **Atuin** potencia tu historial de comandos con búsqueda, sincronización en la nube y estadísticas.
 
-#### Configuración Inicial
+#### Configuración Automática
+
+Si agregas tus credenciales a `.env.age`, Atuin se logueará y sincronizará automáticamente al instalar:
+
+```bash
+# En tu .env.age (o .env.local.age)
+ATUIN_USERNAME=tu_usuario
+ATUIN_KEY=tu_key_encriptada  # Obtener con 'atuin key'
+```
+
+#### Configuración Manual
+
+Si prefieres hacerlo manualmente:
 
 ```bash
 # 1. Registrarse (primera vez)
@@ -1231,39 +1257,6 @@ export GITHUB_PERSONAL_ACCESS_TOKEN="..."
 
 ---
 
-## 🗑️ Desinstalación Total
-
-Si necesitas limpiar tu sistema, el script `uninstall.sh` revierte los cambios:
-
-```bash
-./uninstall.sh
-```
-
-### ✅ **¿Qué se elimina correctamente?**
-
-| Componente               | Ubicación                                      | Acción                    |
-| :----------------------- | :--------------------------------------------- | :------------------------ |
-| **BLE.sh**               | `~/.local/share/blesh`                         | ✅ Eliminado completamente |
-| **BLE.sh (.bashrc)**     | Líneas `ble.sh --noattach` y `ble-attach`      | ✅ Eliminadas              |
-| **Atuin**                | `~/.atuin`, `~/.local/share/atuin` | ✅ Eliminado completamente |
-| **Atuin (.bashrc)**      | Líneas `atuin init bash`                       | ✅ Eliminadas              |
-| **Oh My Posh (.bashrc)** | Líneas `oh-my-posh init`                       | ✅ Eliminadas              |
-| **Gemini/Antigravity**   | `~/.gemini`                                    | ✅ Eliminado completamente |
-| **GitHub Token**         | Variable `GITHUB_PERSONAL_ACCESS_TOKEN`        | ✅ Eliminada de .bashrc    |
-| **Symlinks**             | `.bash_aliases`, `.gitconfig`, tema Oh My Posh | ✅ Eliminados              |
-
-### ⚠️ **¿Qué NO se elimina? (Herramientas del sistema)**
-
-El script **NO** desinstala paquetes instalados globalmente para evitar romper dependencias de otros usuarios:
-
-| Herramienta                          | Razón                                                    |
-| :----------------------------------- | :------------------------------------------------------- |
-| `git`, `docker`, `gh`, `tmux`, `fzf` | Paquetes del sistema (apt/dnf/pacman)                    |
-| `oh-my-posh` binario                 | Instalado en `/usr/local/bin/` (requiere sudo)           |
-| `zoxide` binario                     | Instalado en `~/.local/bin/`                             |
-| `lsd`, `bat`, `ripgrep`              | Paquetes del sistema                                     |
-| `nvm` y Node.js                      | Gestor de versiones (puede tener proyectos dependientes) |
-
 ---
 
 ## 🔒 Seguridad
@@ -1304,26 +1297,57 @@ ssh -T git@github.com
 
 ## 🗑️ Desinstalación Total
 
-El proyecto incluye un script de **Desinstalación Radical** diseñado para dejar tu sistema limpio, ideal si quieres revertir cambios o reinstalar desde cero.
+El proyecto incluye un **Desinstalador Robusto v2.0** con múltiples modos para adaptarse a tus necesidades.
+
+### Ejecutar Desinstalador
 
 ```bash
 ./uninstall.sh
 ```
 
-**Este script limpia:**
-*   ⚠️ **Backups y Archivos Dotfiles**: Elimina `~/.dotfiles`, `~/.bashrc` (restaura backup si existe), `~/.inputrc`, etc.
-*   ⚠️ **Directorios de Configuración**: Borra `~/.config/nvim`, `~/.config/tmux`, `~/.gemini`, etc.
-*   ⚠️ **Runtimes y Herramientas**:
-    *   **NVM + Nodejs**: Elimina `~/.nvm`, `.npm`, `.node_repl_history`.
-    *   **Docker**: Detiene contenedores, elimina imágenes/volúmenes y desinstala paquetes (opcional).
-    *   **Rust/Cargo**: Elimina `~/.cargo` y `~/.rustup`.
-    *   **Go**: Elimina `~/go` y `/usr/local/go`.
-    *   **Brew**: Desinstala Homebrew y sus paquetes.
-*   ⚠️ **Binarios Locales**: Elimina herramientas instaladas en `~/.local/bin` (zoxide, oh-my-posh, etc.).
+### 🎨 Modos Disponibles
 
-> 🛑 **ADVERTENCIA**: Este es un comando destructivo. Úsalo con precaución. El script pedirá confirmación antes de borrar componentes críticos como Docker.
+| Modo | Descripción | Uso Recomendado |
+|:-----|:------------|:----------------|
+| 🔥 **FULL DESTROY** | Elimina absolutamente TODO | Reset completo del sistema |
+| 🧹 **LIMPIEZA SUAVE** | Solo configs (mantiene Node, Docker, etc.) | Reinstalar dotfiles sin perder runtimes |
+| 🎯 **SELECTIVO** | Elige componente por componente | Control granular |
+
+### 📋 Componentes que puede eliminar
+
+| Categoría | Componentes |
+|:----------|:------------|
+| **Shell** | Bloques en `.bashrc`, aliases, gitconfig, tmux.conf |
+| **Herramientas IA** | `~/.gemini`, reglas, workflows |
+| **Runtimes** | NVM/Node.js, Rust/Cargo, Go |
+| **Binarios locales** | oh-my-posh, zoxide, atuin, ble.sh, lsd, bat, fd, rg |
+| **Cronjobs** | Auto-updates (crontab y systemd timers) |
+| **Docker** | Imágenes, contenedores, volúmenes, paquetes (opcional) |
+| **GitHub CLI** | gh, config, logout automático (opcional) |
+| **Paquetes sistema** | fzf, ripgrep, tmux, neovim, etc. (opcional) |
+| **Homebrew** | Si está instalado (opcional) |
+
+### 🛡️ Características de Seguridad
+
+- ✅ **Confirmación "DESTROY"** requerida para modo destructivo
+- ✅ **Backup automático** de `.bashrc` antes de modificar
+- ✅ **Preguntas individuales** para componentes críticos (Docker, paquetes sistema)
+- ✅ **Detección automática de OS** (Debian/Ubuntu, Fedora, Arch)
+
+### Ejemplo: Modo Selectivo
+
+```
+  [1/9] ¿Limpiar .bashrc? [s/N]: s
+  [2/9] ¿Eliminar cronjobs? [s/N]: s
+  [3/9] ¿Eliminar dotfiles (.gemini, aliases, etc.)? [s/N]: s
+  [4/9] ¿Eliminar NVM / Node.js? [s/N]: n   ← Mantener Node
+  [5/9] ¿Eliminar Rust / Cargo? [s/N]: n    ← Mantener Rust
+  ...
 ```
 
+> 🛑 **ADVERTENCIA**: El modo FULL DESTROY es irreversible. Asegúrate de tener backups de cualquier configuración personalizada que quieras conservar.
+
+---
 ## ❓ FAQ y Troubleshooting
 
 ### 1. `nvm: command not found`
@@ -1337,20 +1361,18 @@ Si `git clone` falla, asegúrate de haber subido tu llave pública a GitHub (Pas
 ### 3. Bitwarden Login falla
 Verifique que `BW_CLIENTID` y `BW_CLIENTSECRET` en tu `.env.age` sean correctos.
 
-#### 🔴 BLE.sh muestra errores al iniciar terminal
+#### 🔴 VS Code / Warp: Autocompletado falla o caracteres extraños
 
-**Causa**: Conflicto en el orden de inicialización en `.bashrc`.
+**Causa**: `ble.sh` interfiere con el autocompletado nativo de terminales modernas e IDEs.
 
 **Solución**:
+Desinstalar `ble.sh` para restaurar el comportamiento nativo:
 ```bash
-# Verificar que ble.sh está primero y ble-attach está último
-head -5 ~/.bashrc  # Debe mostrar ble.sh --noattach
-tail -5 ~/.bashrc  # Debe mostrar ble-attach
-
-# Si no, re-ejecuta la opción 6 del instalador
 ./install.sh
-# Selecciona [6] Paquetes Base
+# Selecciona [22] Eliminar ble.sh (Fix VS Code)
 ```
+
+**Nota**: El instalador ya no habilita `ble.sh` por defecto para evitar este conflicto.
 
 #### 🔴 WSL: "agy: command not found"
 

@@ -179,17 +179,13 @@ decrypt_secrets() {
         EXIT_CODE=$?
         
         if [ $EXIT_CODE -eq 0 ]; then
-            DECRYPTED=$(cat "$TEMP_ENV")
+            # Carga dinámica y robusta de variables
+            # set -a exporta automáticamente todas las variables definidas
+            set -a
+            source "$TEMP_ENV"
+            set +a
             
-            # Parsing de variables
-            export BW_CLIENTID=$(echo "$DECRYPTED" | grep "^BW_CLIENTID=" | cut -d'=' -f2-)
-            export BW_CLIENTSECRET=$(echo "$DECRYPTED" | grep "^BW_CLIENTSECRET=" | cut -d'=' -f2-)
-            export GH_TOKEN=$(echo "$DECRYPTED" | grep "^GH_TOKEN=" | cut -d'=' -f2-)
-            export TELEGRAM_BOT_TOKEN=$(echo "$DECRYPTED" | grep "^TELEGRAM_BOT_TOKEN=" | cut -d'=' -f2-)
-            export TELEGRAM_CHAT_ID=$(echo "$DECRYPTED" | grep "^TELEGRAM_CHAT_ID=" | cut -d'=' -f2-)
-            RCLONE_TOKEN_JSON=$(echo "$DECRYPTED" | grep "^RCLONE_TOKEN_JSON=" | cut -d'=' -f2-)
-            
-            # Configurar rclone
+            # Configurar rclone si existe el token JSON
             if [ -n "$RCLONE_TOKEN_JSON" ]; then
                 mkdir -p "$HOME/.config/rclone"
                 cat > "$HOME/.config/rclone/rclone.conf" <<EOF
@@ -201,10 +197,20 @@ team_drive =
 EOF
                 chmod 600 "$HOME/.config/rclone/rclone.conf"
             fi
+            
+            # Verificar variables críticas para debugging
+            if [ -n "$GH_TOKEN" ]; then
+                print_success "GitHub Token cargado."
+            fi
+            if [ -n "$ATUIN_KEY" ]; then
+                print_success "Atuin Key cargada."
+            fi
 
             export SECRETS_LOADED=1
             print_success "Acceso concedido. Secretos cargados."
-            rm -f "$TEMP_ENV"
+            
+            # Limpieza segura
+            shred -u "$TEMP_ENV" 2>/dev/null || rm -f "$TEMP_ENV"
             return 0
         else
             rm -f "$TEMP_ENV"
