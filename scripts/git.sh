@@ -105,3 +105,47 @@ copy_ssh_from_windows() {
     echo -e "${CYAN}   Probando conexión a GitHub...${NC}"
     ssh -T git@github.com 2>&1 | head -2
 }
+
+# ─────────────────────────────────────────────────────────────
+# Configura SSH Agent para iniciar automáticamente.
+# Funciona en Linux nativo y WSL.
+# Agrega automáticamente la llave id_ed25519 si existe.
+# ─────────────────────────────────────────────────────────────
+configure_ssh_agent() {
+    echo -e "${GREEN}>>> Configurando SSH Agent auto-start...${NC}"
+    
+    BASHRC="$HOME/.bashrc"
+    
+    # Bloque de SSH Agent para Linux/WSL
+    SSH_AGENT_BLOCK='# SSH Agent - Inicio automático
+# Inicia ssh-agent si no está corriendo y agrega la llave por defecto
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)" > /dev/null 2>&1
+fi
+
+# Agregar llave si existe y no está cargada
+if [ -f "$HOME/.ssh/id_ed25519" ]; then
+    ssh-add -l 2>/dev/null | grep -q "id_ed25519" || ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
+elif [ -f "$HOME/.ssh/id_rsa" ]; then
+    ssh-add -l 2>/dev/null | grep -q "id_rsa" || ssh-add "$HOME/.ssh/id_rsa" 2>/dev/null
+fi'
+
+    # Verificar si la función update_bashrc_block existe
+    if declare -f update_bashrc_block > /dev/null; then
+        update_bashrc_block "SSH_AGENT" "$SSH_AGENT_BLOCK" "before-ble"
+        echo -e "${CYAN}   ✓ SSH Agent configurado en .bashrc${NC}"
+    else
+        # Fallback si system.sh no está cargado
+        if ! grep -q 'SSH_AUTH_SOCK' "$BASHRC"; then
+            echo "" >> "$BASHRC"
+            echo "# <!-- BEGIN_SSH_AGENT -->" >> "$BASHRC"
+            echo "$SSH_AGENT_BLOCK" >> "$BASHRC"
+            echo "# <!-- END_SSH_AGENT -->" >> "$BASHRC"
+            echo -e "${CYAN}   ✓ SSH Agent configurado (fallback)${NC}"
+        else
+            echo -e "${YELLOW}   ! SSH Agent ya configurado${NC}"
+        fi
+    fi
+    
+    echo -e "${YELLOW}   ⚠️  Recarga tu shell (source ~/.bashrc) para activar${NC}"
+}
