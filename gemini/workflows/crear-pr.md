@@ -1,18 +1,26 @@
 ---
-description: Crear Pull Request usando GitHub CLI
+description: Crear Pull Request (PR) automáticamente usando GitHub CLI
 ---
 
 # /crear-pr
 
-1.  **Validaciones**
-    *   Asegura estar en una rama de feature/fix (no main).
-    *   Asegura que la rama está publicada (`git ls-remote`). Si no, ejecutas `/publicar`.
+## Pasos
 
-2.  **Crear PR**
-    *   Usa el título del último commit o pide uno nuevo.
-    *   Ejecuta:
-        ```bash
-        gh pr create --fill
-        ```
-    *   `--fill`: Autocompleta título y body con la info de los commits.
-    *   (Sin `--web` para compatibilidad con servidores headless).
+1.  **Verificación de Estado (One-Shot)**
+    *   Verifica si ya existe un PR para esta rama. Si existe, muestra su estado y URL.
+    
+    // turbo
+    ```bash
+    gh pr view --web=false
+    ```
+
+2.  **Creación Automática**
+    *   Si NO existe PR, crea uno nuevo usando las **notas de commits** para el título/body.
+    *   Prioriza `gh` CLI nativo para velocidad.
+    
+    ```bash
+    gh pr create --fill --web=false
+    ```
+
+3.  **Confirmación Final**
+    *   Muestra la URL del PR creado.
