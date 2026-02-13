@@ -983,11 +983,22 @@ Este proyecto incluye un archivo `.vscode-extensions` con todas las extensiones 
 
 ### 🚀 Instalación Automatizada
 
-### 🚀 Instalación Automatizada
+Dependiendo de tu sistema operativo, elige el método más rápido:
 
-Hemos incluido un script inteligente que detecta tu editor (`code`, `codium`, `antigravity`) e instala las extensiones automáticamente.
+#### 🪟 En Windows (Antigravity Directo)
 
-**Ejecutar script:**
+Si estás configurando tu entorno en Windows antes de entrar a WSL, usa nuestro script de **PowerShell**:
+
+1.  Abre PowerShell en la carpeta `dotfiles`:
+    ```powershell
+    .\install_extensions.ps1
+    ```
+    *(Este script leerá `.vscode-extensions` e instalará todo en tu Antigravity de Windows)*.
+
+#### 🐧 En Linux / WSL
+
+Usa el script inteligente que detecta tu editor (`code`, `codium`, `antigravity`) e instala las extensiones automáticamente:
+
 ```bash
 ./scripts/extensions.sh
 ```
@@ -998,27 +1009,21 @@ Hemos incluido un script inteligente que detecta tu editor (`code`, `codium`, `a
 - Google Antigravity (`agy` / `antigravity`)
 - Cursor (`cursor`)
 
-> 💡 **Nota**: Si usas **WSL**, el script detectará tu instalación de Windows si configuraste el enlace correctamente.
+> 💡 **Nota**: Si usas **WSL** y ya ejecutaste el script de Windows, ¡es posible que ya tengas acceso a las extensiones vía Remote-WSL! Pero si necesitas instalar extensiones *dentro* del servidor WSL (como herramientas de linter), ejecuta el script de Linux también.
 
 ### 📦 Gestión de Extensiones
 
 Mantén tu entorno sincronizado actualizando la lista de extensiones o creando perfiles personalizados.
 
-#### Actualizar lista del repositorio
-Si instalaste nuevas extensiones manualmente y quieres guardarlas en el repo:
-
-**Linux / WSL:**
-```bash
 #### Actualizar lista del repositorio (Backup)
+
 Si instalaste nuevas extensiones manualmente y quieres guardarlas en el repo:
 
 ```bash
-# Guardar extensiones actuales en .vscode-extensions
+# Guardar extensiones actuales (Linux/WSL)
 ./scripts/extensions.sh --backup
 ```
-
 Esto detectará tu editor automáticamente y generará la lista limpia.
-```
 
 #### Crear un nuevo perfil
 Si necesitas un set de extensiones diferente (ej. para un proyecto específico), crea un archivo nuevo:
@@ -1202,6 +1207,29 @@ En lugar de ensuciar `main` con commits intermedios ("wip", "fix typo", "casi li
 | **Legibilidad**      | El historial cuenta una historia clara del proyecto                    |
 
 ### 2. Protección Absoluta de Main
+
+`main` es la **única fuente de verdad**.
+
+- **Regla**: Nadie (ni humanos ni bots) hace commit directo a `main`
+- **Flujo**: Todo cambio pasa por Pull Request → CI/CD → Review → Merge
+
+### 3. Automatización con GitHub CLI
+
+Reducimos la fricción usando `gh` para todo el ciclo de vida:
+
+```bash
+# Crear repositorio
+gh repo create nombre --private --source=.
+
+# Crear Pull Request
+gh pr create --fill
+
+# Merge con Squash
+gh pr merge --squash --delete-branch
+
+# Crear Release
+gh release create v1.0.0 --generate-notes
+```
 
 `main` es la **única fuente de verdad**.
 
