@@ -121,8 +121,7 @@ install_packages() {
     configure_atuin
     configure_oh_my_posh
     
-    # Ble.sh sigue siendo un script custom (sin soporte mise estable aun)
-    install_blesh
+    # Ble.sh ELIMINADO por solicitud (conflicto con VSCode)
     
     # Tmux Configuration
     if [ -f "$DOTFILES_DIR/config/.tmux.conf" ]; then
@@ -211,56 +210,6 @@ install_antigravity_fix() {
             print_success "Symlink 'agy' vinculado"
         fi
     fi
-}
-
-install_blesh() {
-    print_step "Instalando Ble.sh (Bash Line Editor)..."
-    BLESH_DIR="$HOME/.local/share/blesh"
-    
-    if [ ! -d "$BLESH_DIR" ]; then
-         ensure_package "make"
-         ensure_package "gawk"
-
-         print_info "Clonando ble.sh..."
-         rm -rf /tmp/ble.sh
-         git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh
-         make -C /tmp/ble.sh install PREFIX=~/.local
-         rm -rf /tmp/ble.sh
-    fi
-
-    # Configuración .blerc
-    cat > "$HOME/.blerc" <<'EOF'
-_safe_bleopt() {
-    local opt=$1 val=$2
-    if bleopt "$opt" >/dev/null 2>&1; then bleopt "$opt=$val"; fi
-}
-ble-bind -f 'C-m' 'accept-line'
-ble-bind -f 'RET' 'accept-line'
-_safe_bleopt complete_auto_complete 1
-_safe_bleopt complete_auto_history 1
-_safe_bleopt complete_menu_style align-nowrap
-_safe_bleopt exec_exit_status ""
-_safe_bleopt print_exit_status 0
-bleopt exec_elapsed_mark=
-EOF
-
-    # Configurar .bashrc
-    BLE_SOURCE_CONTENT='# 1. Ble.sh Source
-[[ $- == *i* && -f ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null'
-
-    BLE_ATTACH_CONTENT='# 6. Ble.sh Attach
-[[ ${BLE_VERSION-} ]] && ble-attach'
-
-    update_bashrc_block "BLE_SOURCE" "$BLE_SOURCE_CONTENT" "top"
-    update_bashrc_block "BLE_ATTACH" "$BLE_ATTACH_CONTENT" "bottom"
-}
-
-disable_blesh() {
-    sed -i '/ble.sh/d' "$HOME/.bashrc"
-    sed -i '/ble-attach/d' "$HOME/.bashrc"
-    sed -i '/<!-- BEGIN_BLE_SOURCE -->/,/<!-- END_BLE_SOURCE -->/d' "$HOME/.bashrc"
-    sed -i '/<!-- BEGIN_BLE_ATTACH -->/,/<!-- END_BLE_ATTACH -->/d' "$HOME/.bashrc"
-    rm -rf "$HOME/.local/share/blesh" "$HOME/.cache/ble.sh"
 }
 
 configure_atuin() {

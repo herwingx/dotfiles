@@ -36,15 +36,13 @@ cleanup_legacy_conflicts() {
     if [ -d "/usr/local/go" ]; then
         print_warning "System-wide Go detected in /usr/local/go."
         print_info "Mise will manage Go user-locally. Consider removing /usr/local/go later."
-        # No borramos cosas de root automáticamente por seguridad, solo advertimos.
     fi
     
     # 3. Limpiar binarios manuales antiguos que ahora maneja Mise
-    # (Evita que 'which lsd' apunte al binario viejo en lugar del shim de mise)
     local legacy_bins=("lsd" "bat" "rg" "fd" "zoxide")
     for bin in "${legacy_bins[@]}"; do
         if [ -f "$HOME/.local/bin/$bin" ]; then
-            # Solo si NO es un shim de mise (los shims son scripts pequeños)
+            # Solo si NO es un shim de mise
             if ! grep -q "mise" "$HOME/.local/bin/$bin"; then
                 mv "$HOME/.local/bin/$bin" "$HOME/.local/bin/$bin.old"
                 print_info "Archived legacy binary: $bin -> $bin.old"
@@ -80,11 +78,9 @@ install_toolchain() {
 export PATH="$HOME/.local/bin:$PATH"
 eval "$(mise activate bash)"'
 
-    # Intentar usar helper de system.sh si está disponible (cargado via install.sh)
     if declare -f update_bashrc_block > /dev/null; then
         update_bashrc_block "MISE" "$config_block" "top"
     else
-        # Fallback manual si se ejecuta standalone
         if ! grep -q "mise activate bash" "$HOME/.bashrc"; then
             echo "" >> "$HOME/.bashrc"
             echo "$config_block" >> "$HOME/.bashrc"
@@ -95,10 +91,11 @@ eval "$(mise activate bash)"'
     if [ -f "$DOTFILES_DIR/.mise.toml" ]; then
         print_step "Syncing tools from .mise.toml..."
         
-        # Linking global config if desired, or just installing from repo root
-        # Mise picks up .mise.toml in current dir or parent dirs.
-        # We link it to ~/.config/mise/config.toml or ~/.mise.toml for global usage.
+        # Confiar en el archivo de configuración local para evitar prompts
+        mise trust "$DOTFILES_DIR/.mise.toml"
+        mise trust "$HOME/.mise.toml" 2>/dev/null
         
+        # Linking global config if desired
         ln -sf "$DOTFILES_DIR/.mise.toml" "$HOME/.mise.toml"
         
         # Instalar

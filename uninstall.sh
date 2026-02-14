@@ -508,6 +508,17 @@ selective_clean() {
     echo -ne "${YELLOW}  [9/9] ¿Restaurar backups anteriores? [s/N]: ${NC}"
     read Q9
     [[ "$Q9" =~ ^[Ss]$ ]] && restore_backups
+
+    echo -ne "${YELLOW}  [10/10] ¿Eliminar Ble.sh (Fix VSCode)? [s/N]: ${NC}"
+    read Q10
+    if [[ "$Q10" =~ ^[Ss]$ ]]; then
+        rm -rf "$HOME/.local/share/blesh"
+        rm -rf "$HOME/.cache/ble.sh"
+        rm -f "$HOME/.blerc"
+        sed -i '/ble.sh/d' "$HOME/.bashrc"
+        sed -i '/ble-attach/d' "$HOME/.bashrc"
+        print_success "Ble.sh eliminado"
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

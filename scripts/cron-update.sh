@@ -8,14 +8,18 @@
 # ==========================================
 
 # --- CONFIGURACIÓN ---
-LOG_FILE="/var/log/dotfiles-updates.log"
+# Usar directorios de usuario para evitar problemas de permisos
+LOG_DIR="$HOME/.local/state/dotfiles"
+LOG_FILE="$LOG_DIR/updates.log"
+CONFIG_FILE="$HOME/.config/dotfiles/telegram.env"
+
 # Usar $HOSTNAME con fallback para WSL donde hostname puede no estar
 HOSTNAME="${HOSTNAME:-$(cat /etc/hostname 2>/dev/null || hostname 2>/dev/null || echo 'unknown')}"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Cargar variables de entorno del sistema
-if [ -f /etc/dotfiles-telegram.env ]; then
-    source /etc/dotfiles-telegram.env
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
 fi
 
 # ─────────────────────────────────────────────────────────────
@@ -29,7 +33,8 @@ send_telegram() {
     local TYPE="${2:-info}"
     
     if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-        echo "[$DATE] [WARN] Telegram no configurado, saltando notificación" >> "$LOG_FILE"
+        # Solo loguear warning si no está configurado, para no llenar el log
+        # echo "[$DATE] [WARN] Telegram no configurado" >> "$LOG_FILE"
         return 1
     fi
     
@@ -102,12 +107,18 @@ run_update() {
     local UPDATE_OUTPUT=""
     local PACKAGES_UPDATED=0
     local UPDATE_SUCCESS=true
+    local SUDO_PREFIX=""
+
+    # Detectar si necesitamos sudo (si no somos root)
+    if [ "$EUID" -ne 0 ]; then
+        SUDO_PREFIX="sudo"
+    fi
     
     if [ -f /etc/debian_version ]; then
         # Debian/Ubuntu
         log "INFO" "Sistema detectado: Debian/Ubuntu (apt)"
         
-        apt-get update -y >> "$LOG_FILE" 2>&1
+        $SUDO_PREFIX apt-get update -y >> "$LOG_FILE" 2>&1
         
         # Contar paquetes a actualizar
         PACKAGES_UPDATED=$(apt list --upgradable 2>/dev/null | grep -c upgradable || echo "0")
@@ -117,9 +128,9 @@ run_update() {
             
             # Configurar para no preguntar en actualizaciones
             export DEBIAN_FRONTEND=noninteractive
-            apt-get upgrade -y >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-            apt-get autoremove -y >> "$LOG_FILE" 2>&1
-            apt-get autoclean -y >> "$LOG_FILE" 2>&1
+            $SUDO_PREFIX apt-get upgrade -y >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
+            $SUDO_PREFIX apt-get autoremove -y >> "$LOG_FILE" 2>&1
+            $SUDO_PREFIX apt-get autoclean -y >> "$LOG_FILE" 2>&1
         fi
         
     elif [ -f /etc/redhat-release ]; then
@@ -131,15 +142,15 @@ run_update() {
         
         if [ "$PACKAGES_UPDATED" -gt 0 ]; then
             log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
-            dnf upgrade --refresh -y >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-            dnf autoremove -y >> "$LOG_FILE" 2>&1
+            $SUDO_PREFIX dnf upgrade --refresh -y >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
+            $SUDO_PREFIX dnf autoremove -y >> "$LOG_FILE" 2>&1
         fi
         
     elif [ -f /etc/arch-release ]; then
         # Arch Linux
         log "INFO" "Sistema detectado: Arch Linux (pacman)"
         
-        pacman -Syu --noconfirm >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
+        $SUDO_PREFIX pacman -Syu --noconfirm >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
         PACKAGES_UPDATED="N/A"
         
     else
@@ -177,10 +188,10 @@ Reiniciando en 60 segundos..." "reboot"
         if [ -f /proc/1/environ ] && grep -q "container=lxc" /proc/1/environ 2>/dev/null; then
             log "INFO" "LXC detectado, solicitando reinicio al host"
             # En LXC el reinicio es manejado por el host
-            reboot
+            $SUDO_PREFIX reboot
         else
             # VM o bare metal
-            shutdown -r now
+            $SUDO_PREFIX shutdown -r now
         fi
     fi
 }
@@ -189,8 +200,9 @@ Reiniciando en 60 segundos..." "reboot"
 # MAIN
 # ─────────────────────────────────────────────────────────────
 
-# Crear directorio de logs si no existe
-mkdir -p "$(dirname "$LOG_FILE")"
+# Crear directorio de logs y config si no existe
+mkdir -p "$LOG_DIR"
+mkdir -p "$(dirname "$CONFIG_FILE")"
 
 # Ejecutar actualización
 run_update
