@@ -12,25 +12,36 @@
 # Verifica la conexión tras la configuración.
 # ─────────────────────────────────────────────────────────────
 configure_rclone() {
-    echo -e "${GREEN}>>> Configurando rclone...${NC}"
+    print_step "Configurando rclone..."
     
-    if ! command -v rclone &> /dev/null; then
-        echo -e "${YELLOW}   ! rclone no está instalado. Instalando...${NC}"
-        install_packages
-    fi
+    # 1. Idempotency: Install rclone using package manager if missing
+    ensure_package "rclone"
     
-    # Forzar descifrado de secrets
+    # 2. Secret Management
+    # Force secret decryption to ensure variables are fresh
     unset SECRETS_LOADED
     
     if decrypt_secrets; then
-        if [ -f "$HOME/.config/rclone/rclone.conf" ]; then
-            echo -e "${CYAN}   ✓ rclone configurado correctamente${NC}"
-            echo -e "${CYAN}   Remotos disponibles:${NC}"
-            rclone listremotes
+        if [ -n "$RCLONE_TOKEN_JSON" ]; then
+             mkdir -p "$HOME/.config/rclone"
+             
+             # Create config file idempotently (overwrite)
+             cat > "$HOME/.config/rclone/rclone.conf" <<EOF
+[gdrive]
+type = drive
+scope = drive
+token = $RCLONE_TOKEN_JSON
+team_drive =
+EOF
+             chmod 600 "$HOME/.config/rclone/rclone.conf"
+             
+             print_success "rclone configured successfully"
+             echo -e "${CYAN}   Remotes available:${NC}"
+             rclone listremotes
         else
-            echo -e "${RED}   ✗ No se encontró RCLONE_TOKEN_JSON en los secrets${NC}"
+            print_error "RCLONE_TOKEN_JSON not found in decrypted secrets."
         fi
     else
-        echo -e "${RED}   ✗ Error descifrando secrets${NC}"
+        print_error "Failed to decrypt secrets."
     fi
 }

@@ -1,10 +1,9 @@
 #!/bin/bash
 # ==========================================
-# DOTFILES INSTALLER
-# Instalador interactivo modular para Linux
+# DOTFILES INSTALLER v2.0
+# Instalador interactivo idempotente (Mise + Package Managers)
 # ==========================================
 
-# Obtener directorio real del script (no depende de pwd)
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 DOTFILES_DIR="$(dirname "$SCRIPT_PATH")"
 
@@ -12,42 +11,61 @@ DOTFILES_DIR="$(dirname "$SCRIPT_PATH")"
 source "$DOTFILES_DIR/scripts/common.sh"
 source "$DOTFILES_DIR/scripts/system.sh"
 source "$DOTFILES_DIR/scripts/git.sh"
+source "$DOTFILES_DIR/scripts/toolchain.sh" # NEW: Mise handler
 source "$DOTFILES_DIR/scripts/dev-tools.sh"
 source "$DOTFILES_DIR/scripts/antigravity.sh"
 source "$DOTFILES_DIR/scripts/cloud.sh"
-
-# --- FUNCIONES DE INSTALACIÓN AGRUPADAS ---
+source "$DOTFILES_DIR/scripts/extensions.sh"
 
 install_all() {
     export AUTO_INSTALL=true
     
-    update_system
-    install_packages
+    # 1. Update System (Smart check <24h)
+    update_system        
+    
+    # 2. Base Packages
+    install_packages     
+    
+    # 3. Toolchain (Mise)
+    install_toolchain    
+    
+    # 4. Config & Cloud
     configure_rclone
     install_gitconfig
     install_ssh_keys
-    configure_ssh_agent  # Nuevo: SSH Agent auto-start
-    install_dev_tools_all
+    configure_ssh_agent
+    
+    # 5. Heavy Tools (Docker, GH CLI)
+    install_dev_tools_all 
+    
+    # 6. Extras
     install_antigravity_full
+    install_vscode_extensions
     install_auto_update
-    # install_blesh (Deshabilitado: Warp/VSCode Incompatible)
+    
     show_reload_message
 }
 
-# Instalación solo del sistema base (Opción 2 del menú)
 install_system_all() {
     update_system
     install_packages
+    install_toolchain
     install_gitconfig
     install_ssh_keys
-    configure_ssh_agent  # SSH Agent auto-start
-    # install_blesh (Deshabilitado: Warp/VSCode Incompatible)
+    configure_ssh_agent
     show_reload_message
 }
 
-# --- ASCII ART HIGH-TECH ---
+show_reload_message() {
+    print_header "Instalación Finalizada con Éxito"
+    echo -e "${GREEN}  Recargando tu terminal para aplicar cambios... 🚀${NC}"
+    echo ""
+    exec bash
+}
+
 show_banner() {
     clear
+    echo -e "${NEON_GREEN}   DOTFILES v2.0 (IDEMPOTENT)${NC}"
     echo -e "${NEON_GREEN}"
     cat << 'EOF'
   ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗
@@ -56,17 +74,16 @@ show_banner() {
   ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║
   ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║
   ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
-                            v2.0_PREMIUM_BUILD // SYSTEM_READY
+                            v2.5_IDEMPOTENT // MISE_POWERED
 EOF
     echo -e "${NC}"
     echo -e "${GRAY}----------------------------------------------------------------${NC}"
-    echo -e "${WHITE}  SYSTEM :: ${NEON_CYAN}$(uname -n) [$(uname -s)]${NC}"
+    echo -e "${WHITE}  SYSTEM :: ${NEON_CYAN}$(uname -n) [${OS_TYPE^^}]${NC}"
     echo -e "${WHITE}  USER   :: ${NEON_CYAN}$(whoami)${NC}"
     echo -e "${GRAY}----------------------------------------------------------------${NC}"
     echo ""
 }
 
-# --- ERROR HANDLING ---
 handle_error() {
     local exit_code=$1
     local task=$2
@@ -76,114 +93,65 @@ handle_error() {
         echo -e "${YELLOW}  [DEBUG_INFO]:${NC}"
         echo -e "   - Check Network Connection"
         echo -e "   - Verify SUDO privileges"
-        echo -e "   - Try: ${DIM}sudo apt update --fix-missing${NC}"
+        echo -e "   - Log: /var/log/syslog or similar"
         echo ""
-        read -p "  [PRESS ENTER TO CONTINUE OR CTRL+C TO ABORT]..."
+        read -p "  [PRESS ENTER TO CONTINUE]..."
     fi
 }
 
-# --- MENÚ INTERACTIVO TÉCNICO ---
 show_menu() {
     show_banner
-    
-    # Grid Layout Helper
-    # $1=Num $2=Desc
-    p_opt() {
-        printf "${GRAY}[${WHITE}%-2s${GRAY}]${NC} %-38s" "$1" "$2"
-    }
+    # p_opt ahora se carga desde common.sh
 
-    echo -e "${NEON_GREEN}  // 🚀 INSTALACIÓN AUTOMÁTICA${NC}"
+    echo -e "${NEON_GREEN}  // 🚀 AUTOMATED DEPLOY${NC}"
+    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
+    echo -ne "  "; p_opt "1" "Full Install (System + Tools + AI)"; echo ""
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     
-    # Fila 1: Full
-    echo -ne "  "; p_opt "1" "Instalar TODO (Full Stack + IA + Cloud)"; echo ""
-    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
+    echo -e "${NEON_CYAN}  // 📦 SYSTEM & TOOLCHAIN${NC}"
+    echo -ne "  "; p_opt "2" "Base System + Mise Tools"; p_opt "3" "Dev Tools Only (Docker, GH)"; echo ""
+    echo -ne "  "; p_opt "5" "Update System (Force)"; p_opt "6" "Install Base Packages"; echo ""
+    echo -ne "  "; p_opt "7" "Re-sync Toolchain (mise install)"; echo ""
     
-    # Fila 2: Groups
-    echo -ne "  "; p_opt "2" "Solo Sistema (Esenciales + Shell)"; p_opt "3" "Solo Dev Tools (Docker + Node)"; echo ""
-    echo -ne "  "; p_opt "4" "Solo Antigravity AI (Reglas + Flows)"; echo ""
+    echo -e "${NEON_CYAN}  // ☁️ CONFIG & CLOUD${NC}"
+    echo -ne "  "; p_opt "10" "Configure Secrets"; p_opt "11" "Install AI Rules (Antigravity)"; echo ""
+    echo -ne "  "; p_opt "12" "Configure Rclone"; p_opt "13" "SSH Keys Import"; echo ""
+    echo -ne "  "; p_opt "14" "Install VSCode Extensions"; echo ""
+
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
-    echo ""
-
-    echo -e "${NEON_CYAN}  // 📦 MÓDULOS DE SISTEMA${NC}"
-    echo -ne "  "; p_opt "5" "Actualizar Sistema (OS Upgrade)"; p_opt "6" "Paquetes Base (vim, fzf, tmux...)"; echo ""
-    echo -ne "  "; p_opt "7" "Configurar Git y Alias"; p_opt "8" "Importar Keys SSH (desde GitHub)"; echo ""
-    echo -ne "  "; p_opt "9" "Sincronizar SSH desde Windows (WSL)"; echo ""
-    echo ""
-
-    echo -e "${NEON_CYAN}  // 🛠️ HERRAMIENTAS DEV${NC}"
-    echo -ne "  "; p_opt "10" "Instalar GitHub CLI (gh)"; p_opt "11" "Instalar Node.js (LTS)"; echo ""
-    echo -ne "  "; p_opt "12" "Instalar Globales NPM"; p_opt "13" "Instalar Docker Engine"; echo ""
-    echo ""
-
-    echo -e "${NEON_CYAN}  // ☁️ CLOUD & INTEGRACIÓN IA${NC}"
-    echo -ne "  "; p_opt "14" "Instalar Reglas IA (GEMINI.md)"; p_opt "15" "Instalar Comandos Slash (/commit...)"; echo ""
-    echo -ne "  "; p_opt "16" "Desencriptar/Cargar Secretos"; p_opt "17" "Crear Nueva Bóveda (Reset Secrets)"; echo ""
-    echo -ne "  "; p_opt "18" "Configurar Rclone (Google Drive)"; echo ""
-    echo ""
-
-    echo -e "${NEON_CYAN}  // 🔄 MANTENIMIENTO${NC}"
-    echo -ne "  "; p_opt "19" "Activar Auto-Updates"; p_opt "20" "Ejecutar Update Manual"; echo ""
-    echo -ne "  "; p_opt "21" "Desactivar Auto-Updates"; echo ""
-    echo -ne "  "; p_opt "22" "Eliminar ble.sh (Fix VS Code)"; p_opt "23" "Instalar ble.sh (Opcional)"; echo ""
+    echo -ne "  "; p_opt "0" "EXIT"; echo ""
     echo ""
     
-    echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
-    echo -ne "  "; p_opt "0" "ABORT / EXIT"; echo ""
-    echo ""
-    
-    echo -e "${GRAY}  [TIP] Press Ctrl+C to force quit at any time${NC}"
     echo -ne "${NEON_GREEN}wrapper@install${NC}:${BLUE}~${NC}$ "
     read choice
     
     case $choice in
-        1) install_all || handle_error $? "FULL_STACK_DEPLOY" ;;
-        2) install_system_all || handle_error $? "SYSTEM_ONLY_DEPLOY" ;;
-        3) install_dev_tools_all || handle_error $? "DEV_TOOLS_DEPLOY" ;;
-        4) install_antigravity_full || handle_error $? "ANTIGRAVITY_DEPLOY" ;;
-        5) update_system || handle_error $? "SYSTEM_UPGRADE" ;;
-        6) install_packages || handle_error $? "BASE_PACKAGES" ;;
-        7) install_gitconfig || handle_error $? "GIT_CONFIG" ;;
-        8) install_ssh_keys || handle_error $? "SSH_CONFIG" ;;
-        9) copy_ssh_from_windows || handle_error $? "WSL_SYNC" ;;
-        10) install_gh_cli || handle_error $? "GH_CLI_DEPLOY" ;;
-        11) install_nvm_node || handle_error $? "NODEJS_DEPLOY" ;;
-        12) install_npm_global_packages || handle_error $? "NPM_GLOBALS" ;;
-        13) install_docker || handle_error $? "DOCKER_DEPLOY" ;;
-        14) install_antigravity_rules || handle_error $? "AI_RULES" ;;
-        15) install_antigravity_workflows || handle_error $? "AI_WORKFLOWS" ;;
-        16) install_gemini_settings || handle_error $? "SECRETS_CONFIG" ;;
-        17) reset_secrets_interactive || handle_error $? "NEW_VAULT_CREATION" ;;
-        18) configure_rclone || handle_error $? "RCLONE_CONFIG" ;;
-        19) install_auto_update || handle_error $? "AUTO_UPDATE_ENABLE" ;;
-        20) run_manual_update || handle_error $? "MANUAL_UPDATE" ;;
-        21) uninstall_auto_update || handle_error $? "AUTO_UPDATE_DISABLE" ;;
-        22) disable_blesh || handle_error $? "BLESH_DISABLE" ;;
-        23) install_blesh || handle_error $? "BLESH_INSTALL" ;;
-        0)
-            echo ""
-            echo -e "${NEON_GREEN}  >> SYSTEM SHUTDOWN... GOODBYE.${NC}"
-            echo ""
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}  [ERROR] INVALID COMMAND SENT${NC}"
-            sleep 1
-            ;;
+        1) install_all || handle_error $? "FULL_INSTALL" ;;
+        2) install_system_all || handle_error $? "SYSTEM_INSTALL" ;;
+        3) install_dev_tools_all || handle_error $? "DEV_TOOLS" ;;
+        5) update_system --force || handle_error $? "SYSTEM_UPDATE" ;;
+        6) install_packages || handle_error $? "PACKAGES" ;;
+        7) install_toolchain || handle_error $? "TOOLCHAIN_SYNC" ;;
+        10) decrypt_secrets || handle_error $? "SECRETS" ;;
+        11) install_antigravity_full || handle_error $? "ANTIGRAVITY" ;;
+        12) configure_rclone || handle_error $? "RCLONE" ;;
+        13) install_ssh_keys || handle_error $? "SSH" ;;
+        14) install_vscode_extensions || handle_error $? "EXTENSIONS" ;;
+        0) exit 0 ;;
+        *) echo -e "${RED}Invalid Option${NC}"; sleep 1 ;;
     esac
 }
 
 # --- MAIN ---
-
 if [ "$1" == "--all" ]; then
-    print_header "INITIATING AUTOMATED DEPLOYMENT..."
+    print_header "INITIATING HEADLESS DEPLOYMENT..."
     install_all
     exit 0
 fi
 
+chmod +x "$DOTFILES_DIR/scripts/"*.sh 2>/dev/null
+
 while true; do
     show_menu
-    echo ""
-    echo -e "${GRAY}  [PRESS ENTER TO RETURN TO MENU]${NC}"
     read -r
 done

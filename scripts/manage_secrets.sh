@@ -14,11 +14,6 @@ REPO_SECRETS="$DOTFILES_DIR/.env.age"
 LOCAL_SECRETS="$DOTFILES_DIR/.env.local.age"
 TEMP_FILE="$DOTFILES_DIR/.env.tmp"
 
-# Helper para UI de Opciones
-p_opt() {
-    printf "${GRAY}[${WHITE}%-2s${GRAY}]${NC} %-40s" "$1" "$2"
-}
-
 # --- FUNCIONES DE ACCIÓN ---
 
 action_edit_file() {

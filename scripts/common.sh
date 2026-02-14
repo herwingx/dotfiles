@@ -1,3 +1,4 @@
+#!/bin/bash
 # --- PALETA DE COLORES HACKER (MATRIX/CYBERPUNK) ---
 BOLD='\033[1m'
 DIM='\033[2m'
@@ -25,7 +26,7 @@ fi
 print_header() {
     echo ""
     echo -e "${GRAY}===============================================================${NC}"
-    echo -e "${NEON_GREEN}[+] SYSTEM_TASK :: ${WHITE}${1^^}${NC}" # Uppercase for tech look
+    echo -e "${NEON_GREEN}[+] SYSTEM_TASK :: ${WHITE}${1^^}${NC}"
     echo -e "${GRAY}===============================================================${NC}"
 }
 
@@ -49,6 +50,11 @@ print_info() {
     echo -e "${GRAY}      # $1${NC}"
 }
 
+# Helper para UI de Opciones (Menús)
+p_opt() {
+    printf "${GRAY}[${WHITE}%-2s${GRAY}]${NC} %-40s" "$1" "$2"
+}
+
 # --- DETECCIÓN DE ENTORNO ---
 if [ "$(id -u)" -eq 0 ]; then
     SUDO_CMD=""
@@ -56,16 +62,155 @@ else
     SUDO_CMD="sudo"
 fi
 
+# Detectar OS y Gestor de Paquetes Globalmente
+if [ -f /etc/debian_version ]; then
+    OS_TYPE="debian"
+    PKG_MANAGER="apt-get"
+    PKG_UPDATE_CMD="$SUDO_CMD apt-get update -y"
+    PKG_INSTALL_CMD="$SUDO_CMD apt-get install -y"
+elif [ -f /etc/redhat-release ]; then
+    OS_TYPE="redhat"
+    PKG_MANAGER="dnf"
+    PKG_UPDATE_CMD="$SUDO_CMD dnf check-update"
+    PKG_INSTALL_CMD="$SUDO_CMD dnf install -y"
+elif [ -f /etc/arch-release ]; then
+    OS_TYPE="arch"
+    PKG_MANAGER="pacman"
+    PKG_UPDATE_CMD="$SUDO_CMD pacman -Sy"
+    PKG_INSTALL_CMD="$SUDO_CMD pacman -S --noconfirm"
+else
+    OS_TYPE="unknown"
+    PKG_UPDATE_CMD="true"
+    PKG_INSTALL_CMD="true"
+fi
+
+# --- FUNCIONES CORE ---
+
+# Verificación idempotente de paquetes
+# Uso: ensure_package "nombre_paquete" ["comando_binario"]
+ensure_package() {
+    local package="$1"
+    local binary="${2:-$package}" # Si no se pasa binario, asume que es igual al paquete
+
+    # 1. Verificar si el binario existe en el PATH (Método más rápido y fiable)
+    if command -v "$binary" &> /dev/null; then
+        print_info "Package '$package' is already installed (binary: $binary)."
+        return 0
+    fi
+
+    # 2. Si no hay binario, verificar vía gestor de paquetes (Fallback)
+    local installed=false
+    case "$OS_TYPE" in
+        debian)
+            dpkg -l | grep -q "^ii  $package " && installed=true
+            ;;
+        redhat)
+            rpm -q "$package" &> /dev/null && installed=true
+            ;;
+        arch)
+            pacman -Qi "$package" &> /dev/null && installed=true
+            ;;
+    esac
+
+    if [ "$installed" = true ]; then
+        print_info "Package '$package' is already installed (system verified)."
+        return 0
+    fi
+
+    # 3. Instalación
+    print_step "Installing $package..."
+    $PKG_INSTALL_CMD "$package"
+
+    if [ $? -eq 0 ]; then
+        print_success "$package installed successfully."
+    else
+        print_error "Failed to install $package."
+        return 1
+    fi
+}
+
+# --- HELPERS CONFIGURACIÓN ---
+
+# Gestión robusta de bloques en .bashrc
+# Uso: update_bashrc_block "NOMBRE_BLOQUE" "CONTENIDO" "modo"
+# Modos: "top", "bottom", "before-ble"
+update_bashrc_block() {
+    local name="$1"
+    local content="$2"
+    local mode="$3"
+    local bashrc="$HOME/.bashrc"
+    
+    local start="<!-- BEGIN_${name} -->"
+    local end="<!-- END_${name} -->"
+    
+    # 1. Limpiar bloque existente
+    sed -i "/$start/,/$end/d" "$bashrc"
+    
+    # 2. Preparar nuevo bloque
+    local block="# $start
+$content
+# $end"
+
+    # 3. Insertar según modo
+    if [ "$mode" == "top" ]; then
+        cp "$bashrc" "$bashrc.tmp"
+        echo "$block" > "$bashrc"
+        echo "" >> "$bashrc"
+        cat "$bashrc.tmp" >> "$bashrc"
+        rm -f "$bashrc.tmp"
+        
+    elif [ "$mode" == "before-ble" ]; then
+        # Buscar marcador de inicio de bloque BLE
+        local anchor=$(grep -n "<!-- BEGIN_BLE_ATTACH -->" "$bashrc" | head -n1 | cut -d: -f1)
+        
+        # Fallback: Buscar comando ble-attach
+        if [ -z "$anchor" ]; then
+             anchor=$(grep -n "ble-attach" "$bashrc" | grep -v "^#" | head -n1 | cut -d: -f1)
+        fi
+        
+        if [ -n "$anchor" ]; then
+             local head_lines=$((anchor - 1))
+             cp "$bashrc" "$bashrc.tmp"
+             if [ "$head_lines" -ge 0 ]; then
+                 head -n "$head_lines" "$bashrc.tmp" > "$bashrc"
+             else
+                 > "$bashrc"
+             fi
+             echo "" >> "$bashrc"
+             echo "$block" >> "$bashrc"
+             echo "" >> "$bashrc"
+             tail -n "+$anchor" "$bashrc.tmp" >> "$bashrc"
+             rm -f "$bashrc.tmp"
+        else
+            echo "" >> "$bashrc"
+            echo "$block" >> "$bashrc"
+        fi
+    else # bottom
+        echo "" >> "$bashrc"
+        echo "$block" >> "$bashrc"
+    fi
+}
+
+# Detecta editor de código compatible (VSCode, Codium, etc.)
+detect_editor() {
+    local editors=("code" "codium" "antigravity" "agy" "cursor")
+    for cmd in "${editors[@]}"; do
+        if command -v "$cmd" &> /dev/null; then
+            echo "$cmd"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # --- GESTIÓN DE SECRETOS ---
 
-# Función explícita para resetear/crear secretos desde el menú
 reset_secrets_interactive() {
     print_header "RESET SECRETS VAULT"
     echo -e "${YELLOW}  [!] WARNING: A NEW local secrets vault will be generated.${NC}"
     echo -e "${GRAY}      If .env.local.age exists, it will be OVERWRITTEN.${NC}"
     echo ""
     
-    # Detección y recomendación para Forks
     if [ -f "$DOTFILES_DIR/.env.age" ]; then
         echo -e "${NEON_CYAN}  [INFO] FORK DETECTED :: Original .env.age found.${NC}"
         echo -e "${GRAY}         Creating your own vault allows you to safely remove/archive${NC}"
@@ -82,7 +227,6 @@ reset_secrets_interactive() {
     fi
 }
 
-# Función auxiliar para guiar la creación de secretos locales
 create_local_secrets() {
     print_header "🔐 Configuración de Secretos Personales"
     
@@ -91,12 +235,10 @@ create_local_secrets() {
     echo ""
     echo -e "${GRAY}  [TIP] Press Ctrl+C to cancel operation${NC}"
     
-    # Input interactivo con estilo
     echo -e "${BOLD}Ingresa tus credenciales (Deja vacío para omitir):${NC}"
     read -p "   GitHub Token (GH_TOKEN): " NEW_GH_TOKEN
     
     if [ -n "$NEW_GH_TOKEN" ]; then
-        # Crear contenido temporal
         TEMP_ENV=$(mktemp)
         echo "GH_TOKEN=$NEW_GH_TOKEN" > "$TEMP_ENV"
         
@@ -104,7 +246,7 @@ create_local_secrets() {
         print_step "Encriptando archivo seguro..."
         echo -e "${YELLOW}  > A continuación, age te pedirá una${BOLD} NUEVA passphrase${NC}${YELLOW} para proteger este archivo.${NC}"
         
-        # Encriptar
+        ensure_package "age"
         age --encrypt -p -o "$DOTFILES_DIR/.env.local.age" "$TEMP_ENV"
         RET_CODE=$?
         rm -f "$TEMP_ENV"
@@ -112,19 +254,15 @@ create_local_secrets() {
         if [ $RET_CODE -eq 0 ]; then
              print_success "Bóveda local creada: .env.local.age"
              
-             # Asegurar gitignore
              if ! grep -q ".env.local.age" "$DOTFILES_DIR/.gitignore" 2>/dev/null; then
                  echo ".env.local.age" >> "$DOTFILES_DIR/.gitignore"
              fi
              
-             # Limpieza UX: Ocultar el archivo del repo original para evitar confusión
              if [ -f "$DOTFILES_DIR/.env.age" ]; then
                  mv "$DOTFILES_DIR/.env.age" "$DOTFILES_DIR/.env.age.dist"
-                 print_info "El archivo original .env.age ha sido archivado como .env.age.dist"
-                 print_info "para que solo veas tu propia configuración."
+                 print_info "Original .env.age archived as .env.age.dist"
              fi
              
-             # Recargar recursivamente
              decrypt_secrets
              return $?
         else
@@ -138,16 +276,15 @@ create_local_secrets() {
 }
 
 decrypt_secrets() {
-    # 1. PRIORIDAD: Archivo local propio
+    ensure_package "age"
+    
     if [ -f "$DOTFILES_DIR/.env.local.age" ]; then
         TARGET_FILE="$DOTFILES_DIR/.env.local.age"
         MSG_TYPE="Tu Bóveda Local 🏠 (.env.local.age)"
-    # 2. FALLBACK: Archivo del repositorio
     elif [ -f "$DOTFILES_DIR/.env.age" ]; then
         TARGET_FILE="$DOTFILES_DIR/.env.age"
         MSG_TYPE="Bóveda del Repositorio 📦 (.env.age)"
     else
-        # No existe ninguno detected
         print_header "SECRETS VAULT SETUP"
         echo -e "${NEON_CYAN}  >> No existing secrets vault detected.${NC}"
         echo -e "${GRAY}     You can create a secure vault now or proceed as guest.${NC}"
@@ -173,19 +310,15 @@ decrypt_secrets() {
         TEMP_ENV=$(mktemp)
         chmod 600 "$TEMP_ENV"
         
-        # Ejecutamos age
         echo -e "${YELLOW}  🔑 Passphrase:${NC}"
         age --decrypt -o "$TEMP_ENV" "$TARGET_FILE"
         EXIT_CODE=$?
         
         if [ $EXIT_CODE -eq 0 ]; then
-            # Carga dinámica y robusta de variables
-            # set -a exporta automáticamente todas las variables definidas
             set -a
             source "$TEMP_ENV"
             set +a
             
-            # Configurar rclone si existe el token JSON
             if [ -n "$RCLONE_TOKEN_JSON" ]; then
                 mkdir -p "$HOME/.config/rclone"
                 cat > "$HOME/.config/rclone/rclone.conf" <<EOF
@@ -198,7 +331,6 @@ EOF
                 chmod 600 "$HOME/.config/rclone/rclone.conf"
             fi
             
-            # Verificar variables críticas para debugging
             if [ -n "$GH_TOKEN" ]; then
                 print_success "GitHub Token cargado."
             fi
@@ -209,7 +341,6 @@ EOF
             export SECRETS_LOADED=1
             print_success "Acceso concedido. Secretos cargados."
             
-            # Limpieza segura
             shred -u "$TEMP_ENV" 2>/dev/null || rm -f "$TEMP_ENV"
             return 0
         else
@@ -238,14 +369,8 @@ EOF
 }
 
 reload_shell() {
-    print_header "Instalación Finalizada con Éxito"
-    echo -e "${GREEN}  Recargando tu terminal para aplicar cambios... 🚀${NC}"
+    print_header "Reloading Shell..."
+    echo -e "${GREEN}  Applying changes... 🚀${NC}"
     echo ""
     exec bash
-}
-
-
-# Alias para compatibilidad con código existente
-show_reload_message() {
-    reload_shell
 }

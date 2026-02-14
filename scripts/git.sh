@@ -12,17 +12,17 @@
 # Esto es vital para que funcione el SSH Agent Forwarding.
 # ─────────────────────────────────────────────────────────────
 install_gitconfig() {
-    echo -e "${GREEN}>>> Configurando Git...${NC}"
+    print_step "Configurando Git..."
     cp "$DOTFILES_DIR/config/.gitconfig" "$HOME/.gitconfig"
     # Fuerza SSH aunque copies links HTTPS (vital para forwarding)
     git config --global url."git@github.com:".insteadOf "https://github.com/"
-    echo -e "${CYAN}   ✓ Git configurado${NC}"
+    print_success "Git configurado"
 
     # Configurar credential helper para persistencia en LXC/Headless
     # En WSL git suele usar el de Windows, pero en LXC puro necesitamos 'store' o 'cache'
     if ! grep -qi microsoft /proc/version 2>/dev/null; then
          # Si no es WSL (es un Linux nativo o container)
-         echo -e "${CYAN}   Configurando credential.helper store (para persistencia en LXC)...${NC}"
+         print_info "Configurando credential.helper store (para persistencia en LXC)..."
          git config --global credential.helper store
     fi
 }
@@ -32,11 +32,11 @@ install_gitconfig() {
 # Las agrega a ~/.ssh/authorized_keys para acceso SSH.
 # ─────────────────────────────────────────────────────────────
 install_ssh_keys() {
-    echo -e "${GREEN}>>> Importando llaves públicas de herwingx...${NC}"
+    print_step "Importando llaves públicas de herwingx..."
     mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
     curl -s "https://github.com/herwingx.keys" >> "$HOME/.ssh/authorized_keys"
     chmod 600 "$HOME/.ssh/authorized_keys"
-    echo -e "${CYAN}   ✓ Llaves SSH importadas${NC}"
+    print_success "Llaves SSH importadas"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -45,10 +45,10 @@ install_ssh_keys() {
 # Detecta automáticamente el usuario de Windows.
 # ─────────────────────────────────────────────────────────────
 copy_ssh_from_windows() {
-    echo -e "${GREEN}>>> Copiando llaves SSH desde Windows a WSL...${NC}"
+    print_step "Copiando llaves SSH desde Windows a WSL..."
     
     if [ ! -d "/mnt/c" ]; then
-        echo -e "${RED}   ✗ No se detectó WSL. Esta opción solo funciona en WSL.${NC}"
+        print_error "No se detectó WSL. Esta opción solo funciona en WSL."
         return 1
     fi
     
@@ -62,19 +62,19 @@ copy_ssh_from_windows() {
     fi
     
     if [ -z "$WIN_USER" ]; then
-        echo -e "${YELLOW}   ! No se pudo detectar el usuario de Windows.${NC}"
+        print_warning "No se pudo detectar el usuario de Windows."
         read -p "   Ingresa tu nombre de usuario de Windows: " WIN_USER
     fi
     
     WIN_SSH_DIR="/mnt/c/Users/$WIN_USER/.ssh"
     
     if [ ! -d "$WIN_SSH_DIR" ]; then
-        echo -e "${RED}   ✗ No se encontró: $WIN_SSH_DIR${NC}"
+        print_error "No se encontró: $WIN_SSH_DIR"
         return 1
     fi
     
-    echo -e "${CYAN}   Usuario de Windows: $WIN_USER${NC}"
-    echo -e "${CYAN}   Copiando desde: $WIN_SSH_DIR${NC}"
+    print_info "Usuario de Windows: $WIN_USER"
+    print_info "Copiando desde: $WIN_SSH_DIR"
     
     mkdir -p "$HOME/.ssh"
     chmod 700 "$HOME/.ssh"
@@ -84,7 +84,7 @@ copy_ssh_from_windows() {
         if [ -f "$WIN_SSH_DIR/$key_type" ]; then
             cp "$WIN_SSH_DIR/$key_type" "$HOME/.ssh/"
             chmod 600 "$HOME/.ssh/$key_type"
-            echo -e "${CYAN}   ✓ Copiada: $key_type${NC}"
+            print_success "Copiada: $key_type"
             KEYS_COPIED=$((KEYS_COPIED + 1))
         fi
         if [ -f "$WIN_SSH_DIR/$key_type.pub" ]; then
@@ -97,12 +97,12 @@ copy_ssh_from_windows() {
     [ -f "$WIN_SSH_DIR/known_hosts" ] && cp "$WIN_SSH_DIR/known_hosts" "$HOME/.ssh/" && chmod 600 "$HOME/.ssh/known_hosts"
     
     if [ $KEYS_COPIED -eq 0 ]; then
-        echo -e "${YELLOW}   ! No se encontraron llaves SSH.${NC}"
+        print_warning "No se encontraron llaves SSH."
         return 1
     fi
     
-    echo -e "${CYAN}   ✓ $KEYS_COPIED llave(s) copiada(s)${NC}"
-    echo -e "${CYAN}   Probando conexión a GitHub...${NC}"
+    print_success "$KEYS_COPIED llave(s) copiada(s)"
+    print_info "Probando conexión a GitHub..."
     ssh -T git@github.com 2>&1 | head -2
 }
 
@@ -112,7 +112,7 @@ copy_ssh_from_windows() {
 # Agrega automáticamente la llave id_ed25519 si existe.
 # ─────────────────────────────────────────────────────────────
 configure_ssh_agent() {
-    echo -e "${GREEN}>>> Configurando SSH Agent auto-start...${NC}"
+    print_step "Configurando SSH Agent auto-start..."
     
     BASHRC="$HOME/.bashrc"
     
@@ -130,22 +130,8 @@ elif [ -f "$HOME/.ssh/id_rsa" ]; then
     ssh-add -l 2>/dev/null | grep -q "id_rsa" || ssh-add "$HOME/.ssh/id_rsa" 2>/dev/null
 fi'
 
-    # Verificar si la función update_bashrc_block existe
-    if declare -f update_bashrc_block > /dev/null; then
-        update_bashrc_block "SSH_AGENT" "$SSH_AGENT_BLOCK" "before-ble"
-        echo -e "${CYAN}   ✓ SSH Agent configurado en .bashrc${NC}"
-    else
-        # Fallback si system.sh no está cargado
-        if ! grep -q 'SSH_AUTH_SOCK' "$BASHRC"; then
-            echo "" >> "$BASHRC"
-            echo "# <!-- BEGIN_SSH_AGENT -->" >> "$BASHRC"
-            echo "$SSH_AGENT_BLOCK" >> "$BASHRC"
-            echo "# <!-- END_SSH_AGENT -->" >> "$BASHRC"
-            echo -e "${CYAN}   ✓ SSH Agent configurado (fallback)${NC}"
-        else
-            echo -e "${YELLOW}   ! SSH Agent ya configurado${NC}"
-        fi
-    fi
+    update_bashrc_block "SSH_AGENT" "$SSH_AGENT_BLOCK" "before-ble"
+    print_success "SSH Agent configurado en .bashrc"
     
-    echo -e "${YELLOW}   ⚠️  Recarga tu shell (source ~/.bashrc) para activar${NC}"
+    print_warning "Recarga tu shell (source ~/.bashrc) para activar"
 }

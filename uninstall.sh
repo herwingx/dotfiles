@@ -66,7 +66,7 @@ EOF
     echo ""
     echo -e "${YELLOW}  • Configuraciones Shell${NC} (.bashrc patches, aliases, gitconfig)"
     echo -e "${YELLOW}  • Herramientas IA${NC} (~/.gemini, reglas, workflows)"
-    echo -e "${YELLOW}  • Runtimes${NC} (NVM/Node, Rust/Cargo, Go)"
+    echo -e "${YELLOW}  • Toolchain${NC} (Mise, Node, Go, Rust)"
     echo -e "${YELLOW}  • Binarios locales${NC} (oh-my-posh, zoxide, atuin, ble.sh)"
     echo -e "${YELLOW}  • Cronjobs${NC} (auto-updates)"
     echo -e "${YELLOW}  • [OPCIONAL] Docker${NC} (imágenes, contenedores, volúmenes)"
@@ -108,7 +108,7 @@ clean_bashrc() {
     print_success "Backup creado"
     
     # 1. Eliminar bloques con formato <!-- BEGIN_* --> ... <!-- END_* -->
-    BLOCKS=("NVM" "SSH_AGENT" "ATUIN" "BLE" "OH_MY_POSH" "ZOXIDE" "WSL_PATH" "DOTFILES")
+    BLOCKS=("NVM" "MISE" "SSH_AGENT" "ATUIN" "BLE" "OH_MY_POSH" "ZOXIDE" "WSL_PATH" "DOTFILES")
     for block in "${BLOCKS[@]}"; do
         if grep -q "<!-- BEGIN_${block} -->" "$BASHRC"; then
             sed -i "/<!-- BEGIN_${block} -->/,/<!-- END_${block} -->/d" "$BASHRC"
@@ -132,6 +132,7 @@ clean_bashrc() {
         "starship"
         "dotfiles/scripts"
         "source.*\.gemini"
+        "mise activate"
     )
     
     for pattern in "${PATTERNS[@]}"; do
@@ -173,6 +174,7 @@ remove_dotfiles() {
         "$HOME/.tmux.conf"
         "$HOME/.inputrc"
         "$HOME/.local/bin/agy"
+        "$HOME/.mise.toml"
     )
     
     DIRS_TO_REMOVE=(
@@ -218,44 +220,31 @@ remove_cronjobs() {
     fi
 }
 
-# Eliminar NVM y Node.js
-remove_nvm() {
-    print_header "ELIMINANDO NVM / NODE.JS"
+# Eliminar Mise
+remove_mise() {
+    print_header "ELIMINANDO MISE TOOLCHAIN"
     
+    if command -v mise &> /dev/null || [ -d "$HOME/.local/share/mise" ]; then
+        # Desinstalar herramientas primero
+        mise uninstall --all 2>/dev/null
+        
+        # Eliminar binario y datos
+        rm -f "$HOME/.local/bin/mise"
+        rm -rf "$HOME/.local/share/mise"
+        rm -rf "$HOME/.config/mise"
+        print_success "Mise y tools eliminados"
+    else
+        print_warning "Mise no encontrado"
+    fi
+}
+
+# Eliminar NVM y Node.js (Legacy Cleanup)
+remove_nvm() {
     if [ -d "$HOME/.nvm" ]; then
+        print_header "ELIMINANDO NVM / NODE.JS (LEGACY)"
         rm -rf "$HOME/.nvm"
         rm -rf "$HOME/.npm"
-        rm -rf "$HOME/.node_repl_history"
-        rm -f "$HOME/.npmrc"
         print_success "NVM y Node.js eliminados"
-    else
-        print_warning "NVM no encontrado"
-    fi
-}
-
-# Eliminar Rust
-remove_rust() {
-    print_header "ELIMINANDO RUST / CARGO"
-    
-    if [ -d "$HOME/.cargo" ]; then
-        rm -rf "$HOME/.cargo"
-        rm -rf "$HOME/.rustup"
-        print_success "Rust eliminado"
-    else
-        print_warning "Rust no encontrado"
-    fi
-}
-
-# Eliminar Go
-remove_go() {
-    print_header "ELIMINANDO GO"
-    
-    if [ -d "$HOME/go" ] || [ -d "/usr/local/go" ]; then
-        rm -rf "$HOME/go"
-        sudo rm -rf /usr/local/go 2>/dev/null
-        print_success "Go eliminado"
-    else
-        print_warning "Go no encontrado"
     fi
 }
 
@@ -447,9 +436,8 @@ full_destroy() {
     clean_bashrc
     remove_cronjobs
     remove_dotfiles
+    remove_mise
     remove_nvm
-    remove_rust
-    remove_go
     remove_local_tools
     remove_homebrew
     remove_docker
@@ -497,19 +485,15 @@ selective_clean() {
     read Q3
     [[ "$Q3" =~ ^[Ss]$ ]] && remove_dotfiles
     
-    echo -ne "${YELLOW}  [4/9] ¿Eliminar NVM / Node.js? [s/N]: ${NC}"
+    echo -ne "${YELLOW}  [4/9] ¿Eliminar Mise Toolchain? [s/N]: ${NC}"
     read Q4
-    [[ "$Q4" =~ ^[Ss]$ ]] && remove_nvm
+    [[ "$Q4" =~ ^[Ss]$ ]] && remove_mise
     
-    echo -ne "${YELLOW}  [5/9] ¿Eliminar Rust / Cargo? [s/N]: ${NC}"
+    echo -ne "${YELLOW}  [5/9] ¿Eliminar NVM/Node Legacy? [s/N]: ${NC}"
     read Q5
-    [[ "$Q5" =~ ^[Ss]$ ]] && remove_rust
+    [[ "$Q5" =~ ^[Ss]$ ]] && remove_nvm
     
-    echo -ne "${YELLOW}  [6/9] ¿Eliminar Go? [s/N]: ${NC}"
-    read Q6
-    [[ "$Q6" =~ ^[Ss]$ ]] && remove_go
-    
-    echo -ne "${YELLOW}  [7/9] ¿Eliminar herramientas locales (oh-my-posh, zoxide, etc.)? [s/N]: ${NC}"
+    echo -ne "${YELLOW}  [6/9] ¿Eliminar herramientas locales (oh-my-posh, etc.)? [s/N]: ${NC}"
     read Q7
     [[ "$Q7" =~ ^[Ss]$ ]] && remove_local_tools
     

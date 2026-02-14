@@ -13,33 +13,24 @@ source "$DOTFILES_DIR/scripts/common.sh"
 EXTENSIONS_FILE="$DOTFILES_DIR/.vscode-extensions"
 
 install_vscode_extensions() {
-    echo -e "${GREEN}>>> Buscando editor compatible...${NC}"
+    print_step "Buscando editor compatible..."
 
-    # Lista de binarios soportados en orden de preferencia
-    EDITORS=("code" "codium" "antigravity" "agy" "cursor")
-    EDITOR_CMD=""
-
-    for cmd in "${EDITORS[@]}"; do
-        if command -v "$cmd" &> /dev/null; then
-            EDITOR_CMD="$cmd"
-            echo -e "${CYAN}   ✓ Detectado: $cmd${NC}"
-            break
-        fi
-    done
+    EDITOR_CMD=$(detect_editor)
 
     if [ -z "$EDITOR_CMD" ]; then
-        echo -e "${RED}   ✗ No se encontró ningún editor compatible (VS Code, Codium, Antigravity).${NC}"
+        print_error "No se encontró ningún editor compatible (VS Code, Codium, Antigravity)."
         echo -e "${YELLOW}   Instala VS Code primero para cargar las extensiones.${NC}"
-        # Opcional: Ofrecer instalar VS Code en Fedora/Ubuntu?
         return 1
     fi
+    
+    print_success "Detectado: $EDITOR_CMD"
 
     if [ ! -f "$EXTENSIONS_FILE" ]; then
-        echo -e "${RED}   ✗ No se encontró el archivo .vscode-extensions${NC}"
+        print_error "No se encontró el archivo .vscode-extensions"
         return 1
     fi
 
-    echo -e "${GREEN}>>> Instalando extensiones para $EDITOR_CMD...${NC}"
+    print_step "Instalando extensiones para $EDITOR_CMD..."
     
     # Leer el archivo y filtrar líneas vacías o comentarios
     while IFS= read -r ext || [ -n "$ext" ]; do
@@ -55,30 +46,22 @@ install_vscode_extensions() {
         
     done < "$EXTENSIONS_FILE"
 
-    echo -e "${GREEN}>>> Proceso finalizado.${NC}"
+    print_success "Proceso finalizado."
 }
 
 backup_extensions() {
-    echo -e "${GREEN}>>> Buscando editor para backup...${NC}"
+    print_step "Buscando editor para backup..."
     
-    # Misma lógica de detección
-    EDITORS=("code" "codium" "antigravity" "agy" "cursor")
-    EDITOR_CMD=""
-
-    for cmd in "${EDITORS[@]}"; do
-        if command -v "$cmd" &> /dev/null; then
-            EDITOR_CMD="$cmd"
-            echo -e "${CYAN}   ✓ Detectado: $cmd${NC}"
-            break
-        fi
-    done
+    EDITOR_CMD=$(detect_editor)
 
     if [ -z "$EDITOR_CMD" ]; then
-        echo -e "${RED}   ✗ No se encontró editor para listar extensiones.${NC}"
+        print_error "No se encontró editor para listar extensiones."
         return 1
     fi
+    
+    print_success "Detectado: $EDITOR_CMD"
 
-    echo -e "${GREEN}>>> Guardando lista en $EXTENSIONS_FILE...${NC}"
+    print_step "Guardando lista en $EXTENSIONS_FILE..."
     
     # Listar y limpiar (eliminar versiones si las muestra)
     $EDITOR_CMD --list-extensions > "$EXTENSIONS_FILE"
@@ -86,9 +69,9 @@ backup_extensions() {
     # Verificar si escribió algo
     if [ -s "$EXTENSIONS_FILE" ]; then
         COUNT=$(wc -l < "$EXTENSIONS_FILE")
-        echo -e "${CYAN}   ✓ $COUNT extensiones guardadas.${NC}"
+        print_success "$COUNT extensiones guardadas."
     else
-        echo -e "${RED}   ✗ Error al guardar la lista.${NC}"
+        print_error "Error al guardar la lista."
     fi
 }
 
