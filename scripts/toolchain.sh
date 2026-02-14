@@ -3,10 +3,65 @@
 # TOOLCHAIN - Gestión de Herramientas (Mise)
 # ==========================================
 # Instala y configura mise como gestor de versiones universal
+# Incluye migración inteligente desde herramientas legacy (NVM, etc.)
 # ==========================================
+
+# ─────────────────────────────────────────────────────────────
+# Detecta y desactiva herramientas que entran en conflicto con Mise
+# (NVM, instalaciones manuales de Go/Rust/Node)
+# ─────────────────────────────────────────────────────────────
+cleanup_legacy_conflicts() {
+    print_step "Checking for legacy tool conflicts..."
+    
+    local conflicts_found=false
+    
+    # 1. Detectar NVM (Node Version Manager)
+    if [ -d "$HOME/.nvm" ] || grep -q "NVM_DIR" "$HOME/.bashrc"; then
+        print_warning "Legacy NVM detected. It conflicts with Mise."
+        conflicts_found=true
+        
+        # Desactivar de .bashrc
+        sed -i '/export NVM_DIR/d' "$HOME/.bashrc"
+        sed -i '/\[ -s "$NVM_DIR\/nvm.sh" \]/d' "$HOME/.bashrc"
+        sed -i '/\[ -s "$NVM_DIR\/bash_completion" \]/d' "$HOME/.bashrc"
+        
+        # Renombrar directorio para desactivar (Backup seguro)
+        if [ -d "$HOME/.nvm" ]; then
+            mv "$HOME/.nvm" "$HOME/.nvm.backup_legacy"
+            print_success "NVM disabled (backed up to ~/.nvm.backup_legacy)"
+        fi
+    fi
+    
+    # 2. Detectar Go legacy en /usr/local/go
+    if [ -d "/usr/local/go" ]; then
+        print_warning "System-wide Go detected in /usr/local/go."
+        print_info "Mise will manage Go user-locally. Consider removing /usr/local/go later."
+        # No borramos cosas de root automáticamente por seguridad, solo advertimos.
+    fi
+    
+    # 3. Limpiar binarios manuales antiguos que ahora maneja Mise
+    # (Evita que 'which lsd' apunte al binario viejo en lugar del shim de mise)
+    local legacy_bins=("lsd" "bat" "rg" "fd" "zoxide")
+    for bin in "${legacy_bins[@]}"; do
+        if [ -f "$HOME/.local/bin/$bin" ]; then
+            # Solo si NO es un shim de mise (los shims son scripts pequeños)
+            if ! grep -q "mise" "$HOME/.local/bin/$bin"; then
+                mv "$HOME/.local/bin/$bin" "$HOME/.local/bin/$bin.old"
+                print_info "Archived legacy binary: $bin -> $bin.old"
+            fi
+        fi
+    done
+
+    if [ "$conflicts_found" = false ]; then
+        print_success "No critical conflicts found."
+    fi
+}
 
 install_toolchain() {
     print_header "TOOLCHAIN SETUP (MISE)"
+    
+    # 0. Limpieza preventiva
+    cleanup_legacy_conflicts
     
     # 1. Instalar mise si no existe
     if ! command -v mise &> /dev/null; then

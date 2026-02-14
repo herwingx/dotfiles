@@ -110,13 +110,13 @@ show_menu() {
     
     echo -e "${NEON_CYAN}  // 📦 SYSTEM & TOOLCHAIN${NC}"
     echo -ne "  "; p_opt "2" "Base System + Mise Tools"; p_opt "3" "Dev Tools Only (Docker, GH)"; echo ""
-    echo -ne "  "; p_opt "5" "Update System (Force)"; p_opt "6" "Install Base Packages"; echo ""
-    echo -ne "  "; p_opt "7" "Re-sync Toolchain (mise install)"; echo ""
+    echo -ne "  "; p_opt "4" "Toolchain Sync (mise install)"; p_opt "5" "Update System (Force)"; echo ""
+    echo -ne "  "; p_opt "6" "Install Base Packages"; echo ""
     
     echo -e "${NEON_CYAN}  // ☁️ CONFIG & CLOUD${NC}"
-    echo -ne "  "; p_opt "10" "Configure Secrets"; p_opt "11" "Install AI Rules (Antigravity)"; echo ""
-    echo -ne "  "; p_opt "12" "Configure Rclone"; p_opt "13" "SSH Keys Import"; echo ""
-    echo -ne "  "; p_opt "14" "Install VSCode Extensions"; echo ""
+    echo -ne "  "; p_opt "7" "Configure Secrets"; p_opt "8" "Install AI Rules (Antigravity)"; echo ""
+    echo -ne "  "; p_opt "9" "Configure Rclone"; p_opt "10" "SSH Keys Import"; echo ""
+    echo -ne "  "; p_opt "11" "Install VSCode Extensions"; echo ""
 
     echo -e "${GRAY}  +------------------------------------------------------------+${NC}"
     echo -ne "  "; p_opt "0" "EXIT"; echo ""
@@ -129,14 +129,14 @@ show_menu() {
         1) install_all || handle_error $? "FULL_INSTALL" ;;
         2) install_system_all || handle_error $? "SYSTEM_INSTALL" ;;
         3) install_dev_tools_all || handle_error $? "DEV_TOOLS" ;;
+        4) install_toolchain || handle_error $? "TOOLCHAIN_SYNC" ;;
         5) update_system --force || handle_error $? "SYSTEM_UPDATE" ;;
         6) install_packages || handle_error $? "PACKAGES" ;;
-        7) install_toolchain || handle_error $? "TOOLCHAIN_SYNC" ;;
-        10) decrypt_secrets || handle_error $? "SECRETS" ;;
-        11) install_antigravity_full || handle_error $? "ANTIGRAVITY" ;;
-        12) configure_rclone || handle_error $? "RCLONE" ;;
-        13) install_ssh_keys || handle_error $? "SSH" ;;
-        14) install_vscode_extensions || handle_error $? "EXTENSIONS" ;;
+        7) decrypt_secrets || handle_error $? "SECRETS" ;;
+        8) install_antigravity_full || handle_error $? "ANTIGRAVITY" ;;
+        9) configure_rclone || handle_error $? "RCLONE" ;;
+        10) install_ssh_keys || handle_error $? "SSH" ;;
+        11) install_vscode_extensions || handle_error $? "EXTENSIONS" ;;
         0) exit 0 ;;
         *) echo -e "${RED}Invalid Option${NC}"; sleep 1 ;;
     esac
