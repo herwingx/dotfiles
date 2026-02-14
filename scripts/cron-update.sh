@@ -197,14 +197,38 @@ Reiniciando en 60 segundos..." "reboot"
 }
 
 # ─────────────────────────────────────────────────────────────
-# MAIN
+# Configura el cron job para actualizaciones automáticas
+# ─────────────────────────────────────────────────────────────
+install_auto_update() {
+    print_step "Configurando Actualizaciones Automáticas (Cron)..."
+    
+    local SCRIPT_PATH="$DOTFILES_DIR/scripts/cron-update.sh"
+    
+    if [ ! -f "$SCRIPT_PATH" ]; then
+        print_error "No se encontró el script de actualización en $SCRIPT_PATH"
+        return 1
+    fi
+    
+    chmod +x "$SCRIPT_PATH"
+    
+    # Crear entrada en crontab (diario a las 04:00 AM)
+    # Evitar duplicados eliminando entradas previas que contengan el nombre del script
+    (crontab -l 2>/dev/null | grep -v "cron-update.sh"; echo "0 4 * * * /bin/bash $SCRIPT_PATH") | crontab -
+    
+    print_success "Cron job configurado (Ejecución: 04:00 AM diario)"
+}
+
+# ─────────────────────────────────────────────────────────────
+# MAIN (Solo si se ejecuta directamente)
 # ─────────────────────────────────────────────────────────────
 
-# Crear directorio de logs y config si no existe
-mkdir -p "$LOG_DIR"
-mkdir -p "$(dirname "$CONFIG_FILE")"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Crear directorio de logs y config si no existe
+    mkdir -p "$LOG_DIR"
+    mkdir -p "$(dirname "$CONFIG_FILE")"
 
-# Ejecutar actualización
-run_update
+    # Ejecutar actualización
+    run_update
 
-log "INFO" "Script de actualización finalizado"
+    log "INFO" "Script de actualización finalizado"
+fi

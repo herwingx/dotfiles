@@ -111,16 +111,37 @@ export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\""
 # Instala extensiones MCP para Gemini CLI.
 # ─────────────────────────────────────────────────────────────
 install_gemini_extensions() {
+    # 0. Limpiar extensiones rotas preventivamente
+    if [ -d "$HOME/.gemini/extensions" ]; then
+        # Usar find para evitar problemas con globs y ser más precisos
+        find "$HOME/.gemini/extensions" -maxdepth 1 -type d -not -path "$HOME/.gemini/extensions" | while read -r ext_dir; do
+            if [ ! -f "$ext_dir/gemini-extension.json" ]; then
+                print_warning "Detectada extensión corrupta en $(basename "$ext_dir"). Limpiando..."
+                rm -rf "$ext_dir"
+            fi
+        done
+    fi
+
     # 1. Asegurar que el binario de gemini sea accesible
     if [ -z "$(command -v gemini)" ]; then
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        export PATH="$HOME/.local/bin:$PATH"
     fi
 
     # 2. Obtener la ruta absoluta del binario
     GEMINI_BIN=$(command -v gemini)
 
-    # 3. SI EXISTE EN LINUX: Continuar directo a extensiones
+    # 3. Exportar token para evitar prompts de login interactivo
+    if [ -n "$GH_TOKEN" ]; then
+        export GITHUB_PERSONAL_ACCESS_TOKEN="$GH_TOKEN"
+    fi
+
+    if [ -z "$GITHUB_PERSONAL_ACCESS_TOKEN" ] && [ -z "$GH_TOKEN" ]; then
+        print_warning "No se detectó GITHUB_TOKEN. Saltando instalación de extensiones para evitar bloqueos."
+        print_info "Configura tus secretos (Opción 7) para habilitar esta funcionalidad."
+        return
+    fi
+
+    # 4. SI EXISTE EN LINUX: Continuar directo a extensiones
     if [ -n "$GEMINI_BIN" ] && [[ "$GEMINI_BIN" != /mnt/* ]]; then
         print_success "Gemini CLI detectado en $GEMINI_BIN"
         
@@ -216,19 +237,36 @@ install_gemini_extensions() {
         "https://github.com/gemini-cli-extensions/nanobanana"
     )
 
+    # Lista de extensiones ya instaladas para evitar prompts
+    # Usamos el token exportado. Si falla la lista, asumimos vacía.
+    INSTALLED_EXTS=$("$GEMINI_BIN" extensions list 2>/dev/null || echo "")
+
     for ext in "${extensions[@]}"; do
+        # Extraer nombre base de la extensión para chequear si ya existe
+        EXT_NAME=$(echo "$ext" | awk -F/ '{print $NF}')
+        
+        if echo "$INSTALLED_EXTS" | grep -q "$EXT_NAME"; then
+            print_info "Extensión ya instalada: $EXT_NAME (Saltando...)"
+            continue
+        fi
+
         print_info "Instalando: $ext..."
         LOG_FILE=$(mktemp)
         
-        if timeout 120s bash -c "yes | \"$GEMINI_BIN\" extensions install \"$ext\"" > "$LOG_FILE" 2>&1; then
+        # Usamos el token explícitamente y evitamos capturar stdout si causa problemas de TTY
+        # pero logueamos errores filtrando el ruido de deprecación de Node
+        if timeout 120s "$GEMINI_BIN" extensions install "$ext" --non-interactive > "$LOG_FILE" 2>&1; then
              print_success "Instalada: $ext"
         else
              if grep -qE "already installed|already registered" "$LOG_FILE"; then
                  print_info "La extensión ya estaba registrada (Saltando...)"
              else
-                 print_error "Error instalando $ext"
+                 # Si falló por timeout o falta de input, informar
+                 print_warning "No se pudo instalar $ext automáticamente"
                  if [ -s "$LOG_FILE" ]; then
-                     cat "$LOG_FILE" | sed 's/^/     /'
+                     # Filtrar DeprecationWarning y líneas vacías para ver el error real
+                     REAL_ERROR=$(grep -vE "DeprecationWarning|punycode|^[[:space:]]*$" "$LOG_FILE" | head -n 1 | cut -c1-120)
+                     [ -n "$REAL_ERROR" ] && print_info "Detalle: $REAL_ERROR"
                  fi
              fi
         fi

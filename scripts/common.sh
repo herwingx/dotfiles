@@ -102,13 +102,13 @@ ensure_package() {
     local installed=false
     case "$OS_TYPE" in
         debian)
-            dpkg -l | grep -q "^ii  $package " && installed=true
+            dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "ok installed" && installed=true
             ;;
         redhat)
             rpm -q "$package" &> /dev/null && installed=true
             ;;
         arch)
-            pacman -Qi "$package" &> /dev/null && installed=true
+            pacman -Qq "$package" &> /dev/null && installed=true
             ;;
     esac
 
