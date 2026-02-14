@@ -81,7 +81,7 @@ install_packages() {
     PACKAGES=(
         "git" "curl" "wget" "unzip" "tree" 
         "net-tools" "tmux" "ranger" "mc" 
-        "make" "tar"
+        "make" "tar" "jq" "xclip"
     )
 
     # Distro-specific additions
@@ -287,12 +287,10 @@ configure_atuin() {
 configure_oh_my_posh() {
     print_step "Configurando Oh My Posh..."
     
-    # Configurar tema
+    # Vincular tema local del repositorio
     mkdir -p "$HOME/.poshthemes"
-    if [ ! -f "$HOME/.poshthemes/kushal.omp.json" ]; then
-        curl -s "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/kushal.omp.json" -o "$HOME/.poshthemes/kushal.omp.json" 
-    fi
+    ln -sf "$DOTFILES_DIR/config/herwingx.omp.json" "$HOME/.poshthemes/herwingx.omp.json"
 
-    CONTENT='eval "$(oh-my-posh init bash --config ~/.poshthemes/kushal.omp.json)"'
+    CONTENT='eval "$(oh-my-posh init bash --config ~/.poshthemes/herwingx.omp.json)"'
     update_bashrc_block "OH_MY_POSH" "$CONTENT" "before-ble"
 }

@@ -16,6 +16,7 @@ source "$DOTFILES_DIR/scripts/dev-tools.sh"
 source "$DOTFILES_DIR/scripts/antigravity.sh"
 source "$DOTFILES_DIR/scripts/cloud.sh"
 source "$DOTFILES_DIR/scripts/extensions.sh"
+source "$DOTFILES_DIR/scripts/cron-update.sh"
 
 install_all() {
     export AUTO_INSTALL=true
