@@ -116,9 +116,7 @@ install_packages() {
 
     install_bash_aliases
     
-    # Atuin y Oh My Posh ahora se gestionan via Mise (toolchain.sh)
-    # Solo configuramos sus integraciones aquí
-    configure_atuin
+    # Oh My Posh se gestiona via Mise (toolchain.sh)
     configure_oh_my_posh
     
     # Ble.sh ELIMINADO por solicitud (conflicto con VSCode)
@@ -184,7 +182,7 @@ EOF
 # ─────────────────────────────────────────────────────────────
 ensure_path() {
     # Agregamos .local/bin para mise y tools
-    CONTENT='export PATH="$HOME/.local/bin:$HOME/.atuin/bin:/usr/local/bin:$PATH"'
+    CONTENT='export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"'
     update_bashrc_block "PATH_FIX" "$CONTENT" "before-ble"
 }
 
@@ -209,48 +207,6 @@ install_antigravity_fix() {
             ln -s "$AGY_PATH" "$HOME/.local/bin/agy"
             print_success "Symlink 'agy' vinculado"
         fi
-    fi
-}
-
-configure_atuin() {
-    print_step "Configurando Atuin..."
-
-    mkdir -p "$HOME/.config/atuin"
-
-    # Vincular configuración desde el repositorio
-    ln -sf "$DOTFILES_DIR/config/atuin.toml" "$HOME/.config/atuin/config.toml"
-
-    if command -v atuin &> /dev/null; then
-         # Opcional: Login si hay key en secrets
-         if [ -n "$ATUIN_KEY" ]; then
-             # Lógica de login automática (pendiente de implementar si se desea)
-             :
-         fi
-         # Atuin DEBE cargarse al final del .bashrc para no perder sus hooks de PROMPT_COMMAND
-         # (otros tools como oh-my-posh también modifican PROMPT_COMMAND)
-         # Además incluye workaround para VS Code WSL Remote que sobreescribe el DEBUG trap.
-         if ! grep -q "atuin init bash" "$HOME/.bashrc"; then
-             CONTENT='# Atuin debe cargarse al final para preservar sus hooks de PROMPT_COMMAND
-if [ -f "$HOME/.atuin/bin/env" ]; then
-    . "$HOME/.atuin/bin/env"
-fi
-if command -v atuin &>/dev/null; then
-    eval "$(atuin init bash)"
-    # Workaround: VS Code WSL Remote reemplaza el DEBUG trap de Atuin al inyectar
-    # su shell integration DESPUÉS de .bashrc. Este helper lo restaura en cada prompt.
-    __atuin_restore_trap() {
-        if [[ "$(trap -p DEBUG 2>/dev/null)" != *"__atuin_preexec"* ]]; then
-            if declare -f __vsc_preexec_only &>/dev/null; then
-                trap -- '"'"'__vsc_preexec_only "$_"; __atuin_preexec "$_"'"'"' DEBUG 2>/dev/null || true
-            else
-                trap -- '"'"'__atuin_preexec "$_"'"'"' DEBUG 2>/dev/null || true
-            fi
-        fi
-    }
-    PROMPT_COMMAND="__atuin_restore_trap;${PROMPT_COMMAND}"
-fi'
-             update_bashrc_block "ATUIN" "$CONTENT" "bottom"
-         fi
     fi
 }
 
