@@ -155,7 +155,6 @@ python = "latest"
 lsd = "latest"
 bat = "latest"
 ripgrep = "latest"
-zoxide = "latest"
 atuin = "latest"
 oh-my-posh = "latest"
 ```
@@ -215,7 +214,7 @@ Esto actualiza el archivo `.vscode-extensions` con tu configuración actual.
 | :--- | :--- | :--- |
 | **Core** | Bash, Age, Git | `system.sh` |
 | **Runtimes** | Node.js, Python, Go, Rust | **Mise** |
-| **CLI Moderno** | lsd, bat, ripgrep, zoxide, fzf | **Mise** |
+| **CLI Moderno** | lsd, bat, ripgrep, fzf | **Mise** |
 | **Shell UI** | Oh My Posh, Atuin | **Mise** + Config |
 | **Infra** | Docker, Docker Compose | `dev-tools.sh` |
 | **Cloud** | Rclone, GitHub CLI | `cloud.sh` |

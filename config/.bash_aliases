@@ -43,15 +43,6 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
 
-# zoxide (Smarter cd)
-if command -v zoxide &> /dev/null; then
-    # Si zoxide existe pero la función z no está definida, inicializarla aquí
-    if ! command -v z &> /dev/null; then
-        eval "$(zoxide init bash)"
-    fi
-    alias cd="z"
-fi
-
 # -----------------------------------------------------------------------------
 # Git shortcuts
 # -----------------------------------------------------------------------------
