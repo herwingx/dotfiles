@@ -175,7 +175,7 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
 fi
 EOF
 )
-    update_bashrc_block "WSL_PATH" "$CONTENT" "top"
+    update_bashrc_block "WSL_PATH" "$CONTENT" "bottom"
 }
 
 # ─────────────────────────────────────────────────────────────

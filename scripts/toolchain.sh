@@ -74,12 +74,10 @@ install_toolchain() {
     fi
 
     # 2. Configurar activación en .bashrc
-    local config_block='# Mise (Version Manager)
-export PATH="$HOME/.local/bin:$PATH"
-eval "$(mise activate bash)"'
+    local config_block='eval "$(mise activate bash)"'
 
     if declare -f update_bashrc_block > /dev/null; then
-        update_bashrc_block "MISE" "$config_block" "top"
+        update_bashrc_block "MISE" "$config_block" "bottom"
     else
         if ! grep -q "mise activate bash" "$HOME/.bashrc"; then
             echo "" >> "$HOME/.bashrc"
