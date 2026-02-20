@@ -108,7 +108,7 @@ clean_bashrc() {
     print_success "Backup creado"
     
     # 1. Eliminar bloques con formato <!-- BEGIN_* --> ... <!-- END_* -->
-    BLOCKS=("NVM" "MISE" "SSH_AGENT" "ATUIN" "BLE" "OH_MY_POSH" "ZOXIDE" "WSL_PATH" "DOTFILES")
+    BLOCKS=("MISE" "WSL_PATH" "PATH_FIX" "GH_TOKEN" "ALIASES" "SSH_AGENT" "OH_MY_POSH" "FZF" "NVM" "DOTFILES")
     for block in "${BLOCKS[@]}"; do
         if grep -q "<!-- BEGIN_${block} -->" "$BASHRC"; then
             sed -i "/<!-- BEGIN_${block} -->/,/<!-- END_${block} -->/d" "$BASHRC"

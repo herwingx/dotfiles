@@ -183,7 +183,7 @@ EOF
 # ─────────────────────────────────────────────────────────────
 ensure_path() {
     # Agregamos .local/bin para mise y tools
-    CONTENT='export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"'
+    CONTENT='export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"'
     update_bashrc_block "PATH_FIX" "$CONTENT" "before-ble"
 }
 
