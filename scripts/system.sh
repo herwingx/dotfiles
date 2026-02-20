@@ -117,6 +117,7 @@ install_packages() {
     install_bash_aliases
     
     # Oh My Posh se gestiona via Mise (toolchain.sh)
+    configure_fzf
     configure_oh_my_posh
     
     # Ble.sh ELIMINADO por solicitud (conflicto con VSCode)
@@ -206,6 +207,19 @@ install_antigravity_fix() {
             rm -f "$HOME/.local/bin/agy"
             ln -s "$AGY_PATH" "$HOME/.local/bin/agy"
             print_success "Symlink 'agy' vinculado"
+        fi
+    fi
+}
+
+configure_fzf() {
+    print_step "Configurando fzf..."
+    if command -v fzf &>/dev/null; then
+        if ! grep -q "fzf --bash" "$HOME/.bashrc"; then
+            CONTENT='# fzf - Búsqueda fuzzy en historial (Ctrl+R), archivos (Ctrl+T) y directorios (Alt+C)
+if command -v fzf &>/dev/null; then
+    eval "$(fzf --bash)"
+fi'
+            update_bashrc_block "FZF" "$CONTENT" "bottom"
         fi
     fi
 }
