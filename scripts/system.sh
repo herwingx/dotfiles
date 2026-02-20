@@ -240,8 +240,11 @@ if command -v atuin &>/dev/null; then
     # su shell integration DESPUÉS de .bashrc. Este helper lo restaura en cada prompt.
     __atuin_restore_trap() {
         if [[ "$(trap -p DEBUG 2>/dev/null)" != *"__atuin_preexec"* ]]; then
-            trap -- '"'"'__vsc_preexec_only "$_"; __atuin_preexec "$_"'"'"' DEBUG 2>/dev/null || \
-            trap -- '"'"'__atuin_preexec "$_"'"'"' DEBUG 2>/dev/null || true
+            if declare -f __vsc_preexec_only &>/dev/null; then
+                trap -- '"'"'__vsc_preexec_only "$_"; __atuin_preexec "$_"'"'"' DEBUG 2>/dev/null || true
+            else
+                trap -- '"'"'__atuin_preexec "$_"'"'"' DEBUG 2>/dev/null || true
+            fi
         fi
     }
     PROMPT_COMMAND="__atuin_restore_trap;${PROMPT_COMMAND}"
