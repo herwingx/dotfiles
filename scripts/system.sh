@@ -7,7 +7,10 @@
 # ==========================================
 
 # ─────────────────────────────────────────────────────────────
-# Actualiza el sistema operativo de forma inteligente
+# Fix locales en Debian/Ubuntu
+#
+# Genera y configura los locales en_US.UTF-8 si faltan,
+# algo común en instalaciones mínimas o contenedores.
 # ─────────────────────────────────────────────────────────────
 fix_locales() {
     if [ "$OS_TYPE" == "debian" ]; then
@@ -24,6 +27,14 @@ fix_locales() {
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Actualiza el sistema operativo de forma inteligente
+#
+# Evita actualizaciones repetitivas guardando la última fecha
+# de actualización. Si han pasado menos de 24 horas, la omite.
+#
+# @param $1 - Opcional: "--force" para ignorar el límite de 24h.
+# ─────────────────────────────────────────────────────────────
 update_system() {
     # Check manual skip flag
     if [ "$1" == "--force" ]; then
@@ -61,6 +72,10 @@ update_system() {
     elif [ "$OS_TYPE" == "redhat" ]; then
         $SUDO_CMD dnf upgrade -y
         $SUDO_CMD dnf autoremove -y
+    elif [ "$OS_TYPE" == "suse" ]; then
+        $SUDO_CMD zypper up -y
+    elif [ "$OS_TYPE" == "alpine" ]; then
+        $SUDO_CMD apk upgrade
     fi
     
     # Guardar timestamp
@@ -70,7 +85,12 @@ update_system() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala paquetes esenciales del sistema usando ensure_package
+# Instala paquetes base del sistema
+#
+# Utiliza `ensure_package` de manera idempotente para instalar
+# dependencias clave dependiendo de la distribución detectada.
+#
+# @sideeffects Configura alias, bashrc, PATH y gestores de terminal.
 # ─────────────────────────────────────────────────────────────
 install_packages() {
     print_step "Instalando paquetes base del sistema..."
@@ -96,6 +116,13 @@ install_packages() {
             ;;
         arch)
             PACKAGES+=("base-devel" "bind" "age")
+            ;;
+        suse)
+            PACKAGES+=("gcc" "bind-utils" "age")
+            $SUDO_CMD zypper install -y -t pattern devel_basis 2>/dev/null
+            ;;
+        alpine)
+            PACKAGES+=("alpine-sdk" "bind-tools" "age")
             ;;
     esac
 
@@ -131,7 +158,10 @@ install_packages() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Vincula el archivo .bash_aliases
+# Vincula y configura el archivo .bash_aliases
+#
+# Crea un enlace simbólico desde config/.bash_aliases al home,
+# y añade la lógica a .bashrc para cargarlo automáticamente.
 # ─────────────────────────────────────────────────────────────
 install_bash_aliases() {
     print_step "Vinculando Bash Aliases..."
@@ -159,6 +189,10 @@ EOF
 
 # ─────────────────────────────────────────────────────────────
 # Configura el PATH en WSL
+#
+# Elimina las rutas montadas de Windows (/mnt/c/...) del PATH de Linux
+# para evitar colisiones entre binarios (.exe) y comandos nativos.
+# Solo se ejecuta en entornos Windows Subsystem for Linux (WSL).
 # ─────────────────────────────────────────────────────────────
 configure_wsl_path() {
     if [ ! -f /proc/version ] || ! grep -qi microsoft /proc/version; then
@@ -179,7 +213,10 @@ EOF
 }
 
 # ─────────────────────────────────────────────────────────────
-# Path Universal
+# Configuración del PATH Universal
+#
+# Añade `~/.local/bin` y otras rutas clave al inicio del PATH
+# para priorizar las herramientas locales instaladas.
 # ─────────────────────────────────────────────────────────────
 ensure_path() {
     # Agregamos .local/bin para mise y tools
@@ -188,7 +225,10 @@ ensure_path() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Configura Google Antigravity (agy) en WSL.
+# Configura enlace para Google Antigravity (agy) en WSL
+#
+# Busca la instalación de Antigravity en el sistema host de Windows
+# y crea un symlink en Linux para poder invocar `agy` desde bash.
 # ─────────────────────────────────────────────────────────────
 install_antigravity_fix() {
     if ! grep -qi microsoft /proc/version 2>/dev/null; then return; fi
@@ -211,6 +251,11 @@ install_antigravity_fix() {
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Configura la integración de fzf con Bash
+#
+# Añade atajos útiles como Ctrl+R (historial) o Ctrl+T (archivos).
+# ─────────────────────────────────────────────────────────────
 configure_fzf() {
     print_step "Configurando fzf..."
     if command -v fzf &>/dev/null; then
@@ -224,6 +269,12 @@ fi'
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Configura Oh My Posh
+#
+# Enlaza el tema personalizado del repositorio y añade
+# el bloque de inicialización de OMP en .bashrc.
+# ─────────────────────────────────────────────────────────────
 configure_oh_my_posh() {
     print_step "Configurando Oh My Posh..."
     

@@ -8,6 +8,11 @@
 
 # ─────────────────────────────────────────────────────────────
 # Instala GitHub CLI (gh)
+#
+# Agrega el repositorio oficial e instala la herramienta
+# para interactuar con GitHub desde la terminal.
+#
+# @sideeffects Modifica los repositorios del sistema y fuentes apt/dnf/zypper/apk.
 # ─────────────────────────────────────────────────────────────
 install_gh_cli() {
     print_step "Instalando GitHub CLI (gh)..."
@@ -27,10 +32,20 @@ install_gh_cli() {
                 $SUDO_CMD apt-get install gh -y
                 ;;
             redhat)
-                $SUDO_CMD dnf install gh -y
+                $SUDO_CMD dnf install -y dnf-plugins-core
+                $SUDO_CMD dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+                $SUDO_CMD dnf install -y gh
                 ;;
             arch)
                 $SUDO_CMD pacman -S github-cli --noconfirm
+                ;;
+            suse)
+                $SUDO_CMD zypper addrepo https://cli.github.com/packages/rpm/gh-cli.repo
+                $SUDO_CMD zypper ref
+                $SUDO_CMD zypper install -y gh
+                ;;
+            alpine)
+                $SUDO_CMD apk add github-cli
                 ;;
         esac
         print_success "GitHub CLI instalado"
@@ -41,6 +56,11 @@ install_gh_cli() {
 
 # ─────────────────────────────────────────────────────────────
 # Autentica GitHub CLI
+#
+# Usa el GH_TOKEN guardado en los secretos para autenticar
+# GitHub CLI (gh) sin requerir login interactivo por navegador.
+#
+# @sideeffects Configura credenciales en `~/.config/gh`.
 # ─────────────────────────────────────────────────────────────
 gh_auth_login() {
     if ! command -v gh &> /dev/null; then return 1; fi
@@ -60,6 +80,11 @@ gh_auth_login() {
 
 # ─────────────────────────────────────────────────────────────
 # Instala Docker Engine + Compose
+#
+# Instala Docker según los repositorios oficiales de cada
+# distribución y lo añade al grupo local para no requerir sudo.
+#
+# @sideeffects Habilita e inicia el demonio de Docker. Modifica grupos.
 # ─────────────────────────────────────────────────────────────
 install_docker() {
     print_step "Instalando Docker..."
@@ -75,12 +100,9 @@ install_docker() {
     
     case "$OS_TYPE" in
         debian)
-            # Add Docker's official GPG key:
             $SUDO_CMD install -m 0755 -d /etc/apt/keyrings
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO_CMD gpg --dearmor -o /etc/apt/keyrings/docker.gpg
             $SUDO_CMD chmod a+r /etc/apt/keyrings/docker.gpg
-
-            # Add the repository to Apt sources:
             echo \
               "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
               $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
@@ -96,6 +118,14 @@ install_docker() {
         arch)
             $SUDO_CMD pacman -S docker docker-compose --noconfirm
             ;;
+        suse)
+            $SUDO_CMD zypper install -y docker docker-compose
+            ;;
+        alpine)
+            $SUDO_CMD apk add docker docker-cli-compose
+            $SUDO_CMD rc-update add docker boot
+            $SUDO_CMD service docker start
+            ;;
     esac
     
     $SUDO_CMD systemctl start docker
@@ -108,7 +138,11 @@ install_docker() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala Gemini CLI (requiere Node.js via Mise)
+# Instala Gemini CLI
+#
+# Usa npm para instalar la herramienta CLI de Google Gemini.
+#
+# @requires Node.js (vía Mise o NVM).
 # ─────────────────────────────────────────────────────────────
 install_gemini_cli() {
     print_step "Instalando Gemini CLI..."
@@ -132,7 +166,10 @@ install_gemini_cli() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instalación agrupada
+# Instalación agrupada de Dev Tools
+#
+# Llama secuencialmente a las rutinas de instalación de gh,
+# docker y gemini-cli.
 # ─────────────────────────────────────────────────────────────
 install_dev_tools_all() {
     install_gh_cli

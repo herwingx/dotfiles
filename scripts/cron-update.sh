@@ -25,6 +25,9 @@ fi
 # ─────────────────────────────────────────────────────────────
 # Envía una notificación a Telegram.
 #
+# Utiliza el token del bot y el chat_id definidos en la configuración
+# para enviar mensajes formateados en HTML informando el estado.
+#
 # @param $1 - Mensaje a enviar
 # @param $2 - Tipo: "success", "warning", "error", "info"
 # ─────────────────────────────────────────────────────────────
@@ -62,6 +65,8 @@ $MESSAGE
 # ─────────────────────────────────────────────────────────────
 # Registra un mensaje en el log.
 #
+# Agrega la fecha y el nivel de log al archivo ~/.local/state/dotfiles/updates.log
+#
 # @param $1 - Nivel: INFO, WARN, ERROR
 # @param $2 - Mensaje
 # ─────────────────────────────────────────────────────────────
@@ -74,7 +79,10 @@ log() {
 # ─────────────────────────────────────────────────────────────
 # Detecta si hay actualizaciones de kernel pendientes.
 #
-# @returns 0 si hay kernel nuevo, 1 si no
+# Compara el kernel actualmente en ejecución con la versión instalada
+# más reciente en el sistema para determinar si se necesita un reinicio.
+#
+# @returns 0 si hay kernel nuevo, 1 si no.
 # ─────────────────────────────────────────────────────────────
 check_kernel_update() {
     local CURRENT_KERNEL=$(uname -r)
@@ -91,6 +99,14 @@ check_kernel_update() {
         if [ -n "$LATEST_KERNEL" ] && [ "$LATEST_KERNEL" != "$CURRENT_KERNEL" ]; then
             return 0
         fi
+    elif [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [[ "$ID" == "opensuse"* ]] || [[ "$ID" == "suse" ]]; then
+            local LATEST_KERNEL=$(rpm -q kernel-default --last 2>/dev/null | head -1 | awk '{print $1}' | sed 's/kernel-default-//')
+            if [ -n "$LATEST_KERNEL" ] && [ "$LATEST_KERNEL" != "$CURRENT_KERNEL" ]; then
+                return 0
+            fi
+        fi
     fi
     
     return 1
@@ -98,7 +114,11 @@ check_kernel_update() {
 
 # ─────────────────────────────────────────────────────────────
 # Ejecuta la actualización del sistema.
-# Soporta: Debian/Ubuntu, Fedora/RHEL, Arch Linux
+#
+# Detecta la distribución y utiliza el gestor de paquetes
+# adecuado para actualizar todos los paquetes. Soporta:
+# Debian/Ubuntu, Fedora/RHEL, Arch Linux, openSUSE y Alpine.
+# Registra logs y envía notificaciones por Telegram.
 # ─────────────────────────────────────────────────────────────
 run_update() {
     log "INFO" "Iniciando actualización del sistema"
@@ -153,6 +173,30 @@ run_update() {
         $SUDO_PREFIX pacman -Syu --noconfirm >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
         PACKAGES_UPDATED="N/A"
         
+    elif [ -f /etc/os-release ] && grep -qE "opensuse|suse" /etc/os-release; then
+        # openSUSE
+        log "INFO" "Sistema detectado: openSUSE (zypper)"
+
+        $SUDO_PREFIX zypper refresh >> "$LOG_FILE" 2>&1
+        PACKAGES_UPDATED=$(zypper lu 2>/dev/null | grep -c "v |" || echo "0")
+
+        if [ "$PACKAGES_UPDATED" -gt 0 ]; then
+            log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
+            $SUDO_PREFIX zypper --non-interactive up >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
+        fi
+
+    elif [ -f /etc/os-release ] && grep -q "alpine" /etc/os-release; then
+        # Alpine Linux
+        log "INFO" "Sistema detectado: Alpine Linux (apk)"
+
+        $SUDO_PREFIX apk update >> "$LOG_FILE" 2>&1
+        PACKAGES_UPDATED=$(apk version -l '<' 2>/dev/null | wc -l || echo "0")
+
+        if [ "$PACKAGES_UPDATED" -gt 0 ]; then
+            log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
+            $SUDO_PREFIX apk upgrade >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
+        fi
+
     else
         log "ERROR" "Sistema no soportado"
         send_telegram "Sistema no soportado para actualización automática" "error"
@@ -198,6 +242,9 @@ Reiniciando en 60 segundos..." "reboot"
 
 # ─────────────────────────────────────────────────────────────
 # Configura el cron job para actualizaciones automáticas
+#
+# Añade una entrada al crontab del usuario para ejecutar
+# este script de forma diaria a las 04:00 AM.
 # ─────────────────────────────────────────────────────────────
 install_auto_update() {
     print_step "Configurando Actualizaciones Automáticas (Cron)..."

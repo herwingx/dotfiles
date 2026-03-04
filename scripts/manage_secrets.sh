@@ -16,6 +16,16 @@ TEMP_FILE="$DOTFILES_DIR/.env.tmp"
 
 # --- FUNCIONES DE ACCIÓN ---
 
+# ─────────────────────────────────────────────────────────────
+# Edita un archivo de secretos
+#
+# Desencripta el archivo especificado en un archivo temporal
+# para ser editado y lo vuelve a encriptar con `age` al guardar.
+#
+# @param $1 - Archivo destino (ej. `.env.local.age`).
+# @param $2 - Título para la UI.
+# @sideeffects Usa el editor por defecto (`nano`) y modifica archivos.
+# ─────────────────────────────────────────────────────────────
 action_edit_file() {
     local target_file=$1
     local title=$2
@@ -60,6 +70,14 @@ action_edit_file() {
     read -p "  Press Enter to continue..."
 }
 
+# ─────────────────────────────────────────────────────────────
+# Visualiza un archivo de secretos
+#
+# Desencripta el archivo en memoria y lo muestra en pantalla
+# de solo lectura.
+#
+# @param $1 - Archivo destino a leer.
+# ─────────────────────────────────────────────────────────────
 action_view_file() {
     local target_file=$1
     if [ ! -f "$target_file" ]; then
@@ -77,6 +95,12 @@ action_view_file() {
 
 # --- MENÚ INTERACTIVO ---
 
+# ─────────────────────────────────────────────────────────────
+# Muestra el menú principal de Vault Manager
+#
+# Renderiza la interfaz de usuario en la terminal y maneja
+# el loop principal de interacción del usuario.
+# ─────────────────────────────────────────────────────────────
 show_menu() {
     clear
     echo -e "${NEON_GREEN}"

@@ -7,9 +7,13 @@
 # ==========================================
 
 # ─────────────────────────────────────────────────────────────
-# Copia el .gitconfig desde config/ al home del usuario.
-# Configura git para usar SSH en lugar de HTTPS para GitHub.
-# Esto es vital para que funcione el SSH Agent Forwarding.
+# Configura Git
+#
+# Copia el .gitconfig base al home del usuario y fuerza que
+# toda conexión a GitHub se realice por SSH, lo cual es vital
+# para habilitar SSH Agent Forwarding.
+#
+# @sideeffects Sobrescribe `~/.gitconfig`.
 # ─────────────────────────────────────────────────────────────
 install_gitconfig() {
     print_step "Configurando Git..."
@@ -28,8 +32,12 @@ install_gitconfig() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Importa las llaves públicas de herwingx desde GitHub.
-# Las agrega a ~/.ssh/authorized_keys para acceso SSH.
+# Importa llaves públicas SSH
+#
+# Descarga las llaves públicas registradas del autor desde GitHub
+# y las añade a `authorized_keys` para permitir acceso seguro remoto.
+#
+# @sideeffects Modifica/crea `~/.ssh/authorized_keys`.
 # ─────────────────────────────────────────────────────────────
 install_ssh_keys() {
     print_step "Importando llaves públicas de herwingx..."
@@ -40,9 +48,13 @@ install_ssh_keys() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Copia llaves SSH desde Windows a WSL.
-# Solo funciona en Windows Subsystem for Linux.
-# Detecta automáticamente el usuario de Windows.
+# Importa llaves SSH desde Windows (Solo WSL)
+#
+# Busca en la ruta `C:\Users\...\.ssh` las llaves privadas (RSA,
+# Ed25519) y las copia al entorno Linux asegurando permisos
+# correctos (600/700).
+#
+# @sideeffects Copia archivos a `~/.ssh/`.
 # ─────────────────────────────────────────────────────────────
 copy_ssh_from_windows() {
     print_step "Copiando llaves SSH desde Windows a WSL..."
@@ -107,9 +119,12 @@ copy_ssh_from_windows() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Configura SSH Agent para iniciar automáticamente.
-# Funciona en Linux nativo y WSL.
-# Agrega automáticamente la llave id_ed25519 si existe.
+# Configura SSH Agent persistente
+#
+# Agrega un bloque a `.bashrc` para que inicie `ssh-agent`
+# automáticamente si no está corriendo, y cargue las llaves por defecto.
+#
+# @sideeffects Actualiza `~/.bashrc`.
 # ─────────────────────────────────────────────────────────────
 configure_ssh_agent() {
     print_step "Configurando SSH Agent auto-start..."

@@ -8,7 +8,12 @@
 
 # ─────────────────────────────────────────────────────────────
 # Detecta y desactiva herramientas que entran en conflicto con Mise
-# (NVM, instalaciones manuales de Go/Rust/Node)
+#
+# Evita colisiones de comandos detectando sistemas de versiones
+# legacy como NVM o binarios individuales instalados localmente.
+# Renombra directorios en lugar de borrarlos para preservar datos.
+#
+# @sideeffects Renombra carpetas e invalida paths previos en .bashrc.
 # ─────────────────────────────────────────────────────────────
 cleanup_legacy_conflicts() {
     print_step "Checking for legacy tool conflicts..."
@@ -55,6 +60,15 @@ cleanup_legacy_conflicts() {
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Instala y sincroniza el Toolchain vía Mise
+#
+# Descarga el instalador de Mise, lo añade a .bashrc e instala
+# automáticamente todas las herramientas declaradas en .mise.toml
+# (Node, Go, Rust, etc.).
+#
+# @sideeffects Ejecuta el script remoto de mise.run e instala binarios locales.
+# ─────────────────────────────────────────────────────────────
 install_toolchain() {
     print_header "TOOLCHAIN SETUP (MISE)"
     
