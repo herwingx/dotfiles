@@ -12,6 +12,14 @@ source "$DOTFILES_DIR/scripts/common.sh"
 
 EXTENSIONS_FILE="$DOTFILES_DIR/.vscode-extensions"
 
+# ─────────────────────────────────────────────────────────────
+# Instala extensiones de VSCode
+#
+# Detecta el editor instalado (VS Code, Codium, Antigravity) e
+# instala las extensiones listadas en el archivo `.vscode-extensions`.
+#
+# @sideeffects Ejecuta comandos del editor.
+# ─────────────────────────────────────────────────────────────
 install_vscode_extensions() {
     print_step "Buscando editor compatible..."
 
@@ -49,6 +57,14 @@ install_vscode_extensions() {
     print_success "Proceso finalizado."
 }
 
+# ─────────────────────────────────────────────────────────────
+# Realiza backup de extensiones
+#
+# Guarda una lista de todas las extensiones instaladas
+# actualmente en tu editor dentro del archivo `.vscode-extensions`.
+#
+# @sideeffects Sobrescribe el archivo `.vscode-extensions`.
+# ─────────────────────────────────────────────────────────────
 backup_extensions() {
     print_step "Buscando editor para backup..."
     

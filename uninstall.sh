@@ -25,24 +25,65 @@ else
     print_error() { echo -e "${RED}  ✗ $1${NC}"; }
 fi
 
-# Detectar sistema operativo
+# ─────────────────────────────────────────────────────────────
+# Detecta sistema operativo para desinstalación
+#
+# Configura los comandos de eliminación y limpieza de paquetes
+# según la distribución detectada.
+# ─────────────────────────────────────────────────────────────
 detect_os() {
-    if [ -f /etc/debian_version ]; then
-        OS="debian"
-        PKG_REMOVE="sudo apt-get purge -y"
-        PKG_AUTOREMOVE="sudo apt-get autoremove -y"
-    elif [ -f /etc/redhat-release ]; then
-        OS="fedora"
-        PKG_REMOVE="sudo dnf remove -y"
-        PKG_AUTOREMOVE="sudo dnf autoremove -y"
-    elif [ -f /etc/arch-release ]; then
-        OS="arch"
-        PKG_REMOVE="sudo pacman -Rns --noconfirm"
-        PKG_AUTOREMOVE="true"  # Arch no tiene autoremove
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        case "$ID" in
+            debian|ubuntu|linuxmint|pop)
+                OS="debian"
+                PKG_REMOVE="sudo apt-get purge -y"
+                PKG_AUTOREMOVE="sudo apt-get autoremove -y"
+                ;;
+            fedora|rhel|centos|almalinux|rocky)
+                OS="fedora"
+                PKG_REMOVE="sudo dnf remove -y"
+                PKG_AUTOREMOVE="sudo dnf autoremove -y"
+                ;;
+            arch|manjaro|endeavouros)
+                OS="arch"
+                PKG_REMOVE="sudo pacman -Rns --noconfirm"
+                PKG_AUTOREMOVE="true"
+                ;;
+            opensuse*|suse)
+                OS="suse"
+                PKG_REMOVE="sudo zypper remove -y"
+                PKG_AUTOREMOVE="true"
+                ;;
+            alpine)
+                OS="alpine"
+                PKG_REMOVE="sudo apk del"
+                PKG_AUTOREMOVE="true"
+                ;;
+            *)
+                OS="unknown"
+                PKG_REMOVE="echo 'Sistema no soportado, elimina manualmente:'"
+                PKG_AUTOREMOVE="true"
+                ;;
+        esac
     else
-        OS="unknown"
-        PKG_REMOVE="echo 'Sistema no soportado, elimina manualmente:'"
-        PKG_AUTOREMOVE="true"
+        if [ -f /etc/debian_version ]; then
+            OS="debian"
+            PKG_REMOVE="sudo apt-get purge -y"
+            PKG_AUTOREMOVE="sudo apt-get autoremove -y"
+        elif [ -f /etc/redhat-release ]; then
+            OS="fedora"
+            PKG_REMOVE="sudo dnf remove -y"
+            PKG_AUTOREMOVE="sudo dnf autoremove -y"
+        elif [ -f /etc/arch-release ]; then
+            OS="arch"
+            PKG_REMOVE="sudo pacman -Rns --noconfirm"
+            PKG_AUTOREMOVE="true"
+        else
+            OS="unknown"
+            PKG_REMOVE="echo 'Sistema no soportado, elimina manualmente:'"
+            PKG_AUTOREMOVE="true"
+        fi
     fi
 }
 
@@ -304,7 +345,11 @@ remove_homebrew() {
     fi
 }
 
-# Eliminar Docker
+# ─────────────────────────────────────────────────────────────
+# Elimina Docker
+#
+# Detiene contenedores, elimina volúmenes y desinstala el paquete.
+# ─────────────────────────────────────────────────────────────
 remove_docker() {
     if command -v docker &> /dev/null; then
         print_header "DOCKER DETECTADO"
@@ -334,6 +379,14 @@ remove_docker() {
                     $PKG_REMOVE docker docker-compose 2>/dev/null
                     sudo rm -rf /var/lib/docker
                     ;;
+                suse)
+                    $PKG_REMOVE docker docker-compose 2>/dev/null
+                    sudo rm -rf /var/lib/docker
+                    ;;
+                alpine)
+                    $PKG_REMOVE docker docker-cli-compose 2>/dev/null
+                    sudo rm -rf /var/lib/docker
+                    ;;
             esac
             
             # Eliminar grupo docker del usuario
@@ -346,7 +399,9 @@ remove_docker() {
     fi
 }
 
-# Eliminar GitHub CLI
+# ─────────────────────────────────────────────────────────────
+# Elimina GitHub CLI
+# ─────────────────────────────────────────────────────────────
 remove_gh_cli() {
     if command -v gh &> /dev/null; then
         print_header "GITHUB CLI"
@@ -367,6 +422,13 @@ remove_gh_cli() {
                 arch)
                     $PKG_REMOVE github-cli 2>/dev/null
                     ;;
+                suse)
+                    $PKG_REMOVE gh 2>/dev/null
+                    sudo zypper rr https://cli.github.com/packages/rpm/gh-cli.repo
+                    ;;
+                alpine)
+                    $PKG_REMOVE github-cli 2>/dev/null
+                    ;;
             esac
             
             # Logout de gh
@@ -380,7 +442,9 @@ remove_gh_cli() {
     fi
 }
 
-# Eliminar paquetes base instalados por dotfiles
+# ─────────────────────────────────────────────────────────────
+# Eliminar paquetes base
+# ─────────────────────────────────────────────────────────────
 remove_system_packages() {
     print_header "PAQUETES DEL SISTEMA"
     echo -e "${YELLOW}  Estos son paquetes instalados por dotfiles que podrías querer mantener.${NC}"
@@ -402,6 +466,14 @@ remove_system_packages() {
                 ;;
             arch)
                 $PKG_REMOVE fzf ripgrep bat fd tmux neovim htop tree jq unzip wget curl 2>/dev/null
+                ;;
+            suse)
+                PACKAGES_TO_REMOVE=$(echo $PACKAGES_TO_REMOVE | sed 's/fd-find/fd/')
+                $PKG_REMOVE $PACKAGES_TO_REMOVE 2>/dev/null
+                ;;
+            alpine)
+                PACKAGES_TO_REMOVE=$(echo $PACKAGES_TO_REMOVE | sed 's/fd-find/fd/')
+                $PKG_REMOVE $PACKAGES_TO_REMOVE 2>/dev/null
                 ;;
         esac
         

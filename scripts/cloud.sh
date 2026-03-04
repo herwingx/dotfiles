@@ -7,9 +7,13 @@
 # ==========================================
 
 # ─────────────────────────────────────────────────────────────
-# Configura rclone para Google Drive usando token de secrets.
-# Fuerza el descifrado de secrets para obtener RCLONE_TOKEN_JSON.
-# Verifica la conexión tras la configuración.
+# Configura rclone para Google Drive
+#
+# Asegura la instalación de rclone e intenta desencriptar los
+# secretos para extraer el token JSON (RCLONE_TOKEN_JSON) y así
+# generar un archivo de configuración válido para rclone.
+#
+# @sideeffects Modifica/crea el archivo `~/.config/rclone/rclone.conf`.
 # ─────────────────────────────────────────────────────────────
 configure_rclone() {
     print_step "Configurando rclone..."

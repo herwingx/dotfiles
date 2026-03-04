@@ -63,31 +63,81 @@ else
 fi
 
 # Detectar OS y Gestor de Paquetes Globalmente
-if [ -f /etc/debian_version ]; then
-    OS_TYPE="debian"
-    PKG_MANAGER="apt-get"
-    PKG_UPDATE_CMD="$SUDO_CMD apt-get update -y"
-    PKG_INSTALL_CMD="$SUDO_CMD apt-get install -y"
-elif [ -f /etc/redhat-release ]; then
-    OS_TYPE="redhat"
-    PKG_MANAGER="dnf"
-    PKG_UPDATE_CMD="$SUDO_CMD dnf check-update"
-    PKG_INSTALL_CMD="$SUDO_CMD dnf install -y"
-elif [ -f /etc/arch-release ]; then
-    OS_TYPE="arch"
-    PKG_MANAGER="pacman"
-    PKG_UPDATE_CMD="$SUDO_CMD pacman -Sy"
-    PKG_INSTALL_CMD="$SUDO_CMD pacman -S --noconfirm"
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    case "$ID" in
+        debian|ubuntu|linuxmint|pop)
+            OS_TYPE="debian"
+            PKG_MANAGER="apt-get"
+            PKG_UPDATE_CMD="$SUDO_CMD apt-get update -y"
+            PKG_INSTALL_CMD="$SUDO_CMD apt-get install -y"
+            ;;
+        fedora|rhel|centos|almalinux|rocky)
+            OS_TYPE="redhat"
+            PKG_MANAGER="dnf"
+            PKG_UPDATE_CMD="$SUDO_CMD dnf check-update"
+            PKG_INSTALL_CMD="$SUDO_CMD dnf install -y"
+            ;;
+        arch|manjaro|endeavouros)
+            OS_TYPE="arch"
+            PKG_MANAGER="pacman"
+            PKG_UPDATE_CMD="$SUDO_CMD pacman -Sy"
+            PKG_INSTALL_CMD="$SUDO_CMD pacman -S --noconfirm"
+            ;;
+        opensuse*|suse)
+            OS_TYPE="suse"
+            PKG_MANAGER="zypper"
+            PKG_UPDATE_CMD="$SUDO_CMD zypper refresh"
+            PKG_INSTALL_CMD="$SUDO_CMD zypper install -y"
+            ;;
+        alpine)
+            OS_TYPE="alpine"
+            PKG_MANAGER="apk"
+            PKG_UPDATE_CMD="$SUDO_CMD apk update"
+            PKG_INSTALL_CMD="$SUDO_CMD apk add"
+            ;;
+        *)
+            OS_TYPE="unknown"
+            PKG_UPDATE_CMD="true"
+            PKG_INSTALL_CMD="true"
+            ;;
+    esac
 else
-    OS_TYPE="unknown"
-    PKG_UPDATE_CMD="true"
-    PKG_INSTALL_CMD="true"
+    # Fallback legacy
+    if [ -f /etc/debian_version ]; then
+        OS_TYPE="debian"
+        PKG_MANAGER="apt-get"
+        PKG_UPDATE_CMD="$SUDO_CMD apt-get update -y"
+        PKG_INSTALL_CMD="$SUDO_CMD apt-get install -y"
+    elif [ -f /etc/redhat-release ]; then
+        OS_TYPE="redhat"
+        PKG_MANAGER="dnf"
+        PKG_UPDATE_CMD="$SUDO_CMD dnf check-update"
+        PKG_INSTALL_CMD="$SUDO_CMD dnf install -y"
+    elif [ -f /etc/arch-release ]; then
+        OS_TYPE="arch"
+        PKG_MANAGER="pacman"
+        PKG_UPDATE_CMD="$SUDO_CMD pacman -Sy"
+        PKG_INSTALL_CMD="$SUDO_CMD pacman -S --noconfirm"
+    else
+        OS_TYPE="unknown"
+        PKG_UPDATE_CMD="true"
+        PKG_INSTALL_CMD="true"
+    fi
 fi
 
 # --- FUNCIONES CORE ---
 
+# ─────────────────────────────────────────────────────────────
 # Verificación idempotente de paquetes
-# Uso: ensure_package "nombre_paquete" ["comando_binario"]
+#
+# Instala un paquete solo si no está instalado o si el comando
+# especificado no está en el PATH.
+#
+# @param $1 - Nombre del paquete en el gestor de paquetes.
+# @param $2 - (Opcional) Comando binario a verificar (por defecto asume $1).
+# @return 0 si ya estaba instalado o se instala con éxito, 1 si falla.
+# ─────────────────────────────────────────────────────────────
 ensure_package() {
     local package="$1"
     local binary="${2:-$package}" # Si no se pasa binario, asume que es igual al paquete
@@ -110,6 +160,12 @@ ensure_package() {
         arch)
             pacman -Qq "$package" &> /dev/null && installed=true
             ;;
+        suse)
+            rpm -q "$package" &> /dev/null && installed=true
+            ;;
+        alpine)
+            apk info -e "$package" &> /dev/null && installed=true
+            ;;
     esac
 
     if [ "$installed" = true ]; then
@@ -131,9 +187,16 @@ ensure_package() {
 
 # --- HELPERS CONFIGURACIÓN ---
 
+# ─────────────────────────────────────────────────────────────
 # Gestión robusta de bloques en .bashrc
-# Uso: update_bashrc_block "NOMBRE_BLOQUE" "CONTENIDO" "modo"
-# Modos: "top", "bottom", "before-ble"
+#
+# Inserta o actualiza un bloque de configuración en el archivo
+# .bashrc rodeándolo de marcadores de inicio y fin para fácil reemplazo.
+#
+# @param $1 - Nombre único para el bloque (ej. "ALIASES").
+# @param $2 - Contenido del bloque a insertar.
+# @param $3 - Modo de inserción: "top", "bottom", "before-ble".
+# ─────────────────────────────────────────────────────────────
 update_bashrc_block() {
     local name="$1"
     local content="$2"
@@ -191,7 +254,13 @@ $content
     fi
 }
 
-# Detecta editor de código compatible (VSCode, Codium, etc.)
+# ─────────────────────────────────────────────────────────────
+# Detecta editor de código compatible
+#
+# Busca en el PATH editores compatibles como code, codium, antigravity.
+#
+# @return 0 e imprime el comando si lo encuentra, 1 si no.
+# ─────────────────────────────────────────────────────────────
 detect_editor() {
     local editors=("code" "codium" "antigravity" "agy" "cursor")
     for cmd in "${editors[@]}"; do
@@ -205,6 +274,12 @@ detect_editor() {
 
 # --- GESTIÓN DE SECRETOS ---
 
+# ─────────────────────────────────────────────────────────────
+# Reinicio interactivo de la bóveda de secretos
+#
+# Pregunta al usuario si desea recrear su archivo .env.local.age
+# alertándole que la versión existente se sobrescribirá.
+# ─────────────────────────────────────────────────────────────
 reset_secrets_interactive() {
     print_header "RESET SECRETS VAULT"
     echo -e "${YELLOW}  [!] WARNING: A NEW local secrets vault will be generated.${NC}"
@@ -227,6 +302,12 @@ reset_secrets_interactive() {
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Crea una bóveda de secretos local (.env.local.age)
+#
+# Pide las credenciales por CLI y las encripta con age.
+# Ignora el archivo en git.
+# ─────────────────────────────────────────────────────────────
 create_local_secrets() {
     print_header "🔐 Configuración de Secretos Personales"
     
@@ -275,6 +356,13 @@ create_local_secrets() {
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Desencripta y carga los secretos en la sesión actual
+#
+# Intenta desencriptar .env.local.age (o .env.age como fallback)
+# solicitando la contraseña si es necesario. Carga variables
+# en la sesión y las configura para aplicaciones como rclone.
+# ─────────────────────────────────────────────────────────────
 decrypt_secrets() {
     ensure_package "age"
     
@@ -368,6 +456,11 @@ EOF
     fi
 }
 
+# ─────────────────────────────────────────────────────────────
+# Recarga la shell actual
+#
+# Ejecuta `exec bash` para aplicar cambios de entorno.
+# ─────────────────────────────────────────────────────────────
 reload_shell() {
     print_header "Reloading Shell..."
     echo -e "${GREEN}  Applying changes... 🚀${NC}"

@@ -8,9 +8,12 @@
 # ==========================================
 
 # ─────────────────────────────────────────────────────────────
-# Instala las reglas de Antigravity (GEMINI.md).
-# Copia desde gemini/GEMINI.md a ~/.gemini/GEMINI.md
-# Crea backup si existe un archivo previo.
+# Instala las reglas de Antigravity (GEMINI.md)
+#
+# Copia el archivo principal de directrices (GEMINI.md) al
+# directorio ~/.gemini/ para que la IA tenga contexto global.
+#
+# @sideeffects Crea `~/.gemini/` y posiblemente respalda el archivo anterior.
 # ─────────────────────────────────────────────────────────────
 install_antigravity_rules() {
     print_step "Configurando Antigravity - Reglas (GEMINI.md)..."
@@ -31,9 +34,12 @@ install_antigravity_rules() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala los workflows de Antigravity.
-# Copia desde gemini/workflows/ a ~/.gemini/antigravity/global_workflows/
-# Lista los workflows disponibles tras la instalación.
+# Instala los workflows de Antigravity
+#
+# Copia las recetas de comandos slash (ej. /commit) para que
+# estén disponibles globalmente en la terminal.
+#
+# @sideeffects Crea `~/.gemini/antigravity/global_workflows/` y copia archivos allí.
 # ─────────────────────────────────────────────────────────────
 install_antigravity_workflows() {
     print_step "Configurando Antigravity - Workflows..."
@@ -57,8 +63,12 @@ install_antigravity_workflows() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala la configuración de Gemini (settings.json).
-# Configura el token de GitHub para el servidor MCP.
+# Instala la configuración de Gemini (settings.json)
+#
+# Despliega el archivo de settings para el agente, intentando
+# inyectar y persistir el GH_TOKEN en ~/.bashrc para el uso de MCP.
+#
+# @sideeffects Modifica `~/.bashrc` insertando el token si está disponible.
 # ─────────────────────────────────────────────────────────────
 install_gemini_settings() {
     print_step "Configurando Antigravity - Settings (settings.json)..."
@@ -108,7 +118,13 @@ export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GH_TOKEN\""
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala extensiones MCP para Gemini CLI.
+# Instala extensiones MCP para Gemini CLI
+#
+# Gestiona la integración con servidores de protocolo de contexto (MCP).
+# Detecta si Gemini está corriendo en Windows o Linux, ofrece su instalación
+# y registra extensiones clave automáticamente.
+#
+# @sideeffects Instala herramientas globales de npm si el usuario lo permite.
 # ─────────────────────────────────────────────────────────────
 install_gemini_extensions() {
     # 0. Limpiar extensiones rotas preventivamente
@@ -284,7 +300,9 @@ install_gemini_extensions() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instalación completa de Antigravity: reglas + workflows + settings.
+# Instalación completa de Antigravity
+#
+# Orquesta la configuración de reglas, workflows y settings.
 # ─────────────────────────────────────────────────────────────
 install_antigravity_full() {
     install_antigravity_rules

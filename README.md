@@ -220,6 +220,27 @@ Esto actualiza el archivo `.vscode-extensions` con tu configuración actual.
 
 ---
 
+## 🛠️ Developer Guide / Architecture
+
+**Cómo funciona la Idempotencia**
+El corazón de los dotfiles es la función `ensure_package` (en `scripts/common.sh`). Antes de ejecutar el gestor de paquetes de tu distro (`apt`, `dnf`, `zypper`, `apk`), el script verifica:
+1. Si el binario de la herramienta ya está en tu `$PATH`.
+2. Si el gestor de paquetes reporta la herramienta como ya instalada.
+Solo si ambas comprobaciones fallan, se intenta instalar.
+
+**Cómo extender el sistema**
+1. **Nuevo Módulo:** Crea un archivo en `scripts/` (ej: `scripts/mi-modulo.sh`).
+2. **Documentar:** Añade comentarios estilo Bashdoc en tus funciones (`@param`, `@sideeffects`).
+3. **Incluir:** Añade el `source` de tu script en `install.sh`.
+4. **Actualizar Menú:** Añade una nueva opción de ejecución al menú dentro de `install.sh`.
+
+**Debugging Tips**
+* Ejecuta `./install.sh` y fíjate en los prefijos `[OK]`, `[ERROR]`, `[!]` para saber exactamente dónde ocurrió el fallo.
+* La mayoría de instalaciones de Node/Go fallarán silenciosamente si la descarga de `mise` es interrumpida. Revisa `.mise.toml` si una de estas herramientas falta.
+* Puedes ejecutar los scripts individuales para testear de manera aislada: `bash scripts/cloud.sh`.
+
+---
+
 ## 🗑️ Desinstalación Total
 
 ```bash

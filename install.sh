@@ -7,6 +7,14 @@
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 DOTFILES_DIR="$(dirname "$SCRIPT_PATH")"
 
+# ─────────────────────────────────────────────────────────────
+# ORQUESTADOR PRINCIPAL (INSTALL.SH)
+#
+# Este script inicializa el entorno y ofrece un menú interactivo
+# para ejecutar todas o partes de las configuraciones de dotfiles.
+# Los comandos están separados por módulos para mayor mantenibilidad.
+# ─────────────────────────────────────────────────────────────
+
 # --- CARGAR MÓDULOS ---
 source "$DOTFILES_DIR/scripts/common.sh"
 source "$DOTFILES_DIR/scripts/system.sh"
