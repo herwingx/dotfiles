@@ -106,7 +106,6 @@ EOF
     echo -e "${RED}  Esta acción es IRREVERSIBLE y eliminará:${NC}"
     echo ""
     echo -e "${YELLOW}  • Configuraciones Shell${NC} (.bashrc patches, aliases, gitconfig)"
-    echo -e "${YELLOW}  • Herramientas IA${NC} (~/.gemini, reglas, workflows)"
     echo -e "${YELLOW}  • Toolchain${NC} (Mise, Node, Go, Rust)"
     echo -e "${YELLOW}  • Binarios locales${NC} (oh-my-posh, zoxide, atuin, ble.sh)"
     echo -e "${YELLOW}  • Cronjobs${NC} (auto-updates)"
@@ -172,7 +171,6 @@ clean_bashrc() {
         "zoxide"
         "starship"
         "dotfiles/scripts"
-        "source.*\.gemini"
         "mise activate"
     )
     
@@ -214,12 +212,10 @@ remove_dotfiles() {
         "$HOME/.gitconfig"
         "$HOME/.tmux.conf"
         "$HOME/.inputrc"
-        "$HOME/.local/bin/agy"
         "$HOME/.mise.toml"
     )
     
     DIRS_TO_REMOVE=(
-        "$HOME/.gemini"
         "$HOME/.config/atuin"
         "$HOME/.cache/oh-my-posh"
     )
@@ -553,7 +549,7 @@ selective_clean() {
     read Q2
     [[ "$Q2" =~ ^[Ss]$ ]] && remove_cronjobs
     
-    echo -ne "${YELLOW}  [3/9] ¿Eliminar dotfiles (.gemini, aliases, etc.)? [s/N]: ${NC}"
+    echo -ne "${YELLOW}  [3/9] ¿Eliminar dotfiles (aliases, gitconfig, tmux)? [s/N]: ${NC}"
     read Q3
     [[ "$Q3" =~ ^[Ss]$ ]] && remove_dotfiles
     

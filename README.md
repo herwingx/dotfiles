@@ -27,8 +27,7 @@
 - [🏗️ Arquitectura & Idempotencia](#️-arquitectura--idempotencia)
 - [📦 Toolchain Declarativo (Mise)](#-toolchain-declarativo-mise)
 - [🔐 Gestión de Secretos](#-gestión-de-secretos-envage)
-- [🐧 Configuración WSL (Antigravity)](#-configuración-wsl)
-- [🧩 Gestión de Extensiones (VSCode/Antigravity)](#-gestión-de-extensiones-vscodeantigravity)
+- [🧩 Gestión de Extensiones](#-gestión-de-extensiones-vscodecursor)
 - [📚 Documentación](#-documentación)
 - [🛠️ Stack Tecnológico](#️-stack-tecnológico)
 - [🗑️ Desinstalación](#️-desinstalación-total)
@@ -56,7 +55,7 @@
 *   **Idempotencia Real**: Puedes ejecutar `./install.sh` mil veces; solo aplicará cambios si son necesarios.
 *   **Mise (RTX)**: Reemplazamos instalaciones manuales de `node`, `go`, `rust`, `bat`, `lsd`, etc. por un único archivo de configuración `.mise.toml`.
 *   **Smart Updates**: El sistema detecta si ya se actualizó en las últimas 24h para ahorrar tiempo (saltable con `--force`).
-*   **Extension Manager**: Nuevo módulo para instalar/respaldar extensiones de VS Code/Antigravity automáticamente.
+*   **Extension Manager**: Nuevo módulo para instalar/respaldar extensiones de VS Code/Cursor automáticamente.
 *   **Secretos Híbridos**: Soporte para bóvedas locales (`.env.local.age`) que anulan la configuración del repo, ideal para forks.
 
 ---
@@ -108,18 +107,17 @@ chmod +x install.sh
 ```text
   // 🚀 AUTOMATED DEPLOY
   +------------------------------------------------------------+
-  [1 ] Full Install (System + Tools + AI)
+  [1 ] Full Install (System + Tools)
   +------------------------------------------------------------+
 
   // 📦 SYSTEM & TOOLCHAIN
   [2 ] Base System + Mise Tools        [3 ] Dev Tools Only (Docker, GH)
-  [5 ] Update System (Force)           [6 ] Install Base Packages
-  [7 ] Re-sync Toolchain (mise install)
+  [4 ] Toolchain Sync (mise install)   [5 ] Update System (Force)
+  [6 ] Install Base Packages
 
   // ☁️ CONFIG & CLOUD
-  [10] Configure Secrets               [11] Install AI Rules (Antigravity)
-  [12] Configure Rclone                [13] SSH Keys Import
-  [14] Install VSCode Extensions
+  [7 ] Configure Secrets               [8 ] Configure Rclone
+  [9 ] SSH Keys Import                 [10] Install VSCode Extensions
 
   +------------------------------------------------------------+
   [0 ] EXIT
@@ -184,15 +182,15 @@ Interfaz TUI para editar tus secretos sin exponerlos en texto plano en el disco.
 
 ---
 
-## 🧩 Gestión de Extensiones (VSCode/Antigravity)
+## 🧩 Gestión de Extensiones (VSCode/Cursor)
 
 Nuevo módulo en `scripts/extensions.sh`.
 
 ### Instalación Automática
-Detecta tu editor (`code`, `codium`, `antigravity`, `cursor`) e instala las extensiones definidas en `.vscode-extensions`.
+Detecta tu editor (`code`, `codium`, `cursor`) e instala las extensiones definidas en `.vscode-extensions`.
 
 ```bash
-./install.sh  # Opción 14
+./install.sh  # Opción 10
 # o directo:
 ./scripts/extensions.sh
 ```

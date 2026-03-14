@@ -2,7 +2,7 @@
 # ==========================================
 # VS CODE EXTENSIONS INSTALLER
 # ==========================================
-# Detecta tu editor (VS Code, Codium, Antigravity) e instala las extensiones
+# Detecta tu editor (VS Code, Codium, Cursor) e instala las extensiones
 # definidas en .vscode-extensions
 # ==========================================
 
@@ -15,7 +15,7 @@ EXTENSIONS_FILE="$DOTFILES_DIR/.vscode-extensions"
 # ─────────────────────────────────────────────────────────────
 # Instala extensiones de VSCode
 #
-# Detecta el editor instalado (VS Code, Codium, Antigravity) e
+# Detecta el editor instalado (VS Code, Codium, Cursor) e
 # instala las extensiones listadas en el archivo `.vscode-extensions`.
 #
 # @sideeffects Ejecuta comandos del editor.
@@ -26,7 +26,7 @@ install_vscode_extensions() {
     EDITOR_CMD=$(detect_editor)
 
     if [ -z "$EDITOR_CMD" ]; then
-        print_error "No se encontró ningún editor compatible (VS Code, Codium, Antigravity)."
+        print_error "No se encontró ningún editor compatible (VS Code, Codium, Cursor)."
         echo -e "${YELLOW}   Instala VS Code primero para cargar las extensiones.${NC}"
         return 1
     fi

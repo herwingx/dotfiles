@@ -138,41 +138,11 @@ install_docker() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala Gemini CLI
-#
-# Usa npm para instalar la herramienta CLI de Google Gemini.
-#
-# @requires Node.js (vía Mise o NVM).
-# ─────────────────────────────────────────────────────────────
-install_gemini_cli() {
-    print_step "Instalando Gemini CLI..."
-    
-    if command -v gemini &> /dev/null; then
-        print_info "Gemini CLI ya está instalado"
-        return
-    fi
-    
-    # Verificar si npm está disponible (debería venir de mise)
-    if command -v npm &> /dev/null; then
-        npm install -g @google/gemini-cli
-        if [ $? -eq 0 ]; then
-            print_success "Gemini CLI instalado"
-        else
-            print_error "Fallo al instalar Gemini CLI via npm"
-        fi
-    else
-        print_error "npm no encontrado. Verifica que Mise instaló Node.js correctamente."
-    fi
-}
-
-# ─────────────────────────────────────────────────────────────
 # Instalación agrupada de Dev Tools
 #
-# Llama secuencialmente a las rutinas de instalación de gh,
-# docker y gemini-cli.
+# Llama secuencialmente a las rutinas de instalación de gh y docker.
 # ─────────────────────────────────────────────────────────────
 install_dev_tools_all() {
     install_gh_cli
     install_docker
-    install_gemini_cli
 }

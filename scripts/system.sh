@@ -147,14 +147,10 @@ install_packages() {
     configure_fzf
     configure_oh_my_posh
     
-    # Ble.sh ELIMINADO por solicitud (conflicto con VSCode)
-    
     # Tmux Configuration
     if [ -f "$DOTFILES_DIR/config/.tmux.conf" ]; then
         ln -sf "$DOTFILES_DIR/config/.tmux.conf" "$HOME/.tmux.conf"
     fi
-    
-    install_antigravity_fix
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -181,7 +177,7 @@ EOF
     # Limpieza legacy
     sed -i '/source ~\/.bash_aliases/d' "$BASHRC"
 
-    update_bashrc_block "ALIASES" "$CONTENT" "before-ble"
+    update_bashrc_block "ALIASES" "$CONTENT" "bottom"
     
     configure_wsl_path
     ensure_path
@@ -221,34 +217,7 @@ EOF
 ensure_path() {
     # Agregamos .local/bin para mise y tools
     CONTENT='export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"'
-    update_bashrc_block "PATH_FIX" "$CONTENT" "before-ble"
-}
-
-# ─────────────────────────────────────────────────────────────
-# Configura enlace para Google Antigravity (agy) en WSL
-#
-# Busca la instalación de Antigravity en el sistema host de Windows
-# y crea un symlink en Linux para poder invocar `agy` desde bash.
-# ─────────────────────────────────────────────────────────────
-install_antigravity_fix() {
-    if ! grep -qi microsoft /proc/version 2>/dev/null; then return; fi
-
-    print_info "Configurando Google Antigravity (agy) para WSL..."
-    
-    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tail -n1 | tr -d '\r')
-    if [ -z "$WIN_USER" ] && [ -f "/mnt/c/Windows/System32/cmd.exe" ]; then
-        WIN_USER=$(/mnt/c/Windows/System32/cmd.exe /c "echo %USERNAME%" 2>/dev/null | tail -n1 | tr -d '\r')
-    fi
-    
-    if [ -n "$WIN_USER" ]; then
-        AGY_PATH="/mnt/c/Users/$WIN_USER/AppData/Local/Programs/Antigravity/bin/antigravity"
-        if [ -f "$AGY_PATH" ]; then
-            mkdir -p "$HOME/.local/bin"
-            rm -f "$HOME/.local/bin/agy"
-            ln -s "$AGY_PATH" "$HOME/.local/bin/agy"
-            print_success "Symlink 'agy' vinculado"
-        fi
-    fi
+    update_bashrc_block "PATH_FIX" "$CONTENT" "bottom"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -283,5 +252,5 @@ configure_oh_my_posh() {
     ln -sf "$DOTFILES_DIR/config/herwingx.omp.json" "$HOME/.poshthemes/herwingx.omp.json"
 
     CONTENT='eval "$(oh-my-posh init bash --config ~/.poshthemes/herwingx.omp.json)"'
-    update_bashrc_block "OH_MY_POSH" "$CONTENT" "before-ble"
+    update_bashrc_block "OH_MY_POSH" "$CONTENT" "bottom"
 }

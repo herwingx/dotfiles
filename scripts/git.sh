@@ -145,7 +145,7 @@ elif [ -f "$HOME/.ssh/id_rsa" ]; then
     ssh-add -l 2>/dev/null | grep -q "id_rsa" || ssh-add "$HOME/.ssh/id_rsa" 2>/dev/null
 fi'
 
-    update_bashrc_block "SSH_AGENT" "$SSH_AGENT_BLOCK" "before-ble"
+    update_bashrc_block "SSH_AGENT" "$SSH_AGENT_BLOCK" "bottom"
     print_success "SSH Agent configurado en .bashrc"
     
     print_warning "Recarga tu shell (source ~/.bashrc) para activar"

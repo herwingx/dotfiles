@@ -195,7 +195,7 @@ ensure_package() {
 #
 # @param $1 - Nombre único para el bloque (ej. "ALIASES").
 # @param $2 - Contenido del bloque a insertar.
-# @param $3 - Modo de inserción: "top", "bottom", "before-ble".
+# @param $3 - Modo de inserción: "top" o "bottom".
 # ─────────────────────────────────────────────────────────────
 update_bashrc_block() {
     local name="$1"
@@ -222,32 +222,6 @@ $content
         cat "$bashrc.tmp" >> "$bashrc"
         rm -f "$bashrc.tmp"
         
-    elif [ "$mode" == "before-ble" ]; then
-        # Buscar marcador de inicio de bloque BLE
-        local anchor=$(grep -n "<!-- BEGIN_BLE_ATTACH -->" "$bashrc" | head -n1 | cut -d: -f1)
-        
-        # Fallback: Buscar comando ble-attach
-        if [ -z "$anchor" ]; then
-             anchor=$(grep -n "ble-attach" "$bashrc" | grep -v "^#" | head -n1 | cut -d: -f1)
-        fi
-        
-        if [ -n "$anchor" ]; then
-             local head_lines=$((anchor - 1))
-             cp "$bashrc" "$bashrc.tmp"
-             if [ "$head_lines" -ge 0 ]; then
-                 head -n "$head_lines" "$bashrc.tmp" > "$bashrc"
-             else
-                 > "$bashrc"
-             fi
-             echo "" >> "$bashrc"
-             echo "$block" >> "$bashrc"
-             echo "" >> "$bashrc"
-             tail -n "+$anchor" "$bashrc.tmp" >> "$bashrc"
-             rm -f "$bashrc.tmp"
-        else
-            echo "" >> "$bashrc"
-            echo "$block" >> "$bashrc"
-        fi
     else # bottom
         echo "" >> "$bashrc"
         echo "$block" >> "$bashrc"
@@ -257,12 +231,12 @@ $content
 # ─────────────────────────────────────────────────────────────
 # Detecta editor de código compatible
 #
-# Busca en el PATH editores compatibles como code, codium, antigravity.
+# Busca en el PATH editores compatibles (code, codium, cursor).
 #
 # @return 0 e imprime el comando si lo encuentra, 1 si no.
 # ─────────────────────────────────────────────────────────────
 detect_editor() {
-    local editors=("code" "codium" "antigravity" "agy" "cursor")
+    local editors=("code" "codium" "cursor")
     for cmd in "${editors[@]}"; do
         if command -v "$cmd" &> /dev/null; then
             echo "$cmd"
