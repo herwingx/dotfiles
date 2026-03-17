@@ -30,6 +30,7 @@
 - [🧩 Gestión de Extensiones](#-gestión-de-extensiones-vscodecursor)
 - [📚 Documentación](#-documentación)
 - [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+- [🔁 Replicabilidad](#-replicabilidad)
 - [🗑️ Desinstalación](#️-desinstalación-total)
 - [❓ FAQ y Troubleshooting](#-faq-y-troubleshooting)
 
@@ -239,6 +240,24 @@ Solo si ambas comprobaciones fallan, se intenta instalar.
 
 ---
 
+## 🔁 Replicabilidad
+
+El proyecto está pensado para ser **replicable**: misma experiencia en otra máquina, otro usuario o un fork.
+
+| Aspecto | Replicable | Notas |
+| :--- | :--- | :--- |
+| **Rutas** | ✅ | Los scripts usan `$DOTFILES_DIR` (detectado por `readlink`). Puedes clonar en `~/dotfiles` o en otra ruta. |
+| **Toolchain** | ✅ | `.mise.toml` es declarativo; `mise install` instala las mismas versiones en cualquier Linux/WSL. |
+| **Idempotencia** | ✅ | Ejecutar `./install.sh` varias veces no rompe nada; solo aplica cambios pendientes. |
+| **Git identity** | ⚠️ Personalizar | `config/.gitconfig` trae nombre/email del autor. Edita `[user]` antes de instalar o después: `git config --global user.name "Tu Nombre"` y `user.email`. |
+| **SSH** | ⚠️ Opcional | La opción *Importar llaves GitHub* del menú es para dar acceso a un **servidor** (p. ej. al autor). En tu máquina: usa *Copiar SSH desde Windows* (WSL) o genera tus llaves y no importes las del repo. |
+| **Secretos** | ⚠️ Por usuario | Copia `.env.example` y crea `.env.local.age` (o `.env.age`) con tus tokens; no se versionan. |
+| **Alias `sync-dotfiles`** | ⚠️ Si cambias ruta | El alias asume `~/dotfiles`. Si clonas en otra ruta, edita `config/.bash_aliases` y cambia la ruta en ese alias. |
+
+**Resumen:** Clona → (opcional) personaliza `config/.gitconfig` → ejecuta `./install.sh`. En otra máquina o usuario obtienes el mismo entorno; solo debes ajustar identidad de Git, SSH y secretos.
+
+---
+
 ## 🗑️ Desinstalación Total
 
 ```bash
@@ -251,6 +270,9 @@ Solo si ambas comprobaciones fallan, se intenta instalar.
 ---
 
 ## ❓ FAQ y Troubleshooting
+
+**P: ¿El proyecto es completamente replicable en otra máquina o usuario?**
+R: Sí, con mínima personalización. Rutas, toolchain (Mise) y scripts son replicables. Debes personalizar: nombre/email en `config/.gitconfig`, usar tus propias llaves SSH (no la opción de importar llaves del autor en tu máquina) y tus secretos en `.env.local.age`. Ver [Replicabilidad](#-replicabilidad).
 
 **P: ¿Por qué no veo los iconos en la terminal?**
 R: Necesitas una **Nerd Font**. Recomendamos `Maple Mono NF` o `JetBrains Mono NF`.
