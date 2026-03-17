@@ -181,6 +181,12 @@ clean_bashrc() {
     # 4. Limpiar líneas vacías múltiples consecutivas
     sed -i '/^$/N;/^\n$/d' "$BASHRC"
     
+    # 5. Limpiar bloque MISE de .profile (Cursor/GUI)
+    if [ -f "$HOME/.profile" ] && grep -q "# BEGIN_MISE_PROFILE" "$HOME/.profile"; then
+        sed -i '/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d' "$HOME/.profile"
+        print_success "Bloque MISE eliminado de .profile"
+    fi
+    
     print_success ".bashrc limpiado"
 }
 

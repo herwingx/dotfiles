@@ -61,6 +61,34 @@ cleanup_legacy_conflicts() {
 }
 
 # ─────────────────────────────────────────────────────────────
+# Añade PATH y activación de Mise a .profile
+#
+# Cursor y otras apps GUI no ejecutan .bashrc; leen .profile en login.
+# Así npx/node gestionados por mise están en PATH para MCP y extensiones.
+# Válido en Linux y WSL (en WSL la shell de login también lee ~/.profile).
+#
+# @sideeffects Crea o actualiza ~/.profile con bloque MISE_PROFILE.
+# ─────────────────────────────────────────────────────────────
+ensure_profile_mise() {
+    local profile="$HOME/.profile"
+    local start="# BEGIN_MISE_PROFILE"
+    local end="# END_MISE_PROFILE"
+    local block="$start
+export PATH=\"\$HOME/.local/bin:\$HOME/bin:/usr/local/bin:\$PATH\"
+if [ -x \"\$HOME/.local/bin/mise\" ]; then
+  eval \"\$(\$HOME/.local/bin/mise activate sh)\"
+fi
+$end"
+
+    [ -f "$profile" ] || touch "$profile"
+    # Eliminar bloque previo si existe
+    sed -i "/$start/,/$end/d" "$profile" 2>/dev/null
+    echo "" >> "$profile"
+    echo "$block" >> "$profile"
+    print_success "mise añadido a .profile (Cursor/GUI verá npx y node)"
+}
+
+# ─────────────────────────────────────────────────────────────
 # Instala y sincroniza el Toolchain vía Mise
 #
 # Descarga el instalador de Mise, lo añade a .bashrc e instala
@@ -98,6 +126,11 @@ install_toolchain() {
             echo "$config_block" >> "$HOME/.bashrc"
         fi
     fi
+
+    # 2b. Configurar .profile para GUI (Cursor, MCP, etc.)
+    # Las apps que no leen .bashrc (p. ej. Cursor) heredan el entorno de login.
+    # Así npx/node de mise están en PATH y los MCPs dejan de marcar error.
+    ensure_profile_mise
 
     # 3. Instalar herramientas declaradas en .mise.toml
     if [ -f "$DOTFILES_DIR/.mise.toml" ]; then
