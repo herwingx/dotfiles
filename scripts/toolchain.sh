@@ -70,22 +70,35 @@ cleanup_legacy_conflicts() {
 # @sideeffects Crea o actualiza ~/.profile con bloque MISE_PROFILE.
 # ─────────────────────────────────────────────────────────────
 ensure_profile_mise() {
-    local profile="$HOME/.profile"
-    local start="# BEGIN_MISE_PROFILE"
-    local end="# END_MISE_PROFILE"
-    local block="$start
+    local block="# BEGIN_MISE_PROFILE
 export PATH=\"\$HOME/.local/bin:\$HOME/bin:/usr/local/bin:\$PATH\"
-if [ -x \"\$HOME/.local/bin/mise\" ]; then
-  eval \"\$(\$HOME/.local/bin/mise activate sh)\"
+if [ -d \"\$HOME/.local/share/mise/shims\" ]; then
+  export PATH=\"\$HOME/.local/share/mise/shims:\$PATH\"
 fi
-$end"
+# END_MISE_PROFILE"
 
+    # Actualizar ~/.profile (leído por GUI y login shells sh/dash)
+    local profile="$HOME/.profile"
     [ -f "$profile" ] || touch "$profile"
-    # Eliminar bloque previo si existe
-    sed -i "/$start/,/$end/d" "$profile" 2>/dev/null
+    sed -i "/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d" "$profile" 2>/dev/null
     echo "" >> "$profile"
     echo "$block" >> "$profile"
-    print_success "mise añadido a .profile (Cursor/GUI verá npx y node)"
+
+    # Actualizar ~/.bash_profile si existe (bash lo lee en lugar de .profile)
+    if [ -f "$HOME/.bash_profile" ]; then
+        sed -i "/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d" "$HOME/.bash_profile" 2>/dev/null
+        echo "" >> "$HOME/.bash_profile"
+        echo "$block" >> "$HOME/.bash_profile"
+    fi
+
+    # Actualizar ~/.zprofile para zsh login shells
+    local zprofile="$HOME/.zprofile"
+    [ -f "$zprofile" ] || touch "$zprofile"
+    sed -i "/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d" "$zprofile" 2>/dev/null
+    echo "" >> "$zprofile"
+    echo "$block" >> "$zprofile"
+
+    print_success "mise shims añadidos a perfiles de login (Cursor/GUI verá npx y node)"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -117,10 +130,18 @@ install_toolchain() {
 
     # 2. Configurar activación en .bashrc
     local config_block='eval "$(mise activate bash)"'
+    
+    # Añadimos los shims de mise al inicio de .bashrc para que funcionen
+    # en shells no interactivas (como ssh, bash -c, o extensiones IDE)
+    local shims_block='export PATH="$HOME/.local/share/mise/shims:$PATH"'
 
     if declare -f update_bashrc_block > /dev/null; then
+        update_bashrc_block "MISE_SHIMS" "$shims_block" "top"
         update_bashrc_block "MISE" "$config_block" "bottom"
     else
+        if ! grep -q "mise/shims" "$HOME/.bashrc"; then
+            sed -i "1i $shims_block\n" "$HOME/.bashrc"
+        fi
         if ! grep -q "mise activate bash" "$HOME/.bashrc"; then
             echo "" >> "$HOME/.bashrc"
             echo "$config_block" >> "$HOME/.bashrc"
