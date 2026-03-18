@@ -148,7 +148,7 @@ clean_bashrc() {
     print_success "Backup creado"
     
     # 1. Eliminar bloques con formato <!-- BEGIN_* --> ... <!-- END_* -->
-    BLOCKS=("MISE" "WSL_PATH" "PATH_FIX" "GH_TOKEN" "ALIASES" "SSH_AGENT" "OH_MY_POSH" "FZF" "NVM" "DOTFILES")
+    BLOCKS=("MISE_SHIMS" "MISE" "WSL_PATH" "PATH_FIX" "GH_TOKEN" "ALIASES" "SSH_AGENT" "OH_MY_POSH" "FZF" "NVM" "DOTFILES")
     for block in "${BLOCKS[@]}"; do
         if grep -q "<!-- BEGIN_${block} -->" "$BASHRC"; then
             sed -i "/<!-- BEGIN_${block} -->/,/<!-- END_${block} -->/d" "$BASHRC"
@@ -172,6 +172,7 @@ clean_bashrc() {
         "starship"
         "dotfiles/scripts"
         "mise activate"
+        "mise/shims"
     )
     
     for pattern in "${PATTERNS[@]}"; do
@@ -181,13 +182,16 @@ clean_bashrc() {
     # 4. Limpiar líneas vacías múltiples consecutivas
     sed -i '/^$/N;/^\n$/d' "$BASHRC"
     
-    # 5. Limpiar bloque MISE de .profile (Cursor/GUI)
-    if [ -f "$HOME/.profile" ] && grep -q "# BEGIN_MISE_PROFILE" "$HOME/.profile"; then
-        sed -i '/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d' "$HOME/.profile"
-        print_success "Bloque MISE eliminado de .profile"
-    fi
+    # 5. Limpiar bloques MISE de perfiles de login
+    PROFILES=("$HOME/.profile" "$HOME/.bash_profile" "$HOME/.zprofile")
+    for profile in "${PROFILES[@]}"; do
+        if [ -f "$profile" ] && grep -q "# BEGIN_MISE_PROFILE" "$profile"; then
+            sed -i '/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d' "$profile"
+            print_success "Bloque MISE eliminado de $(basename "$profile")"
+        fi
+    done
     
-    print_success ".bashrc limpiado"
+    print_success ".bashrc y perfiles limpiados"
 }
 
 # Restaurar backups si existen

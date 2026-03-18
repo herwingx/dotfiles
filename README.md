@@ -281,7 +281,7 @@ R: Necesitas una **Nerd Font**. Recomendamos `Maple Mono NF` o `JetBrains Mono N
 R: Reinicia tu terminal (`exec bash`) o asegúrate de que `~/.local/bin` está en tu PATH (el instalador lo hace, pero requiere recarga).
 
 **P: Cursor / MCP marcan error con `npx` o "command not found"**
-R: Cursor no ejecuta `.bashrc`; usa el entorno de login. El instalador añade mise y el PATH a `~/.profile` para que las apps GUI vean `npx` y `node`. Cierra Cursor por completo y ábrelo de nuevo (o inicia desde una terminal donde ya tengas mise: `cursor .`) para que cargue el PATH actualizado. **En WSL funciona igual**: la shell de login lee `~/.profile`, así que Cursor en WSL también verá `npx` tras reinstalar/actualizar dotfiles.
+R: Cursor no ejecuta `.bashrc`; usa el entorno de login. El instalador ahora añade los **shims de mise** al inicio de tu `~/.bashrc` y también a `~/.profile`, `~/.bash_profile` y `~/.zprofile`. Esto garantiza que tanto las aplicaciones GUI (Cursor) como los procesos no interactivos (MCPs) hereden el `PATH` correcto. **En WSL funciona igual**: si acabas de instalar/actualizar dotfiles, reinicia Cursor por completo (o "Developer: Reload Window") para que reconozca los nuevos binarios.
 
 **P: Fallo al desencriptar secretos**
 R: Asegúrate de tener la passphrase correcta. Si la perdiste y es tu propia bóveda, bórrala y crea una nueva con la opción **[17]** del instalador.
