@@ -1,99 +1,105 @@
 #!/bin/bash
-# ==========================================
-# VS CODE EXTENSIONS INSTALLER
-# ==========================================
-# Detecta tu editor (VS Code, Codium, Cursor) e instala las extensiones
-# definidas en .vscode-extensions
-# ==========================================
+# ==============================================================================
+# EXTENSIONS.SH - Gestor Idempotente de Extensiones (VS Code / Cursor / Codium)
+# ==============================================================================
 
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
+# shellcheck disable=SC1091
 source "$DOTFILES_DIR/scripts/common.sh"
 
 EXTENSIONS_FILE="$DOTFILES_DIR/.vscode-extensions"
 
 # ─────────────────────────────────────────────────────────────
-# Instala extensiones de VSCode
-#
-# Detecta el editor instalado (VS Code, Codium, Cursor) e
-# instala las extensiones listadas en el archivo `.vscode-extensions`.
-#
-# @sideeffects Ejecuta comandos del editor.
+# Instala extensiones de VS Code / Cursor de forma idempotente
+# En servidores headless sin editor instalado, omite sin error.
 # ─────────────────────────────────────────────────────────────
 install_vscode_extensions() {
-    print_step "Buscando editor compatible..."
+    print_step "Buscando editor compatible (Cursor, VS Code, VSCodium)..."
 
-    EDITOR_CMD=$(detect_editor)
+    local editor_cmd
+    editor_cmd=$(detect_editor || true)
 
-    if [ -z "$EDITOR_CMD" ]; then
-        print_error "No se encontró ningún editor compatible (VS Code, Codium, Cursor)."
-        echo -e "${YELLOW}   Instala VS Code primero para cargar las extensiones.${NC}"
-        return 1
+    if [ -z "$editor_cmd" ]; then
+        if [ "$IS_SERVER" == "true" ]; then
+            print_info "Entorno Server/Headless sin IDE gráfico: omitiendo extensiones."
+            return 0
+        fi
+        print_warning "No se encontró VS Code, Cursor ni VSCodium instalado en el PATH."
+        return 0
     fi
-    
-    print_success "Detectado: $EDITOR_CMD"
+
+    print_success "Editor detectado: $editor_cmd"
 
     if [ ! -f "$EXTENSIONS_FILE" ]; then
-        print_error "No se encontró el archivo .vscode-extensions"
-        return 1
+        print_warning "No se encontró el archivo $EXTENSIONS_FILE"
+        return 0
     fi
 
-    print_step "Instalando extensiones para $EDITOR_CMD..."
-    
-    # Leer el archivo y filtrar líneas vacías o comentarios
-    while IFS= read -r ext || [ -n "$ext" ]; do
-        # Ignorar comentarios y líneas vacías
-        [[ "$ext" =~ ^#.*$ ]] && continue
-        [[ -z "$ext" ]] && continue
-        
-        # Trim whitespace
-        ext=$(echo "$ext" | xargs)
+    print_step "Sincronizando extensiones para $editor_cmd..."
 
-        echo -e "${CYAN}   Installing: $ext${NC}"
-        $EDITOR_CMD --install-extension "$ext" --force
-        
+    # Obtener lista de extensiones ya instaladas (en minúsculas) para idempotencia rápida
+    local installed_list
+    installed_list="$($editor_cmd --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+
+    local installed_count=0
+    local skipped_count=0
+
+    while IFS= read -r ext || [ -n "$ext" ]; do
+        ext=$(echo "$ext" | xargs)
+        [[ -z "$ext" || "$ext" =~ ^# ]] && continue
+
+        # Validar formato publisher.extension
+        if [[ ! "$ext" =~ ^[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$ ]]; then
+            continue
+        fi
+
+        local ext_lower
+        ext_lower=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
+
+        if grep -qxF "$ext_lower" <<< "$installed_list"; then
+            skipped_count=$((skipped_count + 1))
+            continue
+        fi
+
+        echo -e "${CYAN}   + Installing: ${WHITE}$ext${NC}"
+        if $editor_cmd --install-extension "$ext" --force >/dev/null 2>&1; then
+            installed_count=$((installed_count + 1))
+        else
+            print_warning "No se pudo instalar la extensión: $ext"
+        fi
     done < "$EXTENSIONS_FILE"
 
-    print_success "Proceso finalizado."
+    print_success "Extensiones listas ($installed_count nuevas instaladas, $skipped_count ya estaban instaladas)."
 }
 
 # ─────────────────────────────────────────────────────────────
-# Realiza backup de extensiones
-#
-# Guarda una lista de todas las extensiones instaladas
-# actualmente en tu editor dentro del archivo `.vscode-extensions`.
-#
-# @sideeffects Sobrescribe el archivo `.vscode-extensions`.
+# Respalda la lista de extensiones actualmente instaladas
 # ─────────────────────────────────────────────────────────────
 backup_extensions() {
-    print_step "Buscando editor para backup..."
-    
-    EDITOR_CMD=$(detect_editor)
+    print_step "Buscando editor para respaldar extensiones..."
 
-    if [ -z "$EDITOR_CMD" ]; then
-        print_error "No se encontró editor para listar extensiones."
+    local editor_cmd
+    editor_cmd=$(detect_editor || true)
+
+    if [ -z "$editor_cmd" ]; then
+        print_error "No se encontró editor compatible (Cursor, VS Code, Codium)."
         return 1
     fi
-    
-    print_success "Detectado: $EDITOR_CMD"
 
-    print_step "Guardando lista en $EXTENSIONS_FILE..."
-    
-    # Listar y limpiar (eliminar versiones si las muestra)
-    $EDITOR_CMD --list-extensions > "$EXTENSIONS_FILE"
-    
-    # Verificar si escribió algo
-    if [ -s "$EXTENSIONS_FILE" ]; then
-        COUNT=$(wc -l < "$EXTENSIONS_FILE")
-        print_success "$COUNT extensiones guardadas."
-    else
-        print_error "Error al guardar la lista."
-    fi
+    print_step "Exportando extensiones de $editor_cmd a $EXTENSIONS_FILE..."
+    {
+        echo "# VS Code / Cursor / VSCodium Extensions"
+        $editor_cmd --list-extensions 2>/dev/null | grep -E '^[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$' | sort -u
+    } > "$EXTENSIONS_FILE"
+
+    local count
+    count=$(grep -cE '^[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$' "$EXTENSIONS_FILE" || echo 0)
+    print_success "$count extensiones respaldadas en .vscode-extensions."
 }
 
-# Router de argumentos
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    if [[ "$1" == "--backup" ]]; then
+    if [[ "${1:-}" == "--backup" ]]; then
         backup_extensions
     else
         install_vscode_extensions

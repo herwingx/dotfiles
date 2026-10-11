@@ -1,146 +1,155 @@
 #!/bin/bash
-# ==========================================
-# DEV-TOOLS - Herramientas de desarrollo
-# ==========================================
-# Gestiona herramientas que requieren repositorios externos o root
-# (Docker, GitHub CLI). Node/Rust/Go se gestionan via Mise.
-# ==========================================
+# ==============================================================================
+# DEV-TOOLS.SH - GitHub CLI & Docker Engine + Compose (Ubuntu & Fedora)
+# Soporta DNF4/DNF5 en Fedora y apt en Ubuntu/Debian (Server, Desktop & WSL)
+# ==============================================================================
 
 # ─────────────────────────────────────────────────────────────
-# Instala GitHub CLI (gh)
-#
-# Agrega el repositorio oficial e instala la herramienta
-# para interactuar con GitHub desde la terminal.
-#
-# @sideeffects Modifica los repositorios del sistema y fuentes apt/dnf/zypper/apk.
+# Instala y autentica GitHub CLI (gh)
 # ─────────────────────────────────────────────────────────────
 install_gh_cli() {
-    print_step "Instalando GitHub CLI (gh)..."
-    
+    print_step "Verificando GitHub CLI (gh)..."
+
     if command -v gh &> /dev/null; then
-        print_info "GitHub CLI ya está instalado"
+        print_info "GitHub CLI ya está instalado ($(gh --version 2>/dev/null | head -1))."
+    elif command -v mise &> /dev/null; then
+        print_step "Instalando GitHub CLI vía Mise..."
+        mise use --global gh@latest
+        path_prepend "$HOME/.local/share/mise/shims"
     else
         ensure_package "curl"
-        
-        # Instalación específica por distro (gh requiere repos custom a veces)
         case "$OS_TYPE" in
             debian)
-                curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | $SUDO_CMD dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-                $SUDO_CMD chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-                echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | $SUDO_CMD tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-                $SUDO_CMD apt-get update
-                $SUDO_CMD apt-get install gh -y
+                $SUDO_CMD install -m 0755 -d /etc/apt/keyrings
+                curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | $SUDO_CMD tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+                $SUDO_CMD chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+                echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+                    $SUDO_CMD tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                run_pkg_index_update
+                $PKG_INSTALL_CMD gh
                 ;;
             redhat)
-                $SUDO_CMD dnf install -y dnf-plugins-core
-                $SUDO_CMD dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
-                $SUDO_CMD dnf install -y gh
-                ;;
-            arch)
-                $SUDO_CMD pacman -S github-cli --noconfirm
-                ;;
-            suse)
-                $SUDO_CMD zypper addrepo https://cli.github.com/packages/rpm/gh-cli.repo
-                $SUDO_CMD zypper ref
-                $SUDO_CMD zypper install -y gh
-                ;;
-            alpine)
-                $SUDO_CMD apk add github-cli
+                $PKG_INSTALL_CMD gh
                 ;;
         esac
-        print_success "GitHub CLI instalado"
+        print_success "GitHub CLI instalado."
     fi
-    
+
     gh_auth_login
 }
 
 # ─────────────────────────────────────────────────────────────
-# Autentica GitHub CLI
-#
-# Usa el GH_TOKEN guardado en los secretos para autenticar
-# GitHub CLI (gh) sin requerir login interactivo por navegador.
-#
-# @sideeffects Configura credenciales en `~/.config/gh`.
+# Autentica GitHub CLI usando Proton Pass (o salta en Guest Mode)
 # ─────────────────────────────────────────────────────────────
 gh_auth_login() {
-    if ! command -v gh &> /dev/null; then return 1; fi
-    if gh auth status &> /dev/null; then return 0; fi
-    
-    print_warning "Autenticando GH CLI..."
-    if [ -z "$GH_TOKEN" ]; then decrypt_secrets; fi
-    
-    if [ -n "$GH_TOKEN" ]; then
+    if ! command -v gh &> /dev/null; then
+        return 0
+    fi
+
+    if (unset GH_TOKEN GITHUB_TOKEN; gh auth status &>/dev/null); then
+        print_success "GitHub CLI ya está autenticado."
+        gh auth setup-git 2>/dev/null || true
+        return 0
+    fi
+
+    if [ -z "${GH_TOKEN:-}" ]; then
+        load_secrets
+    fi
+
+    if [ -n "${GH_TOKEN:-}" ]; then
+        print_step "Autenticando GitHub CLI con GH_TOKEN..."
         mkdir -p "$HOME/.config/gh"
-        echo "$GH_TOKEN" | (unset GH_TOKEN; gh auth login --with-token)
-        gh auth setup-git
+        if echo "$GH_TOKEN" | (unset GH_TOKEN GITHUB_TOKEN; gh auth login --with-token); then
+            (unset GH_TOKEN GITHUB_TOKEN; gh auth setup-git)
+            print_success "GitHub CLI autenticado y vinculado con Git."
+            return 0
+        fi
+    fi
+
+    if [ "${GUEST_MODE:-}" == "true" ] || [ "${AUTO_INSTALL:-}" == "true" ]; then
+        print_info "Guest Mode: omitiendo login de GitHub CLI (ejecuta './install.sh --secrets' cuando tengas tus credenciales)."
+        return 0
+    fi
+
+    if ui_confirm "¿Deseas autenticar GitHub CLI (gh auth login) interactivamente ahora?"; then
+        gh auth login && gh auth setup-git
     else
-        gh auth login
+        print_info "Autenticación de GitHub CLI pospuesta."
     fi
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala Docker Engine + Compose
-#
-# Instala Docker según los repositorios oficiales de cada
-# distribución y lo añade al grupo local para no requerir sudo.
-#
-# @sideeffects Habilita e inicia el demonio de Docker. Modifica grupos.
+# Instala Docker Engine + Buildx + Compose en Ubuntu/Debian y Fedora
+# Compatible con Fedora 41-44+ (DNF5) y Ubuntu Server/Desktop.
 # ─────────────────────────────────────────────────────────────
 install_docker() {
-    print_step "Instalando Docker..."
-    
+    print_header "DOCKER ENGINE & COMPOSE SETUP"
+
     if command -v docker &> /dev/null; then
-        print_info "Docker ya está instalado"
-        return
+        print_info "Docker ya está instalado ($(docker --version 2>/dev/null))."
+    else
+        ensure_package "curl"
+        ensure_package "ca-certificates"
+
+        case "$OS_TYPE" in
+            debian)
+                ensure_package "gnupg" "gpg"
+                $SUDO_CMD install -m 0755 -d /etc/apt/keyrings
+
+                local docker_distro="ubuntu"
+                local codename=""
+                # shellcheck disable=SC1091
+                codename="$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")"
+                if [ "$OS_ID" == "debian" ]; then
+                    docker_distro="debian"
+                fi
+
+                curl -fsSL "https://download.docker.com/linux/${docker_distro}/gpg" | \
+                    $SUDO_CMD gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+                $SUDO_CMD chmod a+r /etc/apt/keyrings/docker.gpg
+
+                echo \
+                  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/${docker_distro} \
+                  ${codename} stable" | \
+                  $SUDO_CMD tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+                run_pkg_index_update
+                $PKG_INSTALL_CMD docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                ;;
+            redhat)
+                # Compatible tanto con DNF4 como con DNF5 (Fedora 41-44+)
+                local repo_os="fedora"
+                [[ "$OS_ID" =~ ^(rhel|centos|almalinux|rocky)$ ]] && repo_os="centos"
+
+                print_step "Configurando repositorio oficial de Docker (${repo_os})..."
+                curl -fsSL "https://download.docker.com/linux/${repo_os}/docker-ce.repo" | \
+                    $SUDO_CMD tee /etc/yum.repos.d/docker-ce.repo > /dev/null
+
+                $PKG_INSTALL_CMD docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                ;;
+        esac
+        print_success "Paquetes de Docker instalados."
     fi
-    
-    ensure_package "curl"
-    ensure_package "ca-certificates"
-    ensure_package "gnupg"
-    
-    case "$OS_TYPE" in
-        debian)
-            $SUDO_CMD install -m 0755 -d /etc/apt/keyrings
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO_CMD gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-            $SUDO_CMD chmod a+r /etc/apt/keyrings/docker.gpg
-            echo \
-              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-              $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-              $SUDO_CMD tee /etc/apt/sources.list.d/docker.list > /dev/null
-            $SUDO_CMD apt-get update
-            $SUDO_CMD apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            ;;
-        redhat)
-            $SUDO_CMD dnf -y install dnf-plugins-core
-            $SUDO_CMD dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-            $SUDO_CMD dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            ;;
-        arch)
-            $SUDO_CMD pacman -S docker docker-compose --noconfirm
-            ;;
-        suse)
-            $SUDO_CMD zypper install -y docker docker-compose
-            ;;
-        alpine)
-            $SUDO_CMD apk add docker docker-cli-compose
-            $SUDO_CMD rc-update add docker boot
-            $SUDO_CMD service docker start
-            ;;
-    esac
-    
-    $SUDO_CMD systemctl start docker
-    $SUDO_CMD systemctl enable docker
-    
-    if [ "$(id -u)" -ne 0 ]; then
-        $SUDO_CMD usermod -aG docker "$USER"
-        print_warning "Docker group updated. Re-login required."
+
+    # Iniciar y habilitar servicio si systemd está activo
+    if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null; then
+        $SUDO_CMD systemctl enable --now docker >/dev/null 2>&1 || true
+        print_success "Servicio docker.service activo y habilitado."
+    elif command -v service &>/dev/null; then
+        $SUDO_CMD service docker start >/dev/null 2>&1 || true
+    fi
+
+    # Asegurar que el usuario pertenezca al grupo docker
+    if [ "$(id -u)" -ne 0 ] && getent group docker &>/dev/null; then
+        if ! id -nG "$USER" | grep -qw "docker"; then
+            $SUDO_CMD usermod -aG docker "$USER"
+            print_warning "Usuario '$USER' añadido al grupo 'docker' (requiere relogin para aplicar)."
+        fi
     fi
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instalación agrupada de Dev Tools
-#
-# Llama secuencialmente a las rutinas de instalación de gh y docker.
+# Instala todas las herramientas de desarrollo pesadas
 # ─────────────────────────────────────────────────────────────
 install_dev_tools_all() {
     install_gh_cli

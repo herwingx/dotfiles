@@ -1,13 +1,34 @@
+# =============================================================================
+# MISE DECLARATIVE TOOLCHAIN (.mise.toml)
+# Unified Web Development & Modern CLI Stack for Ubuntu & Fedora (Server/Desktop)
+# =============================================================================
+
 [tools]
+# --- Web Development Runtimes & Package Managers ---
 node = "lts"
+pnpm = "latest"
+bun = "latest"
 go = "latest"
 rust = "latest"
 python = "latest"
-lsd = "latest"
-bat = "latest"
-ripgrep = "latest"
+uv = "latest"
+
+# --- Git & DevOps ---
+gh = "latest"
+lazygit = "latest"
 delta = "latest"
+
+# --- Modern CLI & TUI ---
+gum = "latest"
 fzf = "latest"
+zoxide = "latest"
+ripgrep = "latest"
+fd = "latest"
+jq = "latest"
+yq = "latest"
+bat = "latest"
+lsd = "latest"
+tlrc = "latest"
+btop = "latest"
 oh-my-posh = "latest"
 usage = "latest"
-btop = "latest"

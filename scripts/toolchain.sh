@@ -1,182 +1,150 @@
 #!/bin/bash
-# ==========================================
-# TOOLCHAIN - Gestión de Herramientas (Mise)
-# ==========================================
-# Instala y configura mise como gestor de versiones universal
-# Incluye migración inteligente desde herramientas legacy (NVM, etc.)
-# ==========================================
+# ==============================================================================
+# TOOLCHAIN.SH - Declarative Toolchain (Mise + Proton Pass CLI)
+# Gestiona Node, pnpm, Bun, Go, Rust, Python, uv y utilidades CLI modernas.
+# ==============================================================================
 
 # ─────────────────────────────────────────────────────────────
-# Detecta y desactiva herramientas que entran en conflicto con Mise
-#
-# Evita colisiones de comandos detectando sistemas de versiones
-# legacy como NVM o binarios individuales instalados localmente.
-# Renombra directorios en lugar de borrarlos para preservar datos.
-#
-# @sideeffects Renombra carpetas e invalida paths previos en .bashrc.
+# Detecta y archiva herramientas legacy que colisionan con Mise
 # ─────────────────────────────────────────────────────────────
 cleanup_legacy_conflicts() {
-    print_step "Checking for legacy tool conflicts..."
-    
+    print_step "Verificando conflictos con herramientas legacy..."
+
     local conflicts_found=false
-    
+
     # 1. Detectar NVM (Node Version Manager)
-    if [ -d "$HOME/.nvm" ] || grep -q "NVM_DIR" "$HOME/.bashrc"; then
-        print_warning "Legacy NVM detected. It conflicts with Mise."
+    if [ -d "$HOME/.nvm" ] || grep -q "NVM_DIR" "$HOME/.bashrc" 2>/dev/null; then
+        print_warning "Legacy NVM detectado. Desactivando en favor de Mise..."
         conflicts_found=true
-        
-        # Desactivar de .bashrc
-        sed -i '/export NVM_DIR/d' "$HOME/.bashrc"
-        sed -i '/\[ -s "$NVM_DIR\/nvm.sh" \]/d' "$HOME/.bashrc"
-        sed -i '/\[ -s "$NVM_DIR\/bash_completion" \]/d' "$HOME/.bashrc"
-        
-        # Renombrar directorio para desactivar (Backup seguro)
+
+        sed -i '/export NVM_DIR/d' "$HOME/.bashrc" 2>/dev/null
+        sed -i '/\[ -s "$NVM_DIR\/nvm.sh" \]/d' "$HOME/.bashrc" 2>/dev/null
+        sed -i '/\[ -s "$NVM_DIR\/bash_completion" \]/d' "$HOME/.bashrc" 2>/dev/null
+
         if [ -d "$HOME/.nvm" ]; then
             mv "$HOME/.nvm" "$HOME/.nvm.backup_legacy"
-            print_success "NVM disabled (backed up to ~/.nvm.backup_legacy)"
+            print_success "NVM respaldado en ~/.nvm.backup_legacy"
         fi
     fi
-    
-    # 2. Detectar Go legacy en /usr/local/go
-    if [ -d "/usr/local/go" ]; then
-        print_warning "System-wide Go detected in /usr/local/go."
-        print_info "Mise will manage Go user-locally. Consider removing /usr/local/go later."
-    fi
-    
-    # 3. Limpiar binarios manuales antiguos que ahora maneja Mise
-    local legacy_bins=("lsd" "bat" "rg" "fd" "zoxide")
+
+    # 2. Limpiar binarios manuales antiguos que ahora maneja Mise
+    local legacy_bins=("lsd" "bat" "rg" "fd" "zoxide" "lazygit" "gum")
     for bin in "${legacy_bins[@]}"; do
         if [ -f "$HOME/.local/bin/$bin" ]; then
-            # Solo si NO es un shim de mise
-            if ! grep -q "mise" "$HOME/.local/bin/$bin"; then
+            if ! grep -q "mise" "$HOME/.local/bin/$bin" 2>/dev/null; then
                 mv "$HOME/.local/bin/$bin" "$HOME/.local/bin/$bin.old"
-                print_info "Archived legacy binary: $bin -> $bin.old"
+                print_info "Binario manual archivado: $bin -> $bin.old"
             fi
         fi
     done
 
     if [ "$conflicts_found" = false ]; then
-        print_success "No critical conflicts found."
+        print_success "Sin conflictos legacy detectados."
     fi
 }
 
 # ─────────────────────────────────────────────────────────────
-# Añade PATH y activación de Mise a .profile
-#
-# Cursor y otras apps GUI no ejecutan .bashrc; leen .profile en login.
-# Así npx/node gestionados por mise están en PATH para MCP y extensiones.
-# Válido en Linux y WSL (en WSL la shell de login también lee ~/.profile).
-#
-# @sideeffects Crea o actualiza ~/.profile con bloque MISE_PROFILE.
+# Añade PATH deduplicado y shims de Mise a perfiles de login
+# (.profile, .bash_profile, .zprofile) para IDEs (VS Code / Cursor)
 # ─────────────────────────────────────────────────────────────
 ensure_profile_mise() {
-    local block="# BEGIN_MISE_PROFILE
-export PATH=\"\$HOME/.local/bin:\$HOME/bin:/usr/local/bin:\$PATH\"
-if [ -d \"\$HOME/.local/share/mise/shims\" ]; then
-  export PATH=\"\$HOME/.local/share/mise/shims:\$PATH\"
-fi
-# END_MISE_PROFILE"
+    local block='# BEGIN_MISE_PROFILE
+export PROTON_PASS_KEY_PROVIDER="${PROTON_PASS_KEY_PROVIDER:-fs}"
+for _dir in "$HOME/.local/share/mise/shims" "$HOME/.local/bin" "$HOME/bin" "/usr/local/bin"; do
+    if [ -d "$_dir" ] && [ "${PATH#*$_dir}" = "$PATH" ]; then
+        export PATH="$_dir:$PATH"
+    fi
+done
+unset _dir
+# END_MISE_PROFILE'
 
-    # Actualizar ~/.profile (leído por GUI y login shells sh/dash)
     local profile="$HOME/.profile"
     [ -f "$profile" ] || touch "$profile"
     sed -i "/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d" "$profile" 2>/dev/null
-    echo "" >> "$profile"
-    echo "$block" >> "$profile"
+    printf "\n%s\n" "$block" >> "$profile"
 
-    # Actualizar ~/.bash_profile si existe (bash lo lee en lugar de .profile)
     if [ -f "$HOME/.bash_profile" ]; then
         sed -i "/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d" "$HOME/.bash_profile" 2>/dev/null
-        echo "" >> "$HOME/.bash_profile"
-        echo "$block" >> "$HOME/.bash_profile"
+        printf "\n%s\n" "$block" >> "$HOME/.bash_profile"
     fi
 
-    # Actualizar ~/.zprofile para zsh login shells
     local zprofile="$HOME/.zprofile"
     [ -f "$zprofile" ] || touch "$zprofile"
     sed -i "/# BEGIN_MISE_PROFILE/,/# END_MISE_PROFILE/d" "$zprofile" 2>/dev/null
-    echo "" >> "$zprofile"
-    echo "$block" >> "$zprofile"
+    printf "\n%s\n" "$block" >> "$zprofile"
 
-    print_success "mise shims añadidos a perfiles de login (Cursor/GUI verá npx y node)"
+    print_success "Perfiles de login (.profile / .zprofile) configurados con Mise shims."
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala y sincroniza el Toolchain vía Mise
-#
-# Descarga el instalador de Mise, lo añade a .bashrc e instala
-# automáticamente todas las herramientas declaradas en .mise.toml
-# (Node, Go, Rust, etc.).
-#
-# @sideeffects Ejecuta el script remoto de mise.run e instala binarios locales.
+# Instala Mise, Proton Pass CLI y sincroniza .mise.toml
+# Funciona con o sin credenciales de GitHub en distros limpias.
 # ─────────────────────────────────────────────────────────────
 install_toolchain() {
-    print_header "TOOLCHAIN SETUP (MISE)"
-    
-    # 0. Limpieza preventiva
+    print_header "TOOLCHAIN SETUP (MISE + PROTON PASS CLI)"
+
     cleanup_legacy_conflicts
-    
+
     # 1. Instalar mise si no existe
     if ! command -v mise &> /dev/null; then
-        print_step "Installing mise (CLI version manager)..."
-        ensure_package "curl" # Ensure curl is present
-        curl https://mise.run | sh
-        
-        # Añadir al path temporalmente para esta sesión
-        export PATH="$HOME/.local/bin:$PATH"
+        print_step "Instalando Mise (gestor de runtimes y herramientas)..."
+        ensure_package "curl"
+        curl -fsSL https://mise.run | sh
+        path_prepend "$HOME/.local/bin"
     else
-        print_info "mise is already installed."
+        print_info "Mise ya está instalado ($(mise --version 2>/dev/null | head -1))."
     fi
 
-    # 2. Configurar activación en .bashrc
-    local config_block='eval "$(mise activate bash)"'
-    
-    # Añadimos los shims de mise al inicio de .bashrc para que funcionen
-    # en shells no interactivas (como ssh, bash -c, o extensiones IDE)
-    local shims_block='export PATH="$HOME/.local/share/mise/shims:$PATH"'
+    # 2. Instalar Proton Pass CLI (pass-cli)
+    ensure_pass_cli
 
-    if declare -f update_bashrc_block > /dev/null; then
-        update_bashrc_block "MISE_SHIMS" "$shims_block" "top"
-        update_bashrc_block "MISE" "$config_block" "bottom"
-    else
-        if ! grep -q "mise/shims" "$HOME/.bashrc"; then
-            sed -i "1i $shims_block\n" "$HOME/.bashrc"
-        fi
-        if ! grep -q "mise activate bash" "$HOME/.bashrc"; then
-            echo "" >> "$HOME/.bashrc"
-            echo "$config_block" >> "$HOME/.bashrc"
-        fi
-    fi
+    # 3. Configurar activación en .bashrc (shims al inicio + activate al final)
+    local shims_block='if [ -d "$HOME/.local/share/mise/shims" ] && [[ ":$PATH:" != *":$HOME/.local/share/mise/shims:"* ]]; then
+    export PATH="$HOME/.local/share/mise/shims:$PATH"
+fi'
+    local config_block='if command -v mise &>/dev/null; then
+    eval "$(mise activate bash)"
+fi'
 
-    # 2b. Configurar .profile para GUI (Cursor, MCP, etc.)
-    # Las apps que no leen .bashrc (p. ej. Cursor) heredan el entorno de login.
-    # Así npx/node de mise están en PATH y los MCPs dejan de marcar error.
+    update_bashrc_block "MISE_SHIMS" "$shims_block" "top"
+    update_bashrc_block "MISE" "$config_block" "bottom"
     ensure_profile_mise
 
-    # 3. Instalar herramientas declaradas en .mise.toml
+    # 4. Sincronizar herramientas declaradas en .mise.toml
     if [ -f "$DOTFILES_DIR/.mise.toml" ]; then
-        print_step "Syncing tools from .mise.toml..."
-        
-        # Confiar en el archivo de configuración local para evitar prompts
-        mise trust "$DOTFILES_DIR/.mise.toml"
-        mise trust "$HOME/.mise.toml" 2>/dev/null
-        
-        # Linking global config if desired
+        print_step "Sincronizando herramientas desde .mise.toml..."
+
+        mkdir -p "$HOME/.config/mise"
         ln -sf "$DOTFILES_DIR/.mise.toml" "$HOME/.mise.toml"
-        
-        # Instalar
-        mise install -y
-        
-        if [ $? -eq 0 ]; then
-            print_success "Toolchain synced (Node, Go, Rust, etc.)"
+        ln -sf "$DOTFILES_DIR/.mise.toml" "$HOME/.config/mise/config.toml"
+
+        mise trust "$DOTFILES_DIR/.mise.toml" 2>/dev/null || true
+        mise trust "$HOME/.mise.toml" 2>/dev/null || true
+        mise trust "$HOME/.config/mise/config.toml" 2>/dev/null || true
+
+        # Si hay token de GitHub disponible (en env o gh CLI), pasarlo a mise
+        # para evitar rate-limits de GitHub API; si no hay (distro nueva), continúa normal.
+        if [ -z "${GITHUB_TOKEN:-}" ]; then
+            if [ -n "${GH_TOKEN:-}" ]; then
+                export GITHUB_TOKEN="$GH_TOKEN"
+            elif command -v gh &>/dev/null && gh auth status &>/dev/null; then
+                GITHUB_TOKEN="$(gh auth token 2>/dev/null || true)"
+                [ -n "$GITHUB_TOKEN" ] && export GITHUB_TOKEN
+            fi
+        fi
+
+        if mise install -y; then
+            print_success "Toolchain Web & CLI sincronizado con éxito."
+            path_prepend "$HOME/.local/share/mise/shims"
             mise list
         else
-            print_error "Failed to install some mise tools."
+            print_warning "Algunas herramientas de Mise reportaron advertencias. Puedes reintentar con 'mise install'."
         fi
     else
-        print_warning ".mise.toml not found in $DOTFILES_DIR"
+        print_warning "No se encontró .mise.toml en $DOTFILES_DIR"
     fi
-    
-    # 4. Activar para el resto del script
-    eval "$(mise activate bash)"
+
+    if command -v mise &>/dev/null; then
+        eval "$(mise activate bash)"
+    fi
 }

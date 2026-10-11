@@ -4,8 +4,8 @@
 # 💡 GUÍA DE PERSONALIZACIÓN:
 # Este archivo define el comportamiento global de Git.
 # - [alias]: Atajos para comandos comunes (ej: 'git c' en lugar de 'git commit')
-# - [user]: Tus datos de identidad (se sobrescriben con install.sh)
-# - [core]: Editor y manejo de saltos de línea
+# - [user]: Tus datos de identidad
+# - [core] / [delta]: Visualización de diffs con syntax highlighting
 # =============================================================================
 
 [user]
@@ -18,8 +18,16 @@
 [core]
     editor = code --wait
     autocrlf = input
-    # Mejor diff para archivos grandes
     pager = less -F -X
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    navigate = true
+    light = false
+    line-numbers = true
+    syntax-theme = Dracula
 
 # -----------------------------------------------------------------------------
 # PULL - Siempre usar rebase (historial limpio)
@@ -31,9 +39,7 @@
 # REBASE - Configuración óptima
 # -----------------------------------------------------------------------------
 [rebase]
-    # Stash automático antes de rebase (evita errores por cambios sin commit)
     autoStash = true
-    # Auto-squash para fixup commits
     autoSquash = true
 
 # -----------------------------------------------------------------------------
@@ -41,19 +47,14 @@
 # -----------------------------------------------------------------------------
 [merge]
     ff = only
-    # Mejor herramienta de diff para conflictos
-    conflictstyle = diff3
+    conflictstyle = zdiff3
 
 # -----------------------------------------------------------------------------
 # PUSH - Configuración segura
 # -----------------------------------------------------------------------------
 [push]
-    # Usar el nombre de la rama actual como upstream
     default = current
-    # Configurar tracking automático al pushear nueva rama
     autoSetupRemote = true
-    # Forzar con lease es más seguro que --force
-    # (no sobrescribe si hay commits nuevos en remote)
 
 # -----------------------------------------------------------------------------
 # FETCH - Limpiar ramas eliminadas en remote
@@ -65,10 +66,9 @@
 # DIFF - Mejor visualización
 # -----------------------------------------------------------------------------
 [diff]
-    # Detectar mejor los renombrados
     renames = copies
-    # Algoritmo de diff más inteligente
     algorithm = histogram
+    colorMoved = default
 
 [color]
     ui = auto
@@ -80,87 +80,59 @@
     # Log bonito
     lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) > %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)'
     lg10 = lg -10
-    
+
     # Editar último commit
     amend = commit --amend --no-edit
     edit = commit --amend
-    
+
     # Clonar superficial (más rápido)
     clone-shallow = clone --depth 1
-    
+
     # Status corto
     s = status -sb
-    
+
     # Branches
     br = branch -v
     bra = branch -va
-    
-    # Checkout
+
+    # Checkout / Switch
     co = checkout
     cob = checkout -b
-    
+    sw = switch
+    rs = restore
+
     # Diff
     d = diff
     dc = diff --cached
-    
-    # Pull con rebase (redundante pero explícito)
+    ds = diff --staged
+
+    # Pull con rebase
     pr = pull --rebase
-    
-    # Push force seguro
+    l = pull --rebase
+
+    # Push
+    p = push
     pf = push --force-with-lease
-    
+
     # Deshacer último commit (mantiene cambios)
     undo = reset --soft HEAD~1
-    
+
     # Limpiar ramas mergeadas
-    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d"
-    
+    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master' | xargs -r -n 1 git branch -d"
+
     # Sync con main usando rebase
     sync = "!git fetch origin && git rebase origin/main"
 
-    # -------------------------------------------------------------------------
-    # SHORTCUTS (Migrated from .bash_aliases)
-    # -------------------------------------------------------------------------
-    
-    # Add
+    # Add & Commit shortcuts
     a = add
     aa = add .
-    
-    # Commit
     c = commit -m
     ca = commit -am
-    
-    # Push/Pull
-    p = push
-    l = pull --rebase
-    
-    # Status
-    # s is already defined above as 'status -sb'
-    
-    # Diff
-    # d is already defined above as 'diff'
-    ds = diff --staged
-    
-    # Branch/Checkout
     b = branch -v
-    # co is already defined above as 'checkout'
-    sw = switch
-    rs = restore
-    
-    # Log variations
-    # lg/lg10 are defined above
     glog = log --oneline --graph --decorate -10
-    
-    # Ver archivos modificados en último commit
     last = show --stat
-    
+
     # Stash rápido
-    ss = stash save
+    ss = stash push
     sp = stash pop
     sl = stash list
-
-# -----------------------------------------------------------------------------
-# URL Rewrites - Forzar SSH para GitHub
-# -----------------------------------------------------------------------------
-[url "git@github.com:"]
-    insteadOf = https://github.com/

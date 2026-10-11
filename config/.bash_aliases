@@ -1,17 +1,31 @@
 # =============================================================================
-#                           BASH ALIASES - herwingx
+#                   BASH ALIASES & WEB DEV SHORTCUTS - herwingx
+#      Compatible con Ubuntu & Fedora (Server, Desktop, Wayland/X11 & WSL)
 # =============================================================================
 
+# Detectar directorio real del repositorio de dotfiles mediante el propio symlink
+DOTFILES_HOME="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
+
 # -----------------------------------------------------------------------------
-# Dotfiles
+# Dotfiles & Gestión Rápida
 # -----------------------------------------------------------------------------
-alias sync-dotfiles='(cd ~/dotfiles && git pull && ./install.sh --all) && source ~/.bashrc && echo "✅ Dotfiles Sincronizados"'
+alias dotfiles="cd \"$DOTFILES_HOME\" && ./install.sh"
+alias sync-dotfiles="(cd \"$DOTFILES_HOME\" && git pull && ./install.sh --all) && source ~/.bashrc && echo '✅ Dotfiles Sincronizados'"
 alias reload='exec bash'
+
+# -----------------------------------------------------------------------------
+# Proton Pass CLI (Reemplazo moderno de Bitwarden/Vaultwarden + age)
+# -----------------------------------------------------------------------------
+alias secrets="\"$DOTFILES_HOME/scripts/manage_secrets.sh\""
+alias pass-login='pass-cli login'
+alias pass-info='pass-cli info'
+alias pass-vaults='pass-cli vault list'
+alias pass-ssh='pass-cli ssh-agent load'
+alias pass-run="pass-cli run --env-file \"$DOTFILES_HOME/.env.example\" --"
 
 # -----------------------------------------------------------------------------
 # Theme & Colors (Harmonization)
 # -----------------------------------------------------------------------------
-# Forzar directorios en Púrpura (Magenta) para coincidir con Oh My Posh
 if command -v dircolors &> /dev/null; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 fi
@@ -28,7 +42,6 @@ if command -v lsd &> /dev/null; then
     alias lt='lsd --tree'
     alias ltr='lsd --tree --depth 2'
 else
-    # Fallback a ls normal con colores
     alias ls='ls --color=auto'
     alias ll='ls -alF'
     alias la='ls -a'
@@ -44,75 +57,81 @@ alias ....='cd ../../..'
 alias ~='cd ~'
 
 # -----------------------------------------------------------------------------
-# Git shortcuts
+# Git & Lazygit shortcuts
 # -----------------------------------------------------------------------------
-# 💡 NOTA: La mayoría de estos alias se han movido a .gitconfig para mayor portabilidad.
-# Usa: git s, git a, git c, git p, etc.
 alias g='git'
-# alias gs='git status'
-# alias ga='git add'
-# alias gc='git commit -m'
-# alias gp='git push'
-# alias gl='git pull'
-# alias gd='git diff'
-# alias gb='git branch'
-# alias gco='git checkout'
-# alias glog='git log --oneline --graph --decorate -10'
+if command -v lazygit &> /dev/null; then
+    alias lg='lazygit'
+fi
 
 # -----------------------------------------------------------------------------
-# Docker shortcuts
+# Web Development (Node, pnpm, Bun, Python uv)
+# -----------------------------------------------------------------------------
+alias pn='pnpm'
+alias px='pnpm dlx'
+alias bx='bunx'
+alias ni='npm install'
+alias nr='npm run'
+alias dev='pnpm run dev'
+alias build='pnpm run build'
+alias serve='python3 -m http.server 8000'
+
+# -----------------------------------------------------------------------------
+# Docker & Containers shortcuts
 # -----------------------------------------------------------------------------
 alias d='docker'
 alias dc='docker compose'
-alias dps='docker ps'
+alias dps='docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
 alias dpsa='docker ps -a'
 alias dimg='docker images'
 alias dlog='docker logs -f'
 
 # -----------------------------------------------------------------------------
-# Sistema
+# Sistema & Red (Ubuntu / Fedora)
 # -----------------------------------------------------------------------------
 alias off='sudo shutdown now'
 alias rb='sudo reboot now'
 alias size='du -h --max-depth=1 ~/'
 alias storage='df -h'
-alias ports='netstat -tulanp'
-alias myip='curl -s ifconfig.me'
-alias weather='curl wttr.in'
-alias f='find . -type f -name'
+if command -v ss &> /dev/null; then
+    alias ports='ss -tulanp'
+else
+    alias ports='netstat -tulanp'
+fi
+alias myip='curl -s ifconfig.me; echo'
+alias weather='curl -s wttr.in/?format=3'
+if command -v fd &> /dev/null; then
+    alias f='fd'
+else
+    alias f='find . -type f -name'
+fi
 
-# Herramientas modernas como default
 if command -v btop &> /dev/null; then
     alias top='btop'
     alias htop='btop'
 fi
 
-# bat en lugar de cat si está disponible
 if command -v bat &> /dev/null; then
-    alias cat='bat'
+    alias cat='bat --paging=never'
 elif command -v batcat &> /dev/null; then
-    alias cat='batcat'
+    alias cat='batcat --paging=never'
 fi
 
 # -----------------------------------------------------------------------------
-# Actualización (detecta distro)
+# Actualización rápida según Distro (Ubuntu/Debian & Fedora/RHEL)
 # -----------------------------------------------------------------------------
 if [ -f /etc/debian_version ]; then
-    alias update='sudo apt update && sudo apt upgrade -y'
-    alias up='sudo apt update && sudo apt upgrade -y'
-    alias install='sudo apt install'
+    alias update='sudo apt-get update && sudo apt-get upgrade -y && mise upgrade'
+    alias up='sudo apt-get update && sudo apt-get upgrade -y'
+    alias install='sudo apt-get install'
 elif [ -f /etc/redhat-release ]; then
-    alias update='sudo dnf upgrade --refresh -y'
+    alias update='sudo dnf upgrade --refresh -y && mise upgrade'
     alias up='sudo dnf upgrade --refresh -y'
     alias install='sudo dnf install'
-elif [ -f /etc/arch-release ]; then
-    alias update='sudo pacman -Syu'
-    alias up='sudo pacman -Syu'
-    alias install='sudo pacman -S'
 fi
 
 # -----------------------------------------------------------------------------
-# Utilidades
+# Utilidades & Portapapeles Multi-Entorno (Wayland, X11, WSL)
 # -----------------------------------------------------------------------------
 alias c='clear'
 alias h='history'
@@ -125,30 +144,34 @@ alias df='df -h'
 alias du='du -h'
 alias free='free -h'
 
-# Safety nets
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 alias mkdir='mkdir -pv'
 
-# Copiar al portapapeles
-alias pbcopy='xclip -selection clipboard'
-alias pbpaste='xclip -selection clipboard -o'
-
-# -----------------------------------------------------------------------------
-# Bitwarden CLI
-# -----------------------------------------------------------------------------
-alias bwu='export BW_SESSION=$(bw unlock --raw)'
-alias bws='bw sync'
-
-# -----------------------------------------------------------------------------
-# FZF configuration
-# -----------------------------------------------------------------------------
-if command -v fzf &> /dev/null; then
-    export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+if command -v wl-copy &> /dev/null && [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    alias pbcopy='wl-copy'
+    alias pbpaste='wl-paste'
+elif command -v xclip &> /dev/null && [ -n "${DISPLAY:-}" ]; then
+    alias pbcopy='xclip -selection clipboard'
+    alias pbpaste='xclip -selection clipboard -o'
+elif command -v clip.exe &> /dev/null; then
+    alias pbcopy='clip.exe'
+    alias pbpaste='powershell.exe -NoProfile -Command Get-Clipboard | tr -d "\r"'
 fi
 
 # -----------------------------------------------------------------------------
-# Waydroid (si aplica)
+# FZF configuration (Usa fd si está instalado para máxima velocidad)
+# -----------------------------------------------------------------------------
+if command -v fzf &> /dev/null; then
+    export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --color=hl:#00ff87,fg+:#ffffff,bg+:#1e1e2e,hl+:#00ffff,pointer:#00ff87,prompt:#00ffff'
+    if command -v fd &> /dev/null; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+# Waydroid (si aplica en Desktop)
 # -----------------------------------------------------------------------------
 alias waydroid='waydroid show-full-ui'

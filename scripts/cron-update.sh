@@ -1,281 +1,174 @@
 #!/bin/bash
-# ==========================================
-# CRON-UPDATE - Actualizaciones automáticas del sistema
-# ==========================================
-# Script ejecutado por cron para actualizar el sistema
-# y notificar via Telegram. Diseñado para servidores
-# Proxmox (LXC/VMs) con horarios configurables.
-# ==========================================
+# ==============================================================================
+# CRON-UPDATE.SH - Actualizaciones Automáticas (Ubuntu & Fedora Server/Desktop)
+# Ejecutado por cron con notificaciones a Telegram (configurado vía Proton Pass)
+# ==============================================================================
 
-# --- CONFIGURACIÓN ---
-# Usar directorios de usuario para evitar problemas de permisos
 LOG_DIR="$HOME/.local/state/dotfiles"
 LOG_FILE="$LOG_DIR/updates.log"
 CONFIG_FILE="$HOME/.config/dotfiles/telegram.env"
 
-# Usar $HOSTNAME con fallback para WSL donde hostname puede no estar
 HOSTNAME="${HOSTNAME:-$(cat /etc/hostname 2>/dev/null || hostname 2>/dev/null || echo 'unknown')}"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
-# Cargar variables de entorno del sistema
+export PROTON_PASS_KEY_PROVIDER="${PROTON_PASS_KEY_PROVIDER:-fs}"
+export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+# 1. Cargar credenciales de Telegram desde archivo local o Proton Pass CLI
 if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck disable=SC1090
     source "$CONFIG_FILE"
+elif command -v pass-cli &>/dev/null && pass-cli info >/dev/null 2>&1; then
+    TELEGRAM_BOT_TOKEN="$(pass-cli item view "pass://Personal/dotfiles/TELEGRAM_BOT_TOKEN" 2>/dev/null || true)"
+    TELEGRAM_CHAT_ID="$(pass-cli item view "pass://Personal/dotfiles/TELEGRAM_CHAT_ID" 2>/dev/null || true)"
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        NOTE_BODY="$(pass-cli item view "pass://Personal/dotfiles/note" 2>/dev/null || true)"
+        [ -z "$TELEGRAM_BOT_TOKEN" ] && TELEGRAM_BOT_TOKEN="$(grep -E "^(export[[:space:]]+)?TELEGRAM_BOT_TOKEN=" <<< "$NOTE_BODY" | head -1 | cut -d'=' -f2- | sed -E 's/^["'\''](.*)["'\'']$/\1/')"
+        [ -z "$TELEGRAM_CHAT_ID" ] && TELEGRAM_CHAT_ID="$(grep -E "^(export[[:space:]]+)?TELEGRAM_CHAT_ID=" <<< "$NOTE_BODY" | head -1 | cut -d'=' -f2- | sed -E 's/^["'\''](.*)["'\'']$/\1/')"
+    fi
 fi
 
-# ─────────────────────────────────────────────────────────────
-# Envía una notificación a Telegram.
-#
-# Utiliza el token del bot y el chat_id definidos en la configuración
-# para enviar mensajes formateados en HTML informando el estado.
-#
-# @param $1 - Mensaje a enviar
-# @param $2 - Tipo: "success", "warning", "error", "info"
-# ─────────────────────────────────────────────────────────────
 send_telegram() {
-    local MESSAGE="$1"
-    local TYPE="${2:-info}"
-    
-    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-        # Solo loguear warning si no está configurado, para no llenar el log
-        # echo "[$DATE] [WARN] Telegram no configurado" >> "$LOG_FILE"
+    local message="$1"
+    local type="${2:-info}"
+
+    if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
         return 1
     fi
-    
-    # Emojis según tipo
-    case "$TYPE" in
-        success) EMOJI="✅" ;;
-        warning) EMOJI="⚠️" ;;
-        error)   EMOJI="❌" ;;
-        reboot)  EMOJI="🔄" ;;
-        *)       EMOJI="ℹ️" ;;
+
+    local emoji="ℹ️"
+    case "$type" in
+        success) emoji="✅" ;;
+        warning) emoji="⚠️" ;;
+        error)   emoji="❌" ;;
+        reboot)  emoji="🔄" ;;
     esac
-    
-    # Formatear mensaje con info del servidor
-    local FULL_MESSAGE="$EMOJI <b>[$HOSTNAME]</b>
-$MESSAGE
 
-🕐 $DATE"
+    local full_message="${emoji} <b>[${HOSTNAME}]</b>
+${message}
 
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+🕐 ${DATE}"
+
+    curl -fsS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         -d chat_id="$TELEGRAM_CHAT_ID" \
-        -d text="$FULL_MESSAGE" \
-        -d parse_mode="HTML" > /dev/null 2>&1
+        -d text="$full_message" \
+        -d parse_mode="HTML" > /dev/null 2>&1 || true
 }
 
-# ─────────────────────────────────────────────────────────────
-# Registra un mensaje en el log.
-#
-# Agrega la fecha y el nivel de log al archivo ~/.local/state/dotfiles/updates.log
-#
-# @param $1 - Nivel: INFO, WARN, ERROR
-# @param $2 - Mensaje
-# ─────────────────────────────────────────────────────────────
 log() {
-    local LEVEL="$1"
-    local MESSAGE="$2"
-    echo "[$DATE] [$LEVEL] $MESSAGE" >> "$LOG_FILE"
+    local level="$1"
+    local message="$2"
+    echo "[$DATE] [$level] $message" >> "$LOG_FILE"
 }
 
-# ─────────────────────────────────────────────────────────────
-# Detecta si hay actualizaciones de kernel pendientes.
-#
-# Compara el kernel actualmente en ejecución con la versión instalada
-# más reciente en el sistema para determinar si se necesita un reinicio.
-#
-# @returns 0 si hay kernel nuevo, 1 si no.
-# ─────────────────────────────────────────────────────────────
 check_kernel_update() {
-    local CURRENT_KERNEL=$(uname -r)
-    
+    local current_kernel
+    current_kernel=$(uname -r)
+
     if [ -f /etc/debian_version ]; then
-        # Debian/Ubuntu: verificar si hay kernel más nuevo instalado
-        local LATEST_KERNEL=$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -1 | sed 's|/boot/vmlinuz-||')
-        if [ -n "$LATEST_KERNEL" ] && [ "$LATEST_KERNEL" != "$CURRENT_KERNEL" ]; then
+        local latest_kernel
+        latest_kernel=$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -1 | sed 's|/boot/vmlinuz-||')
+        if [ -n "$latest_kernel" ] && [ "$latest_kernel" != "$current_kernel" ]; then
             return 0
         fi
     elif [ -f /etc/redhat-release ]; then
-        # Fedora/RHEL: verificar kernel instalado vs actual
-        local LATEST_KERNEL=$(rpm -q kernel --last 2>/dev/null | head -1 | awk '{print $1}' | sed 's/kernel-//')
-        if [ -n "$LATEST_KERNEL" ] && [ "$LATEST_KERNEL" != "$CURRENT_KERNEL" ]; then
+        local latest_kernel
+        latest_kernel=$(rpm -q kernel --last 2>/dev/null | head -1 | awk '{print $1}' | sed 's/kernel-//')
+        if [ -n "$latest_kernel" ] && [ "$latest_kernel" != "$current_kernel" ]; then
             return 0
         fi
-    elif [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [[ "$ID" == "opensuse"* ]] || [[ "$ID" == "suse" ]]; then
-            local LATEST_KERNEL=$(rpm -q kernel-default --last 2>/dev/null | head -1 | awk '{print $1}' | sed 's/kernel-default-//')
-            if [ -n "$LATEST_KERNEL" ] && [ "$LATEST_KERNEL" != "$CURRENT_KERNEL" ]; then
-                return 0
-            fi
-        fi
     fi
-    
     return 1
 }
 
-# ─────────────────────────────────────────────────────────────
-# Ejecuta la actualización del sistema.
-#
-# Detecta la distribución y utiliza el gestor de paquetes
-# adecuado para actualizar todos los paquetes. Soporta:
-# Debian/Ubuntu, Fedora/RHEL, Arch Linux, openSUSE y Alpine.
-# Registra logs y envía notificaciones por Telegram.
-# ─────────────────────────────────────────────────────────────
 run_update() {
-    log "INFO" "Iniciando actualización del sistema"
-    send_telegram "🚀 Iniciando actualización del sistema..." "info"
-    
-    local UPDATE_OUTPUT=""
-    local PACKAGES_UPDATED=0
-    local UPDATE_SUCCESS=true
-    local SUDO_PREFIX=""
+    log "INFO" "Iniciando actualización automática del sistema"
+    send_telegram "🚀 Iniciando actualización automática del sistema..." "info"
 
-    # Detectar si necesitamos sudo (si no somos root)
-    if [ "$EUID" -ne 0 ]; then
-        SUDO_PREFIX="sudo"
-    fi
-    
+    local packages_updated=0
+    local update_success=true
+    local sudo_prefix=""
+    [ "$EUID" -ne 0 ] && sudo_prefix="sudo"
+
     if [ -f /etc/debian_version ]; then
-        # Debian/Ubuntu
-        log "INFO" "Sistema detectado: Debian/Ubuntu (apt)"
-        
-        $SUDO_PREFIX apt-get update -y >> "$LOG_FILE" 2>&1
-        
-        # Contar paquetes a actualizar
-        PACKAGES_UPDATED=$(apt list --upgradable 2>/dev/null | grep -c upgradable || echo "0")
-        
-        if [ "$PACKAGES_UPDATED" -gt 0 ]; then
-            log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
-            
-            # Configurar para no preguntar en actualizaciones
-            export DEBIAN_FRONTEND=noninteractive
-            $SUDO_PREFIX apt-get upgrade -y >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-            $SUDO_PREFIX apt-get autoremove -y >> "$LOG_FILE" 2>&1
-            $SUDO_PREFIX apt-get autoclean -y >> "$LOG_FILE" 2>&1
+        log "INFO" "Sistema detectado: Ubuntu/Debian (apt)"
+        $sudo_prefix env DEBIAN_FRONTEND=noninteractive apt-get update -y >> "$LOG_FILE" 2>&1
+
+        packages_updated=$(apt list --upgradable 2>/dev/null | grep -c upgradable || echo "0")
+
+        if [ "$packages_updated" -gt 0 ]; then
+            log "INFO" "Actualizando $packages_updated paquetes"
+            $sudo_prefix env DEBIAN_FRONTEND=noninteractive apt-get upgrade -y >> "$LOG_FILE" 2>&1 || update_success=false
+            $sudo_prefix env DEBIAN_FRONTEND=noninteractive apt-get autoremove -y >> "$LOG_FILE" 2>&1
+            $sudo_prefix env DEBIAN_FRONTEND=noninteractive apt-get autoclean -y >> "$LOG_FILE" 2>&1
         fi
-        
     elif [ -f /etc/redhat-release ]; then
-        # Fedora/RHEL
         log "INFO" "Sistema detectado: Fedora/RHEL (dnf)"
-        
-        # Contar paquetes a actualizar
-        PACKAGES_UPDATED=$(dnf check-update 2>/dev/null | grep -E "^\S+\.\S+" | wc -l || echo "0")
-        
-        if [ "$PACKAGES_UPDATED" -gt 0 ]; then
-            log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
-            $SUDO_PREFIX dnf upgrade --refresh -y >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-            $SUDO_PREFIX dnf autoremove -y >> "$LOG_FILE" 2>&1
+        packages_updated=$(dnf check-update -q 2>/dev/null | awk 'NF>=3 {count++} END {print count+0}')
+
+        if [ "$packages_updated" -gt 0 ]; then
+            log "INFO" "Actualizando $packages_updated paquetes"
+            $sudo_prefix dnf upgrade --refresh -y >> "$LOG_FILE" 2>&1 || update_success=false
+            $sudo_prefix dnf autoremove -y >> "$LOG_FILE" 2>&1
         fi
-        
-    elif [ -f /etc/arch-release ]; then
-        # Arch Linux
-        log "INFO" "Sistema detectado: Arch Linux (pacman)"
-        
-        $SUDO_PREFIX pacman -Syu --noconfirm >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-        PACKAGES_UPDATED="N/A"
-        
-    elif [ -f /etc/os-release ] && grep -qE "opensuse|suse" /etc/os-release; then
-        # openSUSE
-        log "INFO" "Sistema detectado: openSUSE (zypper)"
-
-        $SUDO_PREFIX zypper refresh >> "$LOG_FILE" 2>&1
-        PACKAGES_UPDATED=$(zypper lu 2>/dev/null | grep -c "v |" || echo "0")
-
-        if [ "$PACKAGES_UPDATED" -gt 0 ]; then
-            log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
-            $SUDO_PREFIX zypper --non-interactive up >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-        fi
-
-    elif [ -f /etc/os-release ] && grep -q "alpine" /etc/os-release; then
-        # Alpine Linux
-        log "INFO" "Sistema detectado: Alpine Linux (apk)"
-
-        $SUDO_PREFIX apk update >> "$LOG_FILE" 2>&1
-        PACKAGES_UPDATED=$(apk version -l '<' 2>/dev/null | wc -l || echo "0")
-
-        if [ "$PACKAGES_UPDATED" -gt 0 ]; then
-            log "INFO" "Actualizando $PACKAGES_UPDATED paquetes"
-            $SUDO_PREFIX apk upgrade >> "$LOG_FILE" 2>&1 || UPDATE_SUCCESS=false
-        fi
-
     else
-        log "ERROR" "Sistema no soportado"
-        send_telegram "Sistema no soportado para actualización automática" "error"
+        log "ERROR" "Distribución no soportada (solo Ubuntu/Debian y Fedora/RHEL)"
+        send_telegram "Distribución no soportada para actualización automática" "error"
         exit 1
     fi
-    
-    # Reportar resultado
-    if [ "$UPDATE_SUCCESS" = true ]; then
-        if [ "$PACKAGES_UPDATED" -gt 0 ] || [ "$PACKAGES_UPDATED" = "N/A" ]; then
-            log "INFO" "Actualización completada: $PACKAGES_UPDATED paquetes"
+
+    if [ "$update_success" = true ]; then
+        if [ "$packages_updated" -gt 0 ]; then
+            log "INFO" "Actualización completada: $packages_updated paquetes"
             send_telegram "📦 Actualización completada
-• Paquetes actualizados: $PACKAGES_UPDATED" "success"
+• Paquetes actualizados: $packages_updated" "success"
         else
-            log "INFO" "Sistema ya actualizado, sin cambios"
-            send_telegram "📦 Sistema ya actualizado, sin cambios pendientes" "success"
+            log "INFO" "Sistema al día, sin cambios"
+            send_telegram "📦 Sistema al día, sin cambios pendientes" "success"
         fi
     else
         log "ERROR" "Error durante la actualización"
-        send_telegram "Error durante la actualización. Revisar logs." "error"
+        send_telegram "Error durante la actualización. Revisar ~/.local/state/dotfiles/updates.log" "error"
     fi
-    
-    # Verificar si se necesita reinicio por kernel
+
     if check_kernel_update; then
-        log "INFO" "Kernel actualizado detectado, reinicio programado"
-        send_telegram "🔄 Kernel actualizado detectado.
-Reiniciando en 60 segundos..." "reboot"
-        
-        # Esperar 60 segundos y reiniciar
+        log "INFO" "Kernel nuevo detectado, reiniciando en 60s..."
+        send_telegram "🔄 Nuevo kernel instalado. Reiniciando en 60 segundos..." "reboot"
         sleep 60
-        log "INFO" "Ejecutando reinicio..."
-        
-        # Verificar si estamos en un container LXC (no se puede reiniciar normalmente)
-        if [ -f /proc/1/environ ] && grep -q "container=lxc" /proc/1/environ 2>/dev/null; then
-            log "INFO" "LXC detectado, solicitando reinicio al host"
-            # En LXC el reinicio es manejado por el host
-            $SUDO_PREFIX reboot
-        else
-            # VM o bare metal
-            $SUDO_PREFIX shutdown -r now
-        fi
+        $sudo_prefix shutdown -r now 2>/dev/null || $sudo_prefix reboot
     fi
 }
 
-# ─────────────────────────────────────────────────────────────
-# Configura el cron job para actualizaciones automáticas
-#
-# Añade una entrada al crontab del usuario para ejecutar
-# este script de forma diaria a las 04:00 AM.
-# ─────────────────────────────────────────────────────────────
 install_auto_update() {
-    print_step "Configurando Actualizaciones Automáticas (Cron)..."
-    
-    local SCRIPT_PATH="$DOTFILES_DIR/scripts/cron-update.sh"
-    
-    if [ ! -f "$SCRIPT_PATH" ]; then
-        print_error "No se encontró el script de actualización en $SCRIPT_PATH"
+    print_step "Configurando Actualizaciones Automáticas (Cron 04:00 AM)..."
+
+    local script_path="$DOTFILES_DIR/scripts/cron-update.sh"
+    if [ ! -f "$script_path" ]; then
+        print_error "No se encontró $script_path"
         return 1
     fi
-    
-    chmod +x "$SCRIPT_PATH"
-    
-    # Crear entrada en crontab (diario a las 04:00 AM)
-    # Evitar duplicados eliminando entradas previas que contengan el nombre del script
-    (crontab -l 2>/dev/null | grep -v "cron-update.sh"; echo "0 4 * * * /bin/bash $SCRIPT_PATH") | crontab -
-    
-    print_success "Cron job configurado (Ejecución: 04:00 AM diario)"
+
+    chmod +x "$script_path"
+
+    if ! command -v crontab &>/dev/null; then
+        if [ "$OS_TYPE" == "debian" ]; then
+            ensure_package "cron" "crontab"
+        elif [ "$OS_TYPE" == "redhat" ]; then
+            ensure_package "cronie" "crontab"
+        fi
+    fi
+
+    if command -v crontab &>/dev/null; then
+        (crontab -l 2>/dev/null | grep -v "cron-update.sh"; echo "0 4 * * * /bin/bash $script_path") | crontab -
+        print_success "Cronjob configurado (04:00 AM diario)."
+    else
+        print_warning "crontab no disponible en este contenedor/entorno."
+    fi
 }
 
-# ─────────────────────────────────────────────────────────────
-# MAIN (Solo si se ejecuta directamente)
-# ─────────────────────────────────────────────────────────────
-
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    # Crear directorio de logs y config si no existe
     mkdir -p "$LOG_DIR"
     mkdir -p "$(dirname "$CONFIG_FILE")"
-
-    # Ejecutar actualización
     run_update
-
     log "INFO" "Script de actualización finalizado"
 fi

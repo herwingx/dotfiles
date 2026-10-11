@@ -1,0 +1,19 @@
+# Secret files (never commit plaintext or local vaults)
+.env
+.env.*
+!.env.example
+*.age
+*.key
+*.pem
+
+# Temporary & backup files
+*.tmp
+*.bak
+*.backup
+*~
+
+# OS / Editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+

@@ -1,51 +1,41 @@
 #!/bin/bash
-# ==========================================
-# CLOUD - Configuración de servicios cloud
-# ==========================================
-# Funciones para configurar servicios de almacenamiento cloud.
-# Actualmente soporta: rclone para Google Drive.
-# ==========================================
+# ==============================================================================
+# CLOUD.SH - Configuración de Rclone y Sincronización Cloud con Proton Pass
+# ==============================================================================
 
 # ─────────────────────────────────────────────────────────────
-# Configura rclone para Google Drive
-#
-# Asegura la instalación de rclone e intenta desencriptar los
-# secretos para extraer el token JSON (RCLONE_TOKEN_JSON) y así
-# generar un archivo de configuración válido para rclone.
-#
-# @sideeffects Modifica/crea el archivo `~/.config/rclone/rclone.conf`.
+# Configura rclone para Google Drive usando secretos de Proton Pass
+# Si estamos en Guest Mode (distro limpia sin credenciales), omite sin error.
 # ─────────────────────────────────────────────────────────────
 configure_rclone() {
     print_step "Configurando rclone..."
-    
-    # 1. Idempotency: Install rclone using package manager if missing
+
     ensure_package "rclone"
-    
-    # 2. Secret Management
-    # Force secret decryption to ensure variables are fresh
-    unset SECRETS_LOADED
-    
-    if decrypt_secrets; then
-        if [ -n "$RCLONE_TOKEN_JSON" ]; then
-             mkdir -p "$HOME/.config/rclone"
-             
-             # Create config file idempotently (overwrite)
-             cat > "$HOME/.config/rclone/rclone.conf" <<EOF
+
+    load_secrets
+
+    if [ -n "${RCLONE_TOKEN_JSON:-}" ]; then
+        mkdir -p "$HOME/.config/rclone"
+        cat > "$HOME/.config/rclone/rclone.conf" <<EOF
 [gdrive]
 type = drive
 scope = drive
 token = $RCLONE_TOKEN_JSON
 team_drive =
 EOF
-             chmod 600 "$HOME/.config/rclone/rclone.conf"
-             
-             print_success "rclone configured successfully"
-             echo -e "${CYAN}   Remotes available:${NC}"
-             rclone listremotes
-        else
-            print_error "RCLONE_TOKEN_JSON not found in decrypted secrets."
-        fi
-    else
-        print_error "Failed to decrypt secrets."
+        chmod 600 "$HOME/.config/rclone/rclone.conf"
+
+        print_success "rclone configurado exitosamente (~/.config/rclone/rclone.conf)."
+        echo -e "${CYAN}   Remotes disponibles:${NC}"
+        rclone listremotes | sed 's/^/     /'
+        return 0
     fi
+
+    if [ "${GUEST_MODE:-}" == "true" ]; then
+        print_info "Guest Mode: rclone instalado. Ejecuta './install.sh --secrets' luego para vincular Google Drive."
+        return 0
+    fi
+
+    print_warning "RCLONE_TOKEN_JSON no encontrado. Configúralo con './scripts/manage_secrets.sh'."
+    return 0
 }

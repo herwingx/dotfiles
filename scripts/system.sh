@@ -1,256 +1,279 @@
 #!/bin/bash
-# ==========================================
-# SYSTEM - Actualización y paquetes del sistema
-# ==========================================
-# Funciones para actualizar el sistema operativo e instalar
-# paquetes base mediante ensure_package (idempotente).
-# ==========================================
+# ==============================================================================
+# SYSTEM.SH - Base System Packages, Smart Update, Fonts & Shell Integrations
+# Compatible with: Ubuntu/Debian & Fedora/RHEL (Server, Desktop & WSL)
+# ==============================================================================
 
 # ─────────────────────────────────────────────────────────────
-# Fix locales en Debian/Ubuntu
-#
-# Genera y configura los locales en_US.UTF-8 si faltan,
-# algo común en instalaciones mínimas o contenedores.
+# Genera y configura locales en_US.UTF-8 si faltan (común en LXC/Server)
 # ─────────────────────────────────────────────────────────────
 fix_locales() {
     if [ "$OS_TYPE" == "debian" ]; then
-        print_info "Verificando locales..."
-        if ! locale -a | grep -q "en_US.utf8"; then
-            print_warning "Locales faltantes. Generando en_US.UTF-8..."
-            ensure_package "locales"
+        if ! locale -a 2>/dev/null | grep -qi "en_US.utf8"; then
+            print_warning "Locales UTF-8 faltantes. Generando en_US.UTF-8..."
+            ensure_package "locales" "locale-gen"
             $SUDO_CMD locale-gen en_US.UTF-8
             $SUDO_CMD update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
             export LANG=en_US.UTF-8
             export LC_ALL=en_US.UTF-8
-            print_success "Locales generados"
+            print_success "Locales en_US.UTF-8 generados."
+        fi
+    elif [ "$OS_TYPE" == "redhat" ]; then
+        if ! locale -a 2>/dev/null | grep -qi "en_US.utf8"; then
+            ensure_package "glibc-langpack-en"
         fi
     fi
 }
 
 # ─────────────────────────────────────────────────────────────
-# Actualiza el sistema operativo de forma inteligente
-#
-# Evita actualizaciones repetitivas guardando la última fecha
-# de actualización. Si han pasado menos de 24 horas, la omite.
-#
-# @param $1 - Opcional: "--force" para ignorar el límite de 24h.
+# Actualiza el sistema operativo de forma inteligente (Caché 24h)
+# @param $1 - Opcional: "--force" para ignorar el caché de 24h.
 # ─────────────────────────────────────────────────────────────
 update_system() {
-    # Check manual skip flag
-    if [ "$1" == "--force" ]; then
-        FORCE_UPDATE=true
+    local force_update=false
+    if [ "${1:-}" == "--force" ]; then
+        force_update=true
     fi
 
-    # Lógica de "cache" de update (Smart Update)
-    UPDATE_STATE_FILE="$HOME/.local/state/dotfiles/last_update"
-    mkdir -p "$(dirname "$UPDATE_STATE_FILE")"
-    
-    # Si existe el fichero y tiene menos de 24h (86400 segundos), saltar
-    if [ -f "$UPDATE_STATE_FILE" ] && [ "$FORCE_UPDATE" != "true" ]; then
-        LAST_UPDATE=$(cat "$UPDATE_STATE_FILE")
-        NOW=$(date +%s)
-        DIFF=$((NOW - LAST_UPDATE))
-        
-        if [ $DIFF -lt 86400 ]; then
-             print_info "Skip Update: Last update was $(($DIFF / 3600)) hours ago."
-             echo -e "${GRAY}      Use 'update_system --force' to override.${NC}"
-             return
+    local state_file="$HOME/.local/state/dotfiles/last_update"
+    mkdir -p "$(dirname "$state_file")"
+
+    if [ -f "$state_file" ] && [ "$force_update" != "true" ]; then
+        local last_update now diff
+        last_update=$(cat "$state_file" 2>/dev/null || echo 0)
+        now=$(date +%s)
+        diff=$((now - last_update))
+
+        if [ "$diff" -lt 86400 ]; then
+            print_info "Smart Update: Sistema actualizado hace $((diff / 3600))h (usa --force para forzar)."
+            return 0
         fi
     fi
 
-    print_step "Actualizando el sistema ($OS_TYPE)..."
-    
-    # Fix Locales first
+    print_header "SYSTEM UPDATE :: ${OS_PRETTY_NAME}"
     fix_locales
-    
-    # Ejecutar actualización global
-    $PKG_UPDATE_CMD
-    
+
+    print_step "Sincronizando repositorios ($PKG_MANAGER)..."
+    run_pkg_index_update
+
+    print_step "Actualizando paquetes del sistema..."
     if [ "$OS_TYPE" == "debian" ]; then
-        $SUDO_CMD apt-get upgrade -y
-        $SUDO_CMD apt-get autoremove -y
+        $SUDO_CMD env DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+        $SUDO_CMD env DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
     elif [ "$OS_TYPE" == "redhat" ]; then
         $SUDO_CMD dnf upgrade -y
         $SUDO_CMD dnf autoremove -y
-    elif [ "$OS_TYPE" == "suse" ]; then
-        $SUDO_CMD zypper up -y
-    elif [ "$OS_TYPE" == "alpine" ]; then
-        $SUDO_CMD apk upgrade
     fi
-    
-    # Guardar timestamp
-    date +%s > "$UPDATE_STATE_FILE"
-    
-    print_success "Sistema actualizado"
+
+    date +%s > "$state_file"
+    print_success "Sistema operativo actualizado."
 }
 
 # ─────────────────────────────────────────────────────────────
-# Instala paquetes base del sistema
-#
-# Utiliza `ensure_package` de manera idempotente para instalar
-# dependencias clave dependiendo de la distribución detectada.
-#
-# @sideeffects Configura alias, bashrc, PATH y gestores de terminal.
+# Instala JetBrainsMono Nerd Font en entornos Desktop (Ubuntu/Fedora)
+# para que Oh My Posh y lsd muestren iconos perfectamente.
+# ─────────────────────────────────────────────────────────────
+install_nerd_font() {
+    if [ "$IS_DESKTOP" != "true" ]; then
+        return 0
+    fi
+
+    local font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
+    if [ -d "$font_dir" ] && [ -n "$(ls -A "$font_dir" 2>/dev/null)" ]; then
+        print_info "JetBrainsMono Nerd Font ya instalada."
+        return 0
+    fi
+
+    print_step "Instalando JetBrainsMono Nerd Font (Desktop)..."
+    mkdir -p "$font_dir"
+    local tmp_archive
+    tmp_archive=$(mktemp --suffix=.tar.xz)
+
+    if curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" -o "$tmp_archive"; then
+        tar -xf "$tmp_archive" -C "$font_dir" 2>/dev/null || true
+        rm -f "$tmp_archive"
+        if command -v fc-cache &>/dev/null; then
+            fc-cache -f "$font_dir" >/dev/null 2>&1 || true
+        fi
+        print_success "JetBrainsMono Nerd Font instalada en $font_dir"
+    else
+        rm -f "$tmp_archive"
+        print_warning "No se pudo descargar JetBrainsMono Nerd Font (no crítico)."
+    fi
+}
+
+# ─────────────────────────────────────────────────────────────
+# Instala paquetes base del sistema de forma idempotente
+# Distingue automáticamente entre Server (headless) y Desktop.
 # ─────────────────────────────────────────────────────────────
 install_packages() {
-    print_step "Instalando paquetes base del sistema..."
-    
-    # Paquetes Comunes
-    # Nota: Modern Tools (lsd, bat, ripgrep, zoxide) removidos de aquí
-    # porque ahora se gestionan via MISE en toolchain.sh
-    PACKAGES=(
-        "git" "curl" "wget" "unzip" "tree" 
-        "net-tools" "tmux" "ranger" "mc" 
-        "make" "tar" "jq" "xclip"
+    print_header "BASE PACKAGES & SHELL SETUP (${ENV_PROFILE^^})"
+
+    # Paquetes esenciales comunes (nombre_paquete:binario_en_path)
+    local common_specs=(
+        "git:git"
+        "curl:curl"
+        "wget:wget"
+        "unzip:unzip"
+        "tar:tar"
+        "tree:tree"
+        "tmux:tmux"
+        "ranger:ranger"
+        "mc:mc"
+        "make:make"
+        "jq:jq"
+        "file:file"
+        "net-tools:netstat"
     )
 
-    # Distro-specific additions
+    for spec in "${common_specs[@]}"; do
+        local pkg="${spec%%:*}"
+        local bin="${spec##*:}"
+        ensure_package "$pkg" "$bin"
+    done
+
+    # Paquetes específicos por familia de distribución (Ubuntu/Debian vs Fedora/RHEL)
     case "$OS_TYPE" in
         debian)
-            PACKAGES+=("build-essential" "dnsutils" "age" "locales")
+            ensure_package "ca-certificates" "update-ca-certificates"
+            ensure_package "gnupg" "gpg"
+            ensure_package "build-essential" "gcc"
+            ensure_package "dnsutils" "dig"
+            ensure_package "procps" "ps"
             ;;
         redhat)
-            PACKAGES+=("gcc" "xz" "bind-utils" "age")
-            # Group install logic check
-            $SUDO_CMD dnf group install -y "Development Tools" --skip-broken 2>/dev/null
-            ;;
-        arch)
-            PACKAGES+=("base-devel" "bind" "age")
-            ;;
-        suse)
-            PACKAGES+=("gcc" "bind-utils" "age")
-            $SUDO_CMD zypper install -y -t pattern devel_basis 2>/dev/null
-            ;;
-        alpine)
-            PACKAGES+=("alpine-sdk" "bind-tools" "age")
+            ensure_package "ca-certificates" "update-ca-trust"
+            ensure_package "gnupg2" "gpg"
+            ensure_package "gcc" "gcc"
+            ensure_package "gcc-c++" "g++"
+            ensure_package "xz" "xz"
+            ensure_package "bind-utils" "dig"
+            ensure_package "procps-ng" "ps"
+            ensure_package "findutils" "find"
             ;;
     esac
 
-    # Instalación Iterativa e Idempotente
-    for pkg in "${PACKAGES[@]}"; do
-        ensure_package "$pkg"
-    done
-    
-    # Configurar ranger si está instalado
-    if command -v ranger &> /dev/null; then
-        if [ ! -d "$HOME/.config/ranger" ]; then
-            print_info "Configurando ranger..."
-            ranger --copy-config=all
+    # Herramientas de portapapeles y fuentes solo en Desktop (evita instalar X11 en Server)
+    if [ "$IS_DESKTOP" == "true" ]; then
+        if [ "$SESSION_DISPLAY_TYPE" == "wayland" ]; then
+            ensure_package "wl-clipboard" "wl-copy"
         fi
+        ensure_package "xclip" "xclip"
+        install_nerd_font
     fi
-    
-    print_success "Paquetes base instalados"
 
-    install_bash_aliases
-    
-    # Oh My Posh se gestiona via Mise (toolchain.sh)
-    configure_fzf
-    configure_oh_my_posh
-    
-    # Tmux Configuration
+    # Configurar ranger si está instalado
+    if command -v ranger &> /dev/null && [ ! -d "$HOME/.config/ranger" ]; then
+        print_info "Inicializando configuración de ranger..."
+        ranger --copy-config=all >/dev/null 2>&1 || true
+    fi
+
+    # Vincular configuración de Tmux
     if [ -f "$DOTFILES_DIR/config/.tmux.conf" ]; then
         ln -sf "$DOTFILES_DIR/config/.tmux.conf" "$HOME/.tmux.conf"
+        print_success "Tmux configurado (~/.tmux.conf)."
     fi
+
+    install_bash_aliases
+    configure_fzf
+    configure_zoxide
+    configure_oh_my_posh
+
+    print_success "Paquetes base y configuración de shell completados."
 }
 
 # ─────────────────────────────────────────────────────────────
-# Vincula y configura el archivo .bash_aliases
-#
-# Crea un enlace simbólico desde config/.bash_aliases al home,
-# y añade la lógica a .bashrc para cargarlo automáticamente.
+# Vincula .bash_aliases y configura bloques limpios en .bashrc
 # ─────────────────────────────────────────────────────────────
 install_bash_aliases() {
-    print_step "Vinculando Bash Aliases..."
-    ALIAS_FILE="$HOME/.bash_aliases"
-    [ -f "$ALIAS_FILE" ] && [ ! -L "$ALIAS_FILE" ] && mv "$ALIAS_FILE" "$ALIAS_FILE.backup"
-    ln -sf "$DOTFILES_DIR/config/.bash_aliases" "$ALIAS_FILE"
-    
-    # Asegurar carga en .bashrc
-    BASHRC="$HOME/.bashrc"
-    CONTENT=$(cat <<EOF
-# Cargar aliases personales
+    print_step "Vinculando Bash Aliases y variables de entorno..."
+    local alias_file="$HOME/.bash_aliases"
+    if [ -f "$alias_file" ] && [ ! -L "$alias_file" ]; then
+        mv "$alias_file" "$alias_file.backup"
+    fi
+    ln -sf "$DOTFILES_DIR/config/.bash_aliases" "$alias_file"
+
+    local bashrc="$HOME/.bashrc"
+    [ -f "$bashrc" ] || touch "$bashrc"
+    sed -i '/source ~\/.bash_aliases/d' "$bashrc"
+
+    local content='# Cargar aliases personales
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
-fi
-EOF
-)
-    # Limpieza legacy
-    sed -i '/source ~\/.bash_aliases/d' "$BASHRC"
+fi'
+    update_bashrc_block "ALIASES" "$content" "bottom"
 
-    update_bashrc_block "ALIASES" "$CONTENT" "bottom"
-    
     configure_wsl_path
     ensure_path
 }
 
 # ─────────────────────────────────────────────────────────────
-# Configura el PATH en WSL
-#
-# Elimina las rutas montadas de Windows (/mnt/c/...) del PATH de Linux
-# para evitar colisiones entre binarios (.exe) y comandos nativos.
-# Solo se ejecuta en entornos Windows Subsystem for Linux (WSL).
+# En WSL, limpia las rutas /mnt/c del PATH para evitar colisiones
 # ─────────────────────────────────────────────────────────────
 configure_wsl_path() {
-    if [ ! -f /proc/version ] || ! grep -qi microsoft /proc/version; then
-        return
+    if [ "$IS_WSL" != "true" ]; then
+        return 0
     fi
-    
-    print_info "Detectado WSL. Limpiando PATH de Windows..."
-    
-    CONTENT=$(cat <<EOF
-# WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)
+
+    print_info "Entorno WSL detectado: aislando PATH de binarios .exe de Windows..."
+    local content='# WSL: Limpiar PATH de Windows (evitar conflictos con binarios .exe)
 if grep -qi microsoft /proc/version 2>/dev/null; then
-    NEW_PATH=\$(echo "\$PATH" | tr ":" "\n" | grep -v "^/mnt/" | tr "\n" ":" | sed "s/:\$//")
-    export PATH="\$NEW_PATH"
-fi
-EOF
-)
-    update_bashrc_block "WSL_PATH" "$CONTENT" "bottom"
+    NEW_PATH=$(echo "$PATH" | tr ":" "\n" | grep -v "^/mnt/" | awk "!seen[\$0]++" | paste -sd: -)
+    export PATH="$NEW_PATH"
+fi'
+    update_bashrc_block "WSL_PATH" "$content" "bottom"
 }
 
 # ─────────────────────────────────────────────────────────────
-# Configuración del PATH Universal
-#
-# Añade `~/.local/bin` y otras rutas clave al inicio del PATH
-# para priorizar las herramientas locales instaladas.
+# Configura el PATH universal sin entradas duplicadas y Proton Pass
 # ─────────────────────────────────────────────────────────────
 ensure_path() {
-    # Agregamos .local/bin para mise y tools
-    CONTENT='export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"'
-    update_bashrc_block "PATH_FIX" "$CONTENT" "bottom"
+    local content='# Deduplicated PATH & Proton Pass CLI persistence
+export PROTON_PASS_KEY_PROVIDER="${PROTON_PASS_KEY_PROVIDER:-fs}"
+for _dir in "$HOME/.local/share/mise/shims" "$HOME/.local/bin" "$HOME/bin" "/usr/local/bin"; do
+    if [ -d "$_dir" ] && [[ ":$PATH:" != *":$_dir:"* ]]; then
+        export PATH="$_dir:$PATH"
+    fi
+done
+unset _dir'
+    update_bashrc_block "PATH_FIX" "$content" "bottom"
 }
 
 # ─────────────────────────────────────────────────────────────
-# Configura la integración de fzf con Bash
-#
-# Añade atajos útiles como Ctrl+R (historial) o Ctrl+T (archivos).
+# Configura integración de fzf con Bash (Ctrl+R historial, Ctrl+T archivos)
 # ─────────────────────────────────────────────────────────────
 configure_fzf() {
-    print_step "Configurando fzf..."
-    if command -v fzf &>/dev/null; then
-        if ! grep -q "fzf --bash" "$HOME/.bashrc"; then
-            CONTENT='# fzf - Búsqueda fuzzy en historial (Ctrl+R), archivos (Ctrl+T) y directorios (Alt+C)
+    print_step "Configurando fzf keybindings en .bashrc..."
+    local content='# fzf - Búsqueda fuzzy en historial (Ctrl+R), archivos (Ctrl+T) y directorios (Alt+C)
 if command -v fzf &>/dev/null; then
     eval "$(fzf --bash)"
 fi'
-            update_bashrc_block "FZF" "$CONTENT" "bottom"
-        fi
-    fi
+    update_bashrc_block "FZF" "$content" "bottom"
 }
 
 # ─────────────────────────────────────────────────────────────
-# Configura Oh My Posh
-#
-# Enlaza el tema personalizado del repositorio y añade
-# el bloque de inicialización de OMP en .bashrc.
+# Configura integración de zoxide (reemplazo inteligente de cd)
+# ─────────────────────────────────────────────────────────────
+configure_zoxide() {
+    print_step "Configurando zoxide en .bashrc..."
+    local content='# zoxide - Navegación inteligente de directorios (z / zi)
+if command -v zoxide &>/dev/null; then
+    eval "$(zoxide init bash)"
+fi'
+    update_bashrc_block "ZOXIDE" "$content" "bottom"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Configura Oh My Posh con el tema del repositorio
 # ─────────────────────────────────────────────────────────────
 configure_oh_my_posh() {
     print_step "Configurando Oh My Posh..."
-    
-    # Vincular tema local del repositorio
     mkdir -p "$HOME/.poshthemes"
     ln -sf "$DOTFILES_DIR/config/herwingx.omp.json" "$HOME/.poshthemes/herwingx.omp.json"
 
-    CONTENT='eval "$(oh-my-posh init bash --config ~/.poshthemes/herwingx.omp.json)"'
-    update_bashrc_block "OH_MY_POSH" "$CONTENT" "bottom"
+    local content='# Oh My Posh Prompt
+if command -v oh-my-posh &>/dev/null; then
+    eval "$(oh-my-posh init bash --config ~/.poshthemes/herwingx.omp.json)"
+fi'
+    update_bashrc_block "OH_MY_POSH" "$content" "bottom"
 }
