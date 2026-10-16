@@ -110,7 +110,7 @@ install_packages() {
     print_header "BASE PACKAGES & SHELL SETUP (${ENV_PROFILE^^})"
 
     # Paquetes esenciales comunes (nombre_paquete:binario_en_path)
-    local common_specs=(
+    local pkg_specs=(
         "git:git"
         "curl:curl"
         "wget:wget"
@@ -126,39 +126,42 @@ install_packages() {
         "net-tools:netstat"
     )
 
-    for spec in "${common_specs[@]}"; do
-        local pkg="${spec%%:*}"
-        local bin="${spec##*:}"
-        ensure_package "$pkg" "$bin"
-    done
-
     # Paquetes específicos por familia de distribución (Ubuntu/Debian vs Fedora/RHEL)
     case "$OS_TYPE" in
         debian)
-            ensure_package "ca-certificates" "update-ca-certificates"
-            ensure_package "gnupg" "gpg"
-            ensure_package "build-essential" "gcc"
-            ensure_package "dnsutils" "dig"
-            ensure_package "procps" "ps"
+            pkg_specs+=(
+                "ca-certificates:update-ca-certificates"
+                "gnupg:gpg"
+                "build-essential:gcc"
+                "dnsutils:dig"
+                "procps:ps"
+            )
             ;;
         redhat)
-            ensure_package "ca-certificates" "update-ca-trust"
-            ensure_package "gnupg2" "gpg"
-            ensure_package "gcc" "gcc"
-            ensure_package "gcc-c++" "g++"
-            ensure_package "xz" "xz"
-            ensure_package "bind-utils" "dig"
-            ensure_package "procps-ng" "ps"
-            ensure_package "findutils" "find"
+            pkg_specs+=(
+                "ca-certificates:update-ca-trust"
+                "gnupg2:gpg"
+                "gcc:gcc"
+                "gcc-c++:g++"
+                "xz:xz"
+                "bind-utils:dig"
+                "procps-ng:ps"
+                "findutils:find"
+            )
             ;;
     esac
 
-    # Herramientas de portapapeles y fuentes solo en Desktop (evita instalar X11 en Server)
+    # Herramientas de portapapeles solo en Desktop (evita instalar X11/Wayland en Server)
     if [ "$IS_DESKTOP" == "true" ]; then
-        if [ "$SESSION_DISPLAY_TYPE" == "wayland" ]; then
-            ensure_package "wl-clipboard" "wl-copy"
+        if [ "${SESSION_DISPLAY_TYPE,,}" == "wayland" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
+            pkg_specs+=("wl-clipboard:wl-copy")
         fi
-        ensure_package "xclip" "xclip"
+        pkg_specs+=("xclip:xclip")
+    fi
+
+    ensure_packages_batch "${pkg_specs[@]}"
+
+    if [ "$IS_DESKTOP" == "true" ]; then
         install_nerd_font
     fi
 

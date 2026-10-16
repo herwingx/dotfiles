@@ -17,19 +17,23 @@ install_gitconfig() {
         git config --global core.pager "delta"
     fi
 
-    # En servidores headless (sin VS Code), usar nano/vim como editor por defecto de Git
-    if [ "$IS_SERVER" == "true" ] && ! detect_editor &>/dev/null; then
+    # Detectar automáticamente el editor instalado (Cursor, VS Code, Codium) o usar nano/vim
+    local ide_cmd=""
+    ide_cmd="$(detect_editor || true)"
+    if [ -n "$ide_cmd" ] && [ "$IS_SERVER" != "true" ]; then
+        git config --global core.editor "$ide_cmd --wait"
+    else
         git config --global core.editor "${EDITOR:-nano}"
     fi
 
-    # Si gh CLI está autenticado, delegar credenciales HTTPS a gh
+    # Si gh CLI está autenticado, delegar credenciales HTTPS a gh; si no, usar caché en memoria (evita texto plano)
     if command -v gh &>/dev/null && (unset GH_TOKEN GITHUB_TOKEN; gh auth status &>/dev/null); then
         (unset GH_TOKEN GITHUB_TOKEN; gh auth setup-git 2>/dev/null || true)
     elif [ "$IS_WSL" != "true" ]; then
-        git config --global credential.helper store
+        git config --global credential.helper "cache --timeout=86400"
     fi
 
-    print_success "Git configurado correctamente."
+    print_success "Git configurado correctamente (editor: $(git config --global core.editor))."
 }
 
 # ─────────────────────────────────────────────────────────────

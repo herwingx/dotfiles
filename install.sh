@@ -30,18 +30,19 @@ source "$DOTFILES_DIR/scripts/cron-update.sh"
 # ─────────────────────────────────────────────────────────────
 install_all() {
     export AUTO_INSTALL=true
-    print_header "INSTALACIÓN COMPLETA INTELIGENTE :: ${OS_PRETTY_NAME}"
+    print_header "INSTALACIÓN COMPLETA :: ${OS_PRETTY_NAME} (${ENV_PROFILE_LABEL})"
 
     update_system
     install_packages
     install_toolchain
+
+    load_secrets
+    install_dev_tools_all
+
     install_gitconfig
     install_ssh_keys
     configure_ssh_agent
-
-    load_secrets
     configure_rclone
-    install_dev_tools_all
 
     if [ "$IS_DESKTOP" == "true" ] || [ "$IS_WSL" == "true" ]; then
         install_vscode_extensions
@@ -58,48 +59,22 @@ install_all() {
 # Perfil Servidor (Ubuntu Server / Fedora Server / Proxmox LXC)
 # ─────────────────────────────────────────────────────────────
 install_server_profile() {
-    export AUTO_INSTALL=true
     IS_SERVER=true
     IS_DESKTOP=false
     ENV_PROFILE="server"
     ENV_PROFILE_LABEL="SERVIDOR (Headless)"
-
-    print_header "INSTALACIÓN MODO SERVIDOR :: ${OS_PRETTY_NAME}"
-    update_system
-    install_packages
-    install_toolchain
-    install_gitconfig
-    install_ssh_keys
-    configure_ssh_agent
-    load_secrets
-    configure_rclone
-    install_dev_tools_all
-    install_auto_update
-    show_reload_message
+    install_all
 }
 
 # ─────────────────────────────────────────────────────────────
 # Perfil Escritorio / Workstation (Ubuntu Desktop / Fedora Workstation)
 # ─────────────────────────────────────────────────────────────
 install_desktop_profile() {
-    export AUTO_INSTALL=true
     IS_DESKTOP=true
     IS_SERVER=false
     ENV_PROFILE="desktop"
     ENV_PROFILE_LABEL="ESCRITORIO (${SESSION_DISPLAY_TYPE})"
-
-    print_header "INSTALACIÓN MODO ESCRITORIO :: ${OS_PRETTY_NAME}"
-    update_system
-    install_packages
-    install_toolchain
-    install_gitconfig
-    install_ssh_keys
-    configure_ssh_agent
-    load_secrets
-    configure_rclone
-    install_dev_tools_all
-    install_vscode_extensions
-    show_reload_message
+    install_all
 }
 
 # ─────────────────────────────────────────────────────────────

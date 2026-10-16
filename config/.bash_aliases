@@ -81,6 +81,9 @@ alias serve='python3 -m http.server 8000'
 # -----------------------------------------------------------------------------
 alias d='docker'
 alias dc='docker compose'
+if command -v lazydocker &> /dev/null; then
+    alias ld='lazydocker'
+fi
 alias dps='docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
 alias dpsa='docker ps -a'
 alias dimg='docker images'

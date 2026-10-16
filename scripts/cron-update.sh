@@ -7,6 +7,7 @@
 LOG_DIR="$HOME/.local/state/dotfiles"
 LOG_FILE="$LOG_DIR/updates.log"
 CONFIG_FILE="$HOME/.config/dotfiles/telegram.env"
+PASS_CONF="$HOME/.config/dotfiles/pass.conf"
 
 HOSTNAME="${HOSTNAME:-$(cat /etc/hostname 2>/dev/null || hostname 2>/dev/null || echo 'unknown')}"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
@@ -14,15 +15,22 @@ DATE=$(date '+%Y-%m-%d %H:%M:%S')
 export PROTON_PASS_KEY_PROVIDER="${PROTON_PASS_KEY_PROVIDER:-fs}"
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
+PROTON_PASS_VAULT="${PROTON_PASS_VAULT:-Personal}"
+PROTON_PASS_ITEM="${PROTON_PASS_ITEM:-dotfiles}"
+if [ -f "$PASS_CONF" ]; then
+    # shellcheck disable=SC1090
+    source "$PASS_CONF"
+fi
+
 # 1. Cargar credenciales de Telegram desde archivo local o Proton Pass CLI
 if [ -f "$CONFIG_FILE" ]; then
     # shellcheck disable=SC1090
     source "$CONFIG_FILE"
 elif command -v pass-cli &>/dev/null && pass-cli info >/dev/null 2>&1; then
-    TELEGRAM_BOT_TOKEN="$(pass-cli item view "pass://Personal/dotfiles/TELEGRAM_BOT_TOKEN" 2>/dev/null || true)"
-    TELEGRAM_CHAT_ID="$(pass-cli item view "pass://Personal/dotfiles/TELEGRAM_CHAT_ID" 2>/dev/null || true)"
+    TELEGRAM_BOT_TOKEN="$(pass-cli item view "pass://${PROTON_PASS_VAULT}/${PROTON_PASS_ITEM}/TELEGRAM_BOT_TOKEN" 2>/dev/null || true)"
+    TELEGRAM_CHAT_ID="$(pass-cli item view "pass://${PROTON_PASS_VAULT}/${PROTON_PASS_ITEM}/TELEGRAM_CHAT_ID" 2>/dev/null || true)"
     if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-        NOTE_BODY="$(pass-cli item view "pass://Personal/dotfiles/note" 2>/dev/null || true)"
+        NOTE_BODY="$(pass-cli item view "pass://${PROTON_PASS_VAULT}/${PROTON_PASS_ITEM}/note" 2>/dev/null || true)"
         [ -z "$TELEGRAM_BOT_TOKEN" ] && TELEGRAM_BOT_TOKEN="$(grep -E "^(export[[:space:]]+)?TELEGRAM_BOT_TOKEN=" <<< "$NOTE_BODY" | head -1 | cut -d'=' -f2- | sed -E 's/^["'\''](.*)["'\'']$/\1/')"
         [ -z "$TELEGRAM_CHAT_ID" ] && TELEGRAM_CHAT_ID="$(grep -E "^(export[[:space:]]+)?TELEGRAM_CHAT_ID=" <<< "$NOTE_BODY" | head -1 | cut -d'=' -f2- | sed -E 's/^["'\''](.*)["'\'']$/\1/')"
     fi

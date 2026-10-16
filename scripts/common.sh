@@ -4,6 +4,11 @@
 # Compatible con: Ubuntu/Debian y Fedora/RHEL (Servidor, Escritorio y WSL)
 # ==============================================================================
 
+# Asegurar conteo correcto de caracteres multibyte (tildes/iconos) incluso en servidores recién instalados
+if locale -a 2>/dev/null | grep -qiE '^C\.utf-?8$'; then
+    export LC_CTYPE="${LC_CTYPE:-C.UTF-8}"
+fi
+
 # --- PALETA DE COLORES (CYBERPUNK / TERMINAL MODERNA) ---
 BOLD='\033[1m'
 DIM='\033[2m'
@@ -360,6 +365,55 @@ ensure_package() {
         print_error "No se pudo instalar '$package'."
         return 1
     fi
+}
+
+# Instala una lista de especificaciones "paquete:binario" en una sola transacción de apt/dnf
+ensure_packages_batch() {
+    local missing_pkgs=()
+    local present_count=0
+
+    for spec in "$@"; do
+        local pkg="${spec%%:*}"
+        local bin="${spec##*:}"
+        [ -z "$bin" ] && bin="$pkg"
+
+        if command -v "$bin" &>/dev/null; then
+            present_count=$((present_count + 1))
+            continue
+        fi
+
+        local is_inst=false
+        case "$OS_TYPE" in
+            debian)
+                dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed" && is_inst=true
+                ;;
+            redhat)
+                rpm -q "$pkg" &>/dev/null && is_inst=true
+                ;;
+        esac
+
+        if [ "$is_inst" = true ]; then
+            present_count=$((present_count + 1))
+        else
+            missing_pkgs+=("$pkg")
+        fi
+    done
+
+    if [ "${#missing_pkgs[@]}" -eq 0 ]; then
+        print_info "Todos los paquetes base verificados ($present_count ya instalados)."
+        return 0
+    fi
+
+    print_step "Instalando ${#missing_pkgs[@]} paquete(s) faltante(s) en lote (${missing_pkgs[*]})..."
+    if $PKG_INSTALL_CMD "${missing_pkgs[@]}"; then
+        print_success "Paquetes instalados correctamente (${missing_pkgs[*]})."
+        return 0
+    fi
+
+    print_warning "Instalación en lote reportó aviso; reintentando paquete por paquete..."
+    for pkg in "${missing_pkgs[@]}"; do
+        ensure_package "$pkg" "$pkg" || true
+    done
 }
 
 update_bashrc_block() {

@@ -16,6 +16,7 @@ uv = "latest"
 # --- Git & DevOps ---
 gh = "latest"
 lazygit = "latest"
+lazydocker = "latest"
 delta = "latest"
 
 # --- Modern CLI & TUI ---

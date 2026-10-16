@@ -83,10 +83,18 @@ gh_auth_login() {
 # Compatible con Fedora 41-44+ (DNF5) y Ubuntu Server/Desktop.
 # ─────────────────────────────────────────────────────────────
 install_docker() {
-    print_header "DOCKER ENGINE & COMPOSE SETUP"
+    print_header "DOCKER ENGINE & COMPOSE SETUP (NATIVO SIN OVERHEAD)"
+
+    # En WSL2, si Docker Desktop de Windows ya expone el socket en esta distro, respetarlo
+    if [ "$IS_WSL" == "true" ] && [ -S /var/run/docker.sock ] && command -v docker &>/dev/null; then
+        if docker info 2>/dev/null | grep -qi "Docker Desktop"; then
+            print_success "Docker Desktop (WSL2 Integration) detectado y activo."
+            return 0
+        fi
+    fi
 
     if command -v docker &> /dev/null; then
-        print_info "Docker ya está instalado ($(docker --version 2>/dev/null))."
+        print_info "Docker Engine ya está instalado ($(docker --version 2>/dev/null))."
     else
         ensure_package "curl"
         ensure_package "ca-certificates"
@@ -128,7 +136,22 @@ install_docker() {
                 $PKG_INSTALL_CMD docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                 ;;
         esac
-        print_success "Paquetes de Docker instalados."
+        print_success "Docker Engine + CLI + Buildx + Compose instalados."
+    fi
+
+    # Configurar rotación automática de logs de contenedores (evita que los logs llenen el disco)
+    if [ ! -f /etc/docker/daemon.json ]; then
+        print_step "Configurando rotación de logs de Docker (/etc/docker/daemon.json)..."
+        $SUDO_CMD mkdir -p /etc/docker
+        $SUDO_CMD tee /etc/docker/daemon.json >/dev/null <<'EOF'
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+EOF
     fi
 
     # Iniciar y habilitar servicio si systemd está activo
@@ -146,6 +169,8 @@ install_docker() {
             print_warning "Usuario '$USER' añadido al grupo 'docker' (requiere relogin para aplicar)."
         fi
     fi
+
+    print_info "Atajos listos: 'd' (docker), 'dc' (docker compose), 'ld' (lazydocker TUI)."
 }
 
 # ─────────────────────────────────────────────────────────────
